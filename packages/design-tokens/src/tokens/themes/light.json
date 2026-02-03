@@ -1,0 +1,41 @@
+{
+  "theme": {
+    "light": {
+      "background": {
+        "primary": { "value": "#f8fafc" },
+        "secondary": { "value": "#e0e7ff" },
+        "slate": { "value": "#94a3b8" }
+      },
+      "text": {
+        "primary": { "value": "#0f172a" },
+        "secondary": { "value": "#1e293b" },
+        "tertiary": { "value": "#475569" },
+        "muted": { "value": "#64748b" }
+      },
+      "gray": {
+        "50": { "value": "rgba(15, 23, 42, 0.95)" },
+        "100": { "value": "rgba(15, 23, 42, 0.8)" },
+        "200": { "value": "rgba(15, 23, 42, 0.6)" },
+        "300": { "value": "rgba(15, 23, 42, 0.5)" },
+        "400": { "value": "rgba(15, 23, 42, 0.4)" },
+        "500": { "value": "rgba(15, 23, 42, 0.3)" },
+        "600": { "value": "rgba(15, 23, 42, 0.2)" },
+        "700": { "value": "rgba(15, 23, 42, 0.15)" },
+        "800": { "value": "rgba(15, 23, 42, 0.12)" },
+        "900": { "value": "rgba(15, 23, 42, 0.08)" }
+      },
+      "glass": {
+        "bg": { "value": "rgba(255, 255, 255, 0.7)" },
+        "border": { "value": "rgba(15, 23, 42, 0.1)" },
+        "hover": { "value": "rgba(255, 255, 255, 0.8)" }
+      },
+      "section": {
+        "bg": { "value": "rgba(255, 255, 255, 0.65)" },
+        "border": { "value": "rgba(15, 23, 42, 0.08)" }
+      },
+      "gradient": {
+        "background": { "value": "linear-gradient(135deg, #e0e7ff 0%, #f8fafc 100%)" }
+      }
+    }
+  }
+}

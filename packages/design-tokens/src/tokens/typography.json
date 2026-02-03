@@ -1,0 +1,35 @@
+{
+  "font": {
+    "family": {
+      "base": { "value": "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif" }
+    },
+    "size": {
+      "xs": { "value": "11px" },
+      "sm": { "value": "12px" },
+      "base": { "value": "13px" },
+      "md": { "value": "14px" },
+      "lg": { "value": "15px" },
+      "xl": { "value": "16px" },
+      "2xl": { "value": "18px" },
+      "3xl": { "value": "20px" },
+      "4xl": { "value": "24px" },
+      "5xl": { "value": "28px" },
+      "6xl": { "value": "48px" }
+    },
+    "weight": {
+      "normal": { "value": "400" },
+      "medium": { "value": "500" },
+      "semibold": { "value": "600" },
+      "bold": { "value": "700" }
+    },
+    "lineHeight": {
+      "tight": { "value": "1.2" },
+      "normal": { "value": "1.5" },
+      "relaxed": { "value": "1.6" }
+    },
+    "letterSpacing": {
+      "tight": { "value": "-0.02em" },
+      "normal": { "value": "0" }
+    }
+  }
+}
