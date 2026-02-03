@@ -34,23 +34,18 @@ Need to debug container? → Docker MCP (logs)
 ## Project Structure
 
 ```
-jobswyft-docs/
+jobswyft/
 ├── apps/
 │   ├── api/           # FastAPI - Python 3.11+, uv
 │   ├── web/           # Next.js 14+ - TypeScript
 │   └── extension/     # WXT - TypeScript
-├── packages/types/    # Shared TypeScript types
+├── packages/
+│   ├── design-tokens/ # CSS variables, themes (dark/light)
+│   └── ui/            # React component library + Storybook
 ├── specs/openapi.yaml # API contract (source of truth)
 ├── supabase/migrations/
 ├── docs/project-context.md  # MCP usage guide
 └── _bmad-output/      # Planning & implementation artifacts
-    ├── planning-artifacts/
-    │   ├── prd.md
-    │   ├── architecture.md
-    │   └── epics.md
-    └── implementation-artifacts/
-        ├── sprint-status.yaml
-        └── {story-files}.md
 ```
 
 ## Architecture Patterns
@@ -99,6 +94,39 @@ supabase gen types typescript --local > packages/types/src/database.ts
 # Monorepo
 pnpm install               # Install all deps
 ```
+
+## UI Package & Storybook
+
+```bash
+# From packages/ui/ directory:
+pnpm storybook             # Start Storybook → http://localhost:6006
+pnpm build                 # Build component library
+pnpm test                  # Run Vitest tests
+
+# From packages/design-tokens/:
+pnpm build                 # Rebuild tokens → dist/tokens.css, themes.css
+```
+
+| Package | Purpose | Key Exports |
+|---------|---------|-------------|
+| `@jobswyft/design-tokens` | CSS variables, dark/light themes | `tokens.css`, `themes.css` |
+| `@jobswyft/ui` | React components, utilities | `cn()`, `ThemeProvider`, `useTheme` |
+
+**Storybook Features:**
+- Theme toggle: Dark/Light (toolbar dropdown)
+- Viewports: Mobile (375×667), Tablet (768×1024), Desktop (1440×900), Extension Popup (400×600)
+- Autodocs enabled for `@storybook/autodocs` tag
+
+**Component Pattern:**
+```
+src/atoms/Button/
+├── Button.tsx         # forwardRef + native HTML props
+├── Button.module.css  # CSS Modules with design tokens
+├── Button.stories.tsx # Storybook stories
+└── index.ts           # Re-exports
+```
+
+**Styling Priority:** Design tokens (`var(--color-*)`) → Tailwind utilities → CSS Modules
 
 ## Supabase CLI - Remote Database Management
 

@@ -40,6 +40,16 @@ tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
 development_status:
+  # Epic 0: UI Component Library Migration (PRIORITY)
+  epic-0: in-progress
+  0-1-foundation-design-tokens-ui-scaffold: done
+  0-2-core-atoms-icons-typography-badge-button: backlog
+  0-3-form-atoms-input-textarea-select-progressbar-logo: backlog
+  0-4-molecules-card-modal: backlog
+  0-5-organisms-navbar-jobcard-tabs-emptystate: backlog
+  0-6-compositions-extensionsidebar-fab-extensionpopup: backlog
+  epic-0-retrospective: optional
+
   # Epic 1: User Authentication & Account Foundation API
   epic-1: in-progress
   1-1-project-foundation-auth-system: done

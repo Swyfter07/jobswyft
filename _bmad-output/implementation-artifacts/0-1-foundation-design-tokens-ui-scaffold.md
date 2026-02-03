@@ -1,6 +1,6 @@
 # Story 0.1: Foundation (Design Tokens + UI Scaffold)
 
-Status: review
+Status: done
 
 ## Story
 
@@ -744,3 +744,4 @@ Claude Opus 4.5 (claude-opus-4-5-20251101)
 ## Change Log
 
 - 2026-02-02: Initial implementation of design tokens and UI package scaffold (Story 0.1)
+- 2026-02-02: Code review completed - added tests (11 passing), ThemeDemo story, committed all code, status → done
