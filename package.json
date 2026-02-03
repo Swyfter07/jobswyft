@@ -1,0 +1,20 @@
+{
+  "name": "jobswyft",
+  "version": "1.0.0",
+  "private": true,
+  "description": "AI-powered job application assistant",
+  "scripts": {
+    "dev:web": "pnpm --filter @jobswyft/web dev",
+    "dev:extension": "pnpm --filter @jobswyft/extension dev",
+    "build:web": "pnpm --filter @jobswyft/web build",
+    "build:extension": "pnpm --filter @jobswyft/extension build",
+    "build:types": "pnpm --filter @jobswyft/types build",
+    "lint": "pnpm -r lint",
+    "test": "pnpm -r test"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=9.0.0"
+  },
+  "packageManager": "pnpm@9.15.0"
+}

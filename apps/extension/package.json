@@ -1,0 +1,11 @@
+{
+  "name": "@jobswyft/extension",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Jobswyft Chrome Extension - Placeholder for WXT app",
+  "scripts": {
+    "dev": "echo 'WXT extension not yet initialized. Run: pnpm dlx wxt@latest init . --template react'",
+    "build": "echo 'WXT extension not yet initialized'",
+    "lint": "echo 'WXT extension not yet initialized'"
+  }
+}

@@ -1,0 +1,58 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+venv/
+.uv/
+*.egg-info/
+dist/
+build/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# IDE
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Build outputs
+.next/
+.vercel/
+.output/
+.wxt/
+
+# Testing
+coverage/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Supabase
+.supabase/
+
+# Temporary files
+*.tmp
+*.temp
+
+# BMAD specific ignores
+prompts/01-GreenfieldWorkflow.md
+prompts/02-BrownfieldWorkflow.md
+prompts/03-PromptTemplates.md
+.serena/
+
+*storybook.log
+storybook-static

@@ -1,0 +1,97 @@
+# generated: 2026-01-31
+# project: Jobswyft
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-31
+project: Jobswyft
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 1: User Authentication & Account Foundation API
+  epic-1: in-progress
+  1-1-project-foundation-auth-system: done
+  1-2-profile-account-management-api: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Resume Management API
+  epic-2: in-progress
+  2-1-resume-upload-storage-parsing: done
+  2-2-resume-crud-active-selection: done
+  epic-2-retrospective: optional
+
+  # Epic 3: Job Scanning & Match Analysis API
+  epic-3: in-progress
+  3-1-job-data-storage-api: done
+  3-2-ai-match-analysis-endpoint: done
+  epic-3-retrospective: optional
+
+  # Epic 4: AI Content Generation API
+  epic-4: in-progress
+  4-1-cover-letter-generation-api: done
+  4-2-answer-outreach-generation-api: done
+  epic-4-retrospective: optional
+
+  # Epic 5: Application & Job Tracking API
+  epic-5: in-progress
+  5-1-autofill-data-api: done
+  5-2-job-tracking-notes-api: done
+  epic-5-retrospective: optional
+
+  # Epic 6: Usage & Subscription Management API
+  epic-6: in-progress
+  6-1-usage-tracking-balance-api: done
+  6-2-subscription-billing-api-mocked: done
+  epic-6-retrospective: optional
+
+  # Epic 7: Privacy, Feedback & Dashboard Support API
+  epic-7: in-progress
+  7-1-privacy-data-deletion-api: done
+  7-2-feedback-api: done
+  epic-7-retrospective: optional
+
+  # Epic 8: Component Library Foundation (CRITICAL - Blocks UI implementation)
+  epic-8: backlog
+  8-1-component-library-infrastructure: backlog
+  8-2-primitive-components-buttons-inputs: backlog
+  8-3-primitive-components-feedback-navigation: backlog
+  8-4-composite-components-cards-dialogs: backlog
+  8-5-composite-components-form-command: backlog
+  8-6-domain-components-resume-job: backlog
+  8-7-domain-components-ai-progress: backlog
+  8-8-section-components-layout-navigation: backlog
+  8-9-section-components-ai-studio: backlog
+  8-10-platform-integration-validation: backlog
+  epic-8-retrospective: optional
