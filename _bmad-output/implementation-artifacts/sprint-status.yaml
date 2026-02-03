@@ -43,7 +43,7 @@ development_status:
   # Epic 0: UI Component Library Migration (PRIORITY)
   epic-0: in-progress
   0-1-foundation-design-tokens-ui-scaffold: done
-  0-2-core-atoms-icons-typography-badge-button: backlog
+  0-2-core-atoms-icons-typography-badge-button: review
   0-3-form-atoms-input-textarea-select-progressbar-logo: backlog
   0-4-molecules-card-modal: backlog
   0-5-organisms-navbar-jobcard-tabs-emptystate: backlog

@@ -56,3 +56,4 @@ prompts/03-PromptTemplates.md
 
 *storybook.log
 storybook-static
+.playwright-mcp/

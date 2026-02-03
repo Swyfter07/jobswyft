@@ -353,3 +353,61 @@ Deploy the FastAPI backend to Railway so it's accessible for frontend developmen
 **Covers:** Deployment requirements - Railway CLI setup, project linking, environment configuration, first deployment
 **Surfaces:** API + Infrastructure
 **Note:** Can be worked on independently while UI development continues.
+
+#### Story 8.1: Railway Dev Environment Setup & First Deployment
+
+**As a** developer,
+**I want** to deploy the FastAPI backend to a Railway development environment,
+**So that** the API is accessible for frontend development and testing without affecting future production.
+
+**Acceptance Criteria:**
+
+**Given** Railway CLI is not installed
+**When** I run the installation command
+**Then** Railway CLI is installed and `railway --version` returns a valid version
+
+**Given** I am not authenticated with Railway
+**When** I run `railway login`
+**Then** browser opens for OAuth authentication and CLI confirms successful login
+
+**Given** I am in the `apps/api` directory
+**When** I run `railway init`
+**Then** a new Railway project is created and linked to this directory
+
+**Given** the Railway project is created
+**When** I configure the environment
+**Then** it is explicitly named/tagged as `dev` or `development` environment
+
+**Given** the Railway dev environment exists
+**When** I set environment variables using `railway variables set`
+**Then** the following variables are configured for dev:
+- `SUPABASE_URL` (dev Supabase project)
+- `SUPABASE_SERVICE_ROLE_KEY`
+- `SUPABASE_ANON_KEY`
+- `ANTHROPIC_API_KEY`
+- `OPENAI_API_KEY`
+- `ENVIRONMENT=development`
+
+**Given** environment variables are configured
+**When** I run `railway up`
+**Then** the FastAPI application builds and deploys to the dev environment
+
+**Given** the deployment is complete
+**When** I access the Railway-provided dev URL with `/health` endpoint
+**Then** the API returns a 200 status with a health check response
+
+**Given** the deployment is complete
+**When** I access the Railway-provided dev URL with `/docs` endpoint
+**Then** the FastAPI Swagger documentation is accessible
+
+**Technical Notes:**
+- Railway CLI: `npm install -g @railway/cli`
+- Use Railway's environment feature to create `dev` environment
+- Railway provides automatic HTTPS URL for dev (e.g., `jobswyft-api-dev.up.railway.app`)
+- Production environment with custom domain deferred to later story
+
+**Out of Scope (Future Story):**
+- Production environment setup
+- Custom domain integration
+- SSL certificate configuration
+- Production-specific env vars

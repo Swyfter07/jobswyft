@@ -1,0 +1,10 @@
+import { forwardRef } from 'react';
+import { Icon, IconProps } from '../Icon';
+
+export const Zap = forwardRef<SVGSVGElement, IconProps>((props, ref) => (
+  <Icon ref={ref} {...props}>
+    <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+  </Icon>
+));
+
+Zap.displayName = 'Zap';
