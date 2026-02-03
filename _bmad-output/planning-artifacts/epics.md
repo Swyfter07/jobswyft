@@ -6,8 +6,21 @@ stepsCompleted:
   - step-04-final-validation
 workflowStatus: complete
 completedAt: '2026-01-30'
-lastEdited: '2026-02-01'
+lastEdited: '2026-02-02'
 editHistory:
+  - date: '2026-02-02'
+    changes: |
+      - Added Epic 0: UI Component Library Migration (6 consolidated stories)
+      - Rapid migration epic from storybook-demo to @jobswyft/ui
+      - Story 0.1: Foundation (Design Tokens + UI Scaffold)
+      - Story 0.2: Core Atoms (Icons 60+, Typography, Badge, Button)
+      - Story 0.3: Form Atoms (Input, Textarea, Select, ProgressBar, Logo)
+      - Story 0.4: Molecules (Card, Modal)
+      - Story 0.5: Organisms (Navbar, JobCard, Tabs, EmptyState)
+      - Story 0.6: Compositions (ExtensionSidebar, FAB, ExtensionPopup)
+      - One-to-one visual mapping with exact color/styling preservation
+      - Removed Epic 8 (Component Library Foundation) - superseded by Epic 0
+      - Total epics now 8, total stories now 20
   - date: '2026-02-01'
     changes: |
       - Added Epic 8: Component Library Foundation (10 stories)
@@ -28,16 +41,16 @@ inputDocuments:
   - prd.md
   - architecture.md
   - ux-design-specification.md
-  - epic-8-component-library.md
+  - storybook-demo/packages (migration source)
 workflowType: 'epics-and-stories'
 project_name: 'Jobswyft'
 user_name: 'jobswyft'
 date: '2026-01-30'
-implementationPriority: 'Backend API + Database → Component Library → Extension UI → Dashboard UI'
-epicScope: 'Backend API (Epics 1-7) + Component Library Infrastructure (Epic 8)'
-storySize: 'Large consolidated stories for fast-paced development'
+implementationPriority: 'Epic 0 (UI Migration) → Backend API (Epics 1-7) → Extension/Dashboard UI'
+epicScope: 'UI Migration (Epic 0) + Backend API (Epics 1-7)'
+storySize: 'Fast-paced stories for rapid development'
 totalEpics: 8
-totalStories: 24
+totalStories: 20
 totalFRsCovered: 80
 ---
 
@@ -46,6 +59,621 @@ totalFRsCovered: 80
 ## Overview
 
 This document provides the complete epic and story breakdown for Jobswyft, decomposing the requirements from the PRD and Architecture into implementable stories.
+
+---
+
+# RAPID MIGRATION EPIC
+
+## Epic 0: UI Component Library Migration (PRIORITY)
+
+**Goal:** Rapidly migrate all design tokens and components from storybook-demo to `@jobswyft/ui` using shadcn/Tailwind architecture while preserving exact visual appearance, feel, and UX.
+
+**Source:** `/Users/enigma/Documents/Projects/storybook-demo/packages`
+**Target:** `/Users/enigma/Documents/Projects/jobswyft/packages/`
+
+**Approach:**
+- One-to-one visual mapping from demo to new framework
+- Use Tailwind utilities + CSS Modules for glassmorphism effects
+- shadcn/ui primitives for accessible interactive components
+- Storybook documentation for all components
+- Fast-paced development with minimal overhead
+
+**Total Stories:** 6 | **Focus:** Foundation + 9 Atoms + 2 Molecules + 4 Organisms + 4 Compositions
+
+---
+
+### Story 0.1: Foundation (Design Tokens + UI Scaffold)
+
+**As a** developer,
+**I want** design tokens and UI package infrastructure set up,
+**So that** all components share a single source of truth and proper tooling.
+
+**Acceptance Criteria:**
+
+**Design Tokens Package (`packages/design-tokens/`):**
+
+**Given** the storybook-demo design tokens exist
+**When** I create the design-tokens package
+**Then** the following token files are created:
+- `tokens/colors.json` - Primary (#6366f1), purple (#8b5cf6), blue (#3b82f6), success (#22c55e), warning (#f59e0b), danger (#ef4444), grays, glass, gradients
+- `tokens/typography.json` - Font family (system), sizes (xs 11px → 6xl 48px), weights (400-700), line heights (tight 1.2, normal 1.5, relaxed 1.6)
+- `tokens/spacing.json` - 4px base unit scale (1-10: 4px → 40px)
+- `tokens/shadows.json` - sm (0 2px 8px), md (0 4px 16px), lg (0 10px 40px), xl (0 20px 60px)
+- `tokens/borders.json` - Border radii (sm 6px, md 8px, lg 10px, xl 12px, 2xl 16px, 3xl 20px)
+- `tokens/transitions.json` - fast (0.15s ease), base (0.2s ease), slow (0.3s ease)
+- `tokens/themes/dark.json` - Dark theme (bg #0f1419, secondary #1e3a5f, glass rgba(255,255,255,0.05), text primary rgba(255,255,255,1))
+- `tokens/themes/light.json` - Light theme (bg #f8fafc, secondary #e0e7ff, glass rgba(255,255,255,0.7), text primary #0f172a)
+**And** Style Dictionary builds to `dist/tokens.css`, `dist/themes.css`, `dist/tokens.js`
+**And** CSS variables match exact values from demo
+
+**UI Package Scaffold (`packages/ui/`):**
+
+**Given** the design-tokens package exists
+**When** I scaffold the UI package
+**Then** the following structure exists:
+```
+packages/ui/
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.ts
+├── postcss.config.js
+├── .storybook/main.ts, preview.tsx
+├── src/
+│   ├── index.ts
+│   ├── styles/globals.css
+│   ├── utils/cn.ts
+│   ├── providers/ThemeProvider.tsx
+│   ├── hooks/index.ts
+│   └── test/setup.ts
+```
+**And** `cn()` utility combines clsx + tailwind-merge
+**And** ThemeProvider supports dark/light via `data-theme` attribute
+**And** Storybook runs with theme toggle decorator and viewport presets (Extension: 400x800, Dashboard: responsive)
+**And** Tailwind config extends design-token CSS variables for colors, spacing, radii, fonts
+**And** globals.css imports `@jobswyft/design-tokens/dist/tokens.css` and `themes.css`
+
+**Tasks:**
+- [ ] Create `packages/design-tokens/` structure with package.json, tsconfig.json
+- [ ] Create all token JSON files with exact values from demo
+- [ ] Create dark/light theme files
+- [ ] Configure Style Dictionary build script
+- [ ] Create `packages/ui/` structure with package.json, tsconfig.json, vite.config.ts
+- [ ] Implement `cn()` utility (clsx + tailwind-merge)
+- [ ] Create ThemeProvider with data-theme attribute switching
+- [ ] Configure Tailwind to consume design-token CSS variables
+- [ ] Set up Storybook with main.ts, preview.tsx (theme decorator, viewport presets)
+- [ ] Create globals.css importing design tokens
+- [ ] Verify Storybook launches at localhost:6006
+- [ ] Verify theme toggle works in Storybook
+
+---
+
+### Story 0.2: Core Atoms (Icons, Typography, Badge, Button)
+
+**As a** developer,
+**I want** core atomic components migrated,
+**So that** I have foundational building blocks for all UI.
+
+**Acceptance Criteria:**
+
+**Icon System (60+ icons):**
+
+**Given** storybook-demo has 60+ icons
+**When** I migrate the Icon system
+**Then** all icons are available as named exports:
+- Navigation: Home, Search, Bell, User, Settings, Menu
+- Actions: Plus, Edit, Trash, Copy, Save, Share, Download, Upload, Wand, Scan
+- Chevrons: ChevronDown, ChevronLeft, ChevronRight, ChevronUp
+- Status: Check, CheckCircle, CheckSquare, AlertCircle, AlertTriangle, Info, X, XCircle
+- Business: Briefcase, Building, MapPin, Calendar, Clock, DollarSign, Target, Bookmark, Eye, EyeOff, FileText, File, Filter, Folder, Lock, Mail, MessageSquare, MoreHorizontal, MoreVertical, Rocket, Zap, Heart
+- AI/Tech: Bot, Brain, Sparkles
+- Theme: Sun, Moon
+- Social: Github, Linkedin
+- Charts: BarChart
+**And** each icon accepts `size`, `color`, `strokeWidth`, `className` props
+**And** defaults: size=24, color=currentColor, strokeWidth=2
+**And** Icon wrapper component exists for dynamic icon rendering by name
+
+**Typography:**
+
+**Given** the demo Typography component
+**When** I migrate Typography
+**Then** it supports:
+- `variant`: h1, h2, h3, h4, body, bodyLarge, small, xs
+- `color`: primary, secondary, tertiary, muted, success, danger, warning
+- `weight`: normal (400), medium (500), semibold (600), bold (700)
+- `align`: left, center, right
+- `as`: polymorphic element type (default: h1→h1, h2→h2, body→p, small→small)
+**And** font sizes match demo: h1=48px, h2=24px, h3=20px, h4=18px, body=14px, bodyLarge=15px, small=12px, xs=11px
+
+**Badge:**
+
+**Given** the demo Badge component
+**When** I migrate Badge
+**Then** it supports:
+- `variant`: success (green #22c55e), info (blue #3b82f6), purple (#8b5cf6), warning (orange #f59e0b), danger (red #ef4444)
+- `size`: sm, md
+**And** styling matches demo exactly (border-radius, padding, font-size)
+
+**Button:**
+
+**Given** the demo Button component
+**When** I migrate Button
+**Then** it supports:
+- `variant`: primary, secondary, tertiary, success, danger
+- `size`: sm (8px 16px), md (12px 24px), lg (14px 28px)
+- `loading`: boolean with spinner animation
+- `leftIcon`, `rightIcon`: ReactNode
+- `fullWidth`: boolean
+- `disabled`: boolean
+**And** primary variant has gradient background (`linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)`)
+**And** secondary variant has glassmorphism styling (glass-bg, glass-border, backdrop-filter blur)
+**And** tertiary variant is transparent with hover background
+**And** hover states: primary lifts with glow shadow, secondary brightens
+**And** loading state shows spinner icon and disables interaction
+
+**Tasks:**
+- [ ] Create `src/atoms/Icon/` directory with all 60+ icon components
+- [ ] Create Icon wrapper component with size/color/strokeWidth props
+- [ ] Create Icon.stories.tsx showing all icons in grid
+- [ ] Create Typography component with all variants
+- [ ] Create Typography.module.css with font styles from tokens
+- [ ] Create Typography.stories.tsx
+- [ ] Create Badge component with all variants
+- [ ] Create Badge.module.css
+- [ ] Create Badge.stories.tsx
+- [ ] Create Button component with all variants
+- [ ] Create Button.module.css with gradient, glassmorphism, loading spinner
+- [ ] Create Button.stories.tsx showing all variants, sizes, states
+- [ ] Export all components from index.ts
+- [ ] Verify visual match with demo for each component
+
+---
+
+### Story 0.3: Form Atoms (Input, Textarea, Select, ProgressBar, Logo)
+
+**As a** developer,
+**I want** form input atoms and utility atoms migrated,
+**So that** forms and branding are consistent.
+
+**Acceptance Criteria:**
+
+**Input:**
+
+**Given** the demo Input component
+**When** I migrate Input
+**Then** it supports:
+- `size`: sm, md, lg
+- `error`: boolean (red border styling)
+- `fullWidth`: boolean
+- `leftIcon`, `rightIcon`: ReactNode
+- `placeholder`, `disabled`: standard input props
+**And** styling uses glassmorphism background with subtle border
+**And** focus state shows primary color ring
+**And** error state shows danger color border
+
+**Textarea:**
+
+**Given** the demo Textarea component
+**When** I migrate Textarea
+**Then** it supports:
+- `size`: sm, md, lg
+- `error`: boolean
+- `fullWidth`: boolean
+- `resize`: 'none' | 'both' | 'horizontal' | 'vertical' (default: 'vertical')
+- `disabled`: boolean
+**And** styling matches Input (glassmorphism, focus ring, error state)
+
+**Select:**
+
+**Given** the demo Select component
+**When** I migrate Select
+**Then** it supports:
+- `size`: sm, md, lg
+- `error`: boolean
+- `fullWidth`: boolean
+- `leftIcon`: ReactNode
+- `options`: array of {value, label, disabled}
+- `placeholder`: string
+- `disabled`: boolean
+**And** has chevron down indicator
+**And** styling matches Input (glassmorphism, focus ring)
+
+**ProgressBar:**
+
+**Given** the demo ProgressBar component
+**When** I migrate ProgressBar
+**Then** it supports:
+- `value`: number (0-100, required)
+- `max`: number (default 100)
+- `size`: sm, md, lg
+- `variant`: primary, blue, success, warning, danger (or auto-select by percentage)
+- `showLabel`: boolean
+- `label`: string (custom label text)
+- `showPercentage`: boolean (shows % inside bar)
+- `animated`: boolean (shimmer effect)
+**And** auto-color selection: 100%=success, ≥70%=primary, ≥40%=blue, ≥20%=warning, <20%=danger
+**And** animated variant has left-to-right shimmer effect
+
+**Logo:**
+
+**Given** the demo Logo component
+**When** I migrate Logo
+**Then** it supports:
+- `variant`: 'full' (icon+text), 'icon', 'text'
+- `size`: sm, md, lg, xl
+**And** text displays "JobSwyft"
+**And** icon is the Zap icon with gradient fill
+**And** text has gradient styling matching primary colors
+
+**Tasks:**
+- [ ] Create Input component with all props
+- [ ] Create Input.module.css with glassmorphism, focus, error states
+- [ ] Create Input.stories.tsx
+- [ ] Create Textarea component with resize options
+- [ ] Create Textarea.module.css
+- [ ] Create Textarea.stories.tsx
+- [ ] Create Select component with options array
+- [ ] Create Select.module.css with chevron indicator
+- [ ] Create Select.stories.tsx
+- [ ] Create ProgressBar component with auto-color logic
+- [ ] Create ProgressBar.module.css with shimmer animation
+- [ ] Create ProgressBar.stories.tsx showing all variants
+- [ ] Create Logo component with icon SVG and gradient text
+- [ ] Create Logo.module.css
+- [ ] Create Logo.stories.tsx showing all variants/sizes
+- [ ] Export all components from index.ts
+- [ ] Verify visual match with demo
+
+---
+
+### Story 0.4: Molecules (Card, Modal)
+
+**As a** developer,
+**I want** Card and Modal molecules migrated,
+**So that** content containers and dialogs are consistent.
+
+**Acceptance Criteria:**
+
+**Card:**
+
+**Given** the demo Card component
+**When** I migrate Card
+**Then** it supports:
+- `variant`: 'default' (glassmorphism), 'outlined' (border only), 'elevated' (shadow)
+- `padding`: 'none', 'sm' (12px), 'md' (16px), 'lg' (24px)
+- `interactive`: boolean (hover effects)
+- `header`: ReactNode (optional header section)
+- `footer`: ReactNode (optional footer section)
+- `children`: ReactNode (content area, required)
+**And** default variant has glassmorphism background (glass-bg, glass-border, backdrop-filter)
+**And** interactive variant has hover lift effect (translateY, shadow increase)
+**And** elevated variant has prominent shadow without glassmorphism
+**And** header/footer sections have subtle dividers
+
+**Modal:**
+
+**Given** the demo Modal component
+**When** I migrate Modal
+**Then** it supports:
+- `open`: boolean (required, controls visibility)
+- `onClose`: () => void (required, close handler)
+- `title`: string (optional header title)
+- `description`: string (optional header description)
+- `children`: ReactNode (required, content area)
+- `footer`: ReactNode (optional footer for action buttons)
+- `size`: 'sm' (320px), 'md' (480px), 'lg' (640px), 'xl' (800px)
+- `showCloseButton`: boolean (default true)
+- `closeOnBackdropClick`: boolean (default true)
+- `closeOnEscape`: boolean (default true)
+**And** renders via React Portal to document.body
+**And** traps focus within modal (Tab cycles through focusable elements)
+**And** locks body scroll when open (overflow: hidden on body)
+**And** has ARIA attributes: `role="dialog"`, `aria-modal="true"`, `aria-labelledby` for title
+**And** Escape key triggers onClose when closeOnEscape is true
+**And** backdrop click triggers onClose when closeOnBackdropClick is true
+**And** open/close animation: fade backdrop + scale content (200ms)
+
+**Tasks:**
+- [ ] Create Card component with header/footer slots
+- [ ] Create Card.module.css with glassmorphism, outlined, elevated variants
+- [ ] Implement interactive hover effect (lift + shadow)
+- [ ] Create Card.stories.tsx showing all variant/padding combinations
+- [ ] Create Modal component with React Portal
+- [ ] Implement focus trap logic (cycle through focusable elements)
+- [ ] Implement body scroll lock (add/remove overflow:hidden)
+- [ ] Add all ARIA attributes for accessibility
+- [ ] Implement Escape key and backdrop click handlers
+- [ ] Create Modal.module.css with backdrop fade + content scale animations
+- [ ] Create Modal.stories.tsx showing all sizes and states
+- [ ] Export all components from index.ts
+- [ ] Verify visual match with demo
+
+---
+
+### Story 0.5: Organisms (Navbar, JobCard, Tabs, EmptyState)
+
+**As a** developer,
+**I want** all organism components migrated,
+**So that** complex UI sections are consistent.
+
+**Acceptance Criteria:**
+
+**Navbar:**
+
+**Given** the demo Navbar component
+**When** I migrate Navbar
+**Then** it supports:
+- `logo`: ReactNode (optional, displayed on left)
+- `navItems`: array of {label, icon?, active?, onClick?, href?} (optional)
+- `showThemeToggle`: boolean (default true)
+- `theme`: 'light' | 'dark' (current theme)
+- `onThemeToggle`: () => void (theme switch callback)
+- `user`: {name, avatar?, email?} (optional, displays user button)
+- `onUserMenuClick`: () => void (user button callback)
+- `actions`: ReactNode (optional, custom actions on right)
+**And** theme toggle shows Sun icon (light theme) or Moon icon (dark theme)
+**And** user button shows avatar image if provided, else first initial of name
+**And** active nav item has visual indicator (underline or background)
+**And** layout: logo + nav items on left, actions + theme toggle + user on right
+
+**JobCard:**
+
+**Given** the demo JobCard component
+**When** I migrate JobCard
+**Then** it supports:
+- `company`: string (required)
+- `title`: string (required)
+- `location`: string (optional, with MapPin icon)
+- `salary`: string (optional, blue badge)
+- `employmentType`: string (optional, green badge)
+- `postedDate`: string (optional, with Clock icon)
+- `logo`: string | ReactNode (optional, company logo)
+- `description`: string (optional, excerpt text)
+- `tags`: string[] (optional, skill tags)
+- `bookmarked`: boolean (default false)
+- `onBookmarkClick`: () => void (toggle callback)
+- `onCardClick`: () => void (card click callback)
+- `onApplyClick`: () => void (apply button callback)
+- `showApplyButton`: boolean (default true)
+**And** logo shows image if URL string, renders ReactNode if provided, else shows company initial fallback
+**And** tags show first 3 with "+N more" badge if more than 3
+**And** employment type badge is success (green) variant
+**And** salary badge is info (blue) variant
+**And** bookmark icon toggles between outline and filled states
+**And** Quick Apply button has Zap icon
+**And** card has interactive hover effect
+
+**Tabs:**
+
+**Given** the demo Tabs component
+**When** I migrate Tabs
+**Then** it supports:
+- `tabs`: array of {value, label, icon?, content?, disabled?, badge?} (required)
+- `value`: string (controlled mode - active tab value)
+- `defaultValue`: string (uncontrolled mode - initial tab)
+- `onChange`: (value: string) => void (tab change callback)
+- `variant`: 'line' (underline style), 'pills' (button style)
+- `fullWidth`: boolean (tabs stretch to fill width)
+**And** Tab object badge shows count/text on tab
+**And** disabled tabs are visually muted and not clickable
+**And** has ARIA: `role="tablist"` on container, `role="tab"` on tabs, `role="tabpanel"` on content
+**And** active tab has `aria-selected="true"`, disabled has `aria-disabled="true"`
+**And** content renders based on active tab's `content` property
+
+**EmptyState:**
+
+**Given** the demo EmptyState component
+**When** I migrate EmptyState
+**Then** it supports:
+- `icon`: ReactNode (optional illustration/icon)
+- `title`: string (required)
+- `description`: string (optional)
+- `primaryAction`: {label, icon?, onClick} (optional primary button)
+- `secondaryAction`: {label, icon?, onClick} (optional secondary button)
+- `size`: 'sm', 'md', 'lg' (affects typography)
+**And** centered layout
+**And** size affects title: lg=h2, md=h3, sm=h4
+**And** primary action uses primary Button variant
+**And** secondary action uses secondary Button variant
+
+**Tasks:**
+- [ ] Create Navbar component with all slots
+- [ ] Implement theme toggle with Sun/Moon icon swap
+- [ ] Create user avatar with image/initial fallback
+- [ ] Create Navbar.module.css
+- [ ] Create Navbar.stories.tsx
+- [ ] Create JobCard component with all features
+- [ ] Implement logo fallback (image/node/initial)
+- [ ] Implement tag overflow logic (first 3 + "+N more")
+- [ ] Create bookmark toggle (outline/filled)
+- [ ] Create JobCard.module.css with hover effects
+- [ ] Create JobCard.stories.tsx
+- [ ] Create Tabs component with controlled/uncontrolled modes
+- [ ] Implement line and pills variants
+- [ ] Add all ARIA attributes
+- [ ] Create Tabs.module.css
+- [ ] Create Tabs.stories.tsx with icons, badges, disabled tabs
+- [ ] Create EmptyState component with action buttons
+- [ ] Create EmptyState.module.css
+- [ ] Create EmptyState.stories.tsx showing all sizes
+- [ ] Export all components from index.ts
+- [ ] Verify visual match with demo for each component
+
+---
+
+### Story 0.6: Compositions (ExtensionSidebar, FAB, ExtensionPopup)
+
+**As a** developer,
+**I want** all composition components migrated,
+**So that** complete UI sections are ready for integration.
+
+**Acceptance Criteria:**
+
+**ExtensionSidebar:**
+
+**Given** the demo ExtensionSidebar component
+**When** I migrate ExtensionSidebar
+**Then** it supports:
+- `open`: boolean (default true)
+- `onClose`: () => void (close button callback)
+- `showQuickApply`: boolean (default false)
+- `currentJob`: {title, company, location, salary?} (optional, current job context)
+- `width`: number (default 400)
+**And** structure includes:
+  - **Header:** Logo (full variant) + close button (X icon)
+  - **Resume Tray (expandable section):**
+    - Resume file selector dropdown
+    - Upload/Select buttons
+    - Skills display (Badge components, collapsible)
+    - Experience section (expandable/collapsible)
+    - Education section (expandable/collapsible)
+  - **Quick Apply section** (conditional on showQuickApply + currentJob)
+  - **Main tabs:** Insights, AI Tools, Autofill, Jobs (using Tabs component)
+  - **Footer:** AI Credits ProgressBar + usage text
+**And** width defaults to 400px, full viewport height
+**And** glassmorphism styling matches demo exactly (dark theme default)
+
+**Insights Tab content:**
+- Resume Match score card (percentage with ProgressBar)
+- Match details with checkmark icons for matches
+- Skills matched count
+- Experience level match
+- Warnings section for missing skills/requirements
+
+**AI Tools Tab content:**
+- Cover Letter card with Wand icon
+- Resume Optimizer card with FileText icon
+- Answer Helper card with MessageSquare icon
+- Deep Match Analysis card with Target icon
+- Chat with AI card with Bot icon
+- Each card has gradient icon background
+
+**Autofill Tab content:**
+- Smart autofill status indicator
+- Recent autofill history list
+
+**Jobs Tab content:**
+- Application progress tracker (Applied → Screening → Interview → Offer)
+- Tracked jobs list with JobCard-like items
+
+**FloatingActionButton:**
+
+**Given** the demo FloatingActionButton component
+**When** I migrate FloatingActionButton
+**Then** it supports:
+- `onClick`: () => void (click callback)
+- `showBadge`: boolean (default false)
+- `badgeCount`: number (optional, notification count)
+- `position`: 'bottom-right' | 'bottom-left' (default 'bottom-right')
+**And** uses Zap icon with gradient background
+**And** fixed position floating in viewport corner
+**And** badge shows count if showBadge=true and badgeCount provided
+**And** hover effect: scale up slightly, glow shadow
+
+**ExtensionPopup:**
+
+**Given** the demo ExtensionPopup component
+**When** I migrate ExtensionPopup
+**Then** it supports:
+- `open`: boolean (default true)
+- `onClose`: () => void (close callback)
+- `position`: 'top-right' | 'bottom-right' | 'center' (default 'bottom-right')
+- `showQuickApply`: boolean (default false)
+- `currentJob`: {title, company, location} (optional)
+**And** structure includes:
+  - **Header:** Logo + close button
+  - **Quick Apply section** (conditional)
+  - **Stats display:** Applications, Interviews, Offers (numeric counts)
+  - **AI Credits:** ProgressBar showing remaining credits
+  - **Tabs:** Dashboard, AI Studio
+**And** Dashboard tab shows recent jobs list + "Add New Job" button
+**And** AI Studio tab shows generation options (Cover Letter, Resume Match, Answer Questions) with gradient icons
+**And** backdrop overlay with click-to-close
+
+**Tasks:**
+- [ ] Create ExtensionSidebar composition component
+- [ ] Implement Resume Tray with expandable sections (Skills, Experience, Education)
+- [ ] Implement all 4 tabs (Insights, AI Tools, Autofill, Jobs) with content
+- [ ] Create glassmorphism styling for sidebar
+- [ ] Create ExtensionSidebar.stories.tsx with all states (open/closed, with/without job)
+- [ ] Create FloatingActionButton component
+- [ ] Implement badge with count display
+- [ ] Create hover effects (scale + glow)
+- [ ] Create FloatingActionButton.module.css
+- [ ] Create FloatingActionButton.stories.tsx
+- [ ] Create ExtensionPopup component
+- [ ] Implement stats display section
+- [ ] Implement Dashboard and AI Studio tabs
+- [ ] Create backdrop with click-to-close
+- [ ] Create ExtensionPopup.module.css
+- [ ] Create ExtensionPopup.stories.tsx
+- [ ] Export all components from index.ts
+- [ ] Verify visual match with demo for each composition
+- [ ] Test all components at 400px width (extension viewport)
+
+---
+
+## Story Dependencies (Epic 0)
+
+```
+0.1 Foundation ──► 0.2 Core Atoms ──┬──► 0.4 Molecules
+                                    │
+                  0.3 Form Atoms ───┤
+                                    │
+                                    ▼
+                              0.5 Organisms
+                                    │
+                                    ▼
+                              0.6 Compositions
+```
+
+**Parallel Work Possible:**
+- After 0.1: Stories 0.2 and 0.3 can run in parallel
+- After 0.2 + 0.3: Story 0.4 can start
+- After 0.4: Story 0.5 can start
+- After 0.5: Story 0.6 can start
+
+---
+
+## Color Reference (Demo Exact Values)
+
+| Token | Value |
+|-------|-------|
+| Primary 500 | `#6366f1` |
+| Primary 600 | `#4f46e5` |
+| Primary 700 | `#4338ca` |
+| Purple 500 | `#8b5cf6` |
+| Blue 500 | `#3b82f6` |
+| Success 500 | `#22c55e` |
+| Warning 500 | `#f59e0b` |
+| Danger 500 | `#ef4444` |
+| Background Dark Primary | `#0f1419` |
+| Background Dark Secondary | `#1e3a5f` |
+| Glass BG (Dark) | `rgba(255, 255, 255, 0.05)` |
+| Glass Border (Dark) | `rgba(255, 255, 255, 0.1)` |
+| Glass Hover (Dark) | `rgba(255, 255, 255, 0.08)` |
+| Text Primary (Dark) | `rgba(255, 255, 255, 1)` |
+| Text Secondary (Dark) | `rgba(255, 255, 255, 0.8)` |
+
+**Gradients:**
+- Primary: `linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)`
+- Background: `linear-gradient(135deg, #1e3a5f 0%, #0f1419 100%)`
+- Purple-Blue: `linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)`
+
+---
+
+## Rapid Development Guidelines
+
+1. **One-to-one mapping:** Copy exact colors, spacing, animations from demo
+2. **CSS Modules for complex styling:** Glassmorphism, gradients, animations
+3. **Tailwind for layout:** Flexbox, grid, spacing utilities
+4. **shadcn/ui for accessibility:** Modal focus trap, Select keyboard nav
+5. **Storybook-first:** Build each component with stories before integration
+6. **Visual comparison:** Screenshot demo vs implementation for each component
+
+---
 
 ## Requirements Inventory
 
@@ -1636,344 +2264,3 @@ feedback (
 
 ---
 
-## Epic 8: Component Library Foundation
-
-**Epic Goal:** Build a comprehensive, production-ready component library that matches the demo design aesthetic, supports both extension and dashboard platforms, enables interactive component exploration via Storybook, and establishes the foundation for all UI implementation.
-
-**Epic Priority:** CRITICAL - Must be completed before extension and dashboard UI implementation can begin
-
-**Epic Value:**
-- Provides reusable components across extension + dashboard (DRY principle)
-- Interactive Storybook playground for component exploration and iteration
-- Consistent theming with blue primary color matching demo design
-- Platform-aware components (extension compact, dashboard standard)
-- Enables parallel UI development once components are ready
-
-**Epic Success Criteria:**
-- ✅ Storybook accessible at `http://localhost:6006` with all components documented
-- ✅ All primitive components match demo design aesthetics exactly
-- ✅ Blue primary color (`hsl(221.2 83.2% 53.3%)`) applied throughout
-- ✅ Dual theme support (light + dark) working in Storybook
-- ✅ Extension and dashboard can import components from `@jobswyft/ui`
-- ✅ Components tested in isolation with all variants, states, and interactions
-- ✅ Zero visual regressions from demo design
-
----
-
-### Epic Context
-
-**Problem Statement**
-
-The current approach of creating generic mockups disconnected from the demo design resulted in components that "look shit" (user feedback). We need a systematic approach to:
-
-1. **Match Demo Design:** Components must look exactly like the demo components in `/Users/enigma/Documents/Projects/job-jet/demo/final`
-2. **Blue Primary Color:** Replace yellow (#FACC15) with blue (`hsl(221.2 83.2% 53.3%)`) from demo
-3. **Interactive Exploration:** Storybook playground to explore components in isolation before integration
-4. **Platform Variants:** Support extension (compact, 320-420px sidebar) and dashboard (full-width) with shared theming
-5. **Component Inventory:** Build smallest → biggest (primitives → composites → sections)
-6. **Style Overrides:** Allow component-level styling overrides for special cases
-
-**Current State**
-
-- ✅ Demo design exists with blue color palette at `/Users/enigma/Documents/Projects/job-jet/demo/final`
-- ✅ Blue color values identified: Primary `hsl(221.2 83.2% 53.3%)`, Foreground `hsl(210 40% 98%)`
-- ✅ UX design specification completed (needs color update to blue)
-- ❌ No shared component library exists
-- ❌ No Storybook setup
-- ❌ Extension and dashboard would duplicate component code without shared library
-
-**Target State**
-
-- ✅ `packages/ui` monorepo package with all shared components
-- ✅ Storybook running with interactive component playground
-- ✅ Component hierarchy: Primitives → Composites → Sections
-- ✅ Blue theme tokens (core.css, extension.css, dashboard.css)
-- ✅ Platform-aware components with `platform` prop or separate variants
-- ✅ Extension and dashboard import from `@jobswyft/ui`
-- ✅ All components have Storybook stories with variants, states, interactions
-
-**Architecture Overview**
-
-```
-packages/ui/                          # Shared component library
-├── src/
-│   ├── components/
-│   │   ├── primitives/              # Level 1: Atomic components
-│   │   │   ├── button/
-│   │   │   │   ├── button.tsx
-│   │   │   │   └── button.stories.tsx
-│   │   │   ├── input/
-│   │   │   ├── badge/
-│   │   │   ├── card/
-│   │   │   └── ... (15-20 primitives)
-│   │   ├── composite/               # Level 2-3: Multi-primitive components
-│   │   │   ├── resume-selector/
-│   │   │   ├── job-card/
-│   │   │   ├── ai-output-panel/
-│   │   │   └── ... (10-15 composites)
-│   │   └── sections/                # Level 4-5: Complete sections
-│   │       ├── ai-studio/
-│   │       ├── navbar/
-│   │       ├── footer/
-│   │       └── ... (5-8 sections)
-│   ├── themes/
-│   │   ├── core.css                 # Blue primary, shared tokens
-│   │   ├── extension.css            # Extension overrides (compact)
-│   │   └── dashboard.css            # Dashboard overrides (standard)
-│   ├── hooks/                       # Shared React hooks
-│   ├── utils/                       # cn(), formatters, etc.
-│   └── index.tsx                    # Public API exports
-├── .storybook/
-│   ├── main.ts                      # Storybook configuration
-│   ├── preview.tsx                  # Global decorators, themes
-│   └── manager.ts                   # Storybook UI customization
-└── package.json
-
-apps/extension/
-└── src/
-    └── styles/theme.css             # Imports @jobswyft/ui/themes/extension.css
-
-apps/web/
-└── src/
-    └── styles/theme.css             # Imports @jobswyft/ui/themes/dashboard.css
-```
-
-**Design Principles**
-
-1. **Match Demo Design Exactly:** Reference `/Users/enigma/Documents/Projects/job-jet/demo/final` components, not generic designs
-2. **Blue Primary:** `hsl(221.2 83.2% 53.3%)` throughout (not yellow)
-3. **Component Isolation:** Each component developed in Storybook first, then integrated
-4. **Platform Awareness:** Extension = compact (12px padding, 36px buttons), Dashboard = standard (16px padding, 40px buttons)
-5. **Style Override Support:** `className` prop on all components for special cases
-6. **Accessibility:** WCAG AA compliance, keyboard navigation, screen reader support
-
----
-
-### Stories
-
-**Story 8.1: Component Library Infrastructure & Storybook Setup**
-
-**Story Goal:** Set up `packages/ui` monorepo package, configure Storybook, establish blue theme tokens, install tooling
-
-**Estimated Effort:** 1 day
-
-**Dependencies:** None
-
-**File:** `8-1-component-library-infrastructure.md`
-
----
-
-**Story 8.2: Primitive Components - Buttons, Inputs, Badges**
-
-**Story Goal:** Build Level 1 primitives (Button, Input, Textarea, Badge, Checkbox, Radio, Switch) matching demo design
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** Story 8.1
-
-**File:** `8-2-primitive-components-buttons-inputs.md`
-
----
-
-**Story 8.3: Primitive Components - Feedback & Navigation**
-
-**Story Goal:** Build Tooltip, Spinner, Icon wrapper, Separator, Skeleton (loading states)
-
-**Estimated Effort:** 1 day
-
-**Dependencies:** Story 8.1
-
-**File:** `8-3-primitive-components-feedback-navigation.md`
-
----
-
-**Story 8.4: Composite Components - Cards, Dialogs, Tabs**
-
-**Story Goal:** Build Card, Dialog/Modal, Tabs, Popover, Accordion/Collapsible, Alert
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** Story 8.2, 8.3
-
-**File:** `8-4-composite-components-cards-dialogs.md`
-
----
-
-**Story 8.5: Composite Components - Form & Command**
-
-**Story Goal:** Build Select, Combobox, Command Palette (Cmd+K), Copy Button with feedback, File Upload
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** Story 8.2, 8.3
-
-**File:** `8-5-composite-components-form-command.md`
-
----
-
-**Story 8.6: Domain Components - Resume & Job**
-
-**Story Goal:** Build Resume Selector, Resume Card, Job Info Card, Application Status Badge, Match Score Display
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** Story 8.4, 8.5
-
-**File:** `8-6-domain-components-resume-job.md`
-
----
-
-**Story 8.7: Domain Components - AI & Progress**
-
-**Story Goal:** Build AI Output Panel (edit/copy/regenerate), Progress Checklist, Skill Chips (copyable)
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** Story 8.4, 8.5
-
-**File:** `8-7-domain-components-ai-progress.md`
-
----
-
-**Story 8.8: Section Components - Layout & Navigation**
-
-**Story Goal:** Build Navbar (extension + dashboard variants), Footer (progress + credits), Settings Panel
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** Story 8.6, 8.7
-
-**File:** `8-8-section-components-layout-navigation.md`
-
----
-
-**Story 8.9: Section Components - AI Studio & Complete Flows**
-
-**Story Goal:** Build AI Studio section (tabs + content areas), Job Details section, Resume section, complete workflows
-
-**Estimated Effort:** 3 days
-
-**Dependencies:** Story 8.6, 8.7, 8.8
-
-**File:** `8-9-section-components-ai-studio.md`
-
----
-
-**Story 8.10: Platform Integration & Validation**
-
-**Story Goal:** Integrate components into extension and dashboard, validate platform variants, fix responsive issues, visual regression testing
-
-**Estimated Effort:** 2 days
-
-**Dependencies:** All previous stories (8.1-8.9)
-
-**File:** `8-10-platform-integration-validation.md`
-
----
-
-### Epic Timeline
-
-**Total Estimated Effort:** 19 days (approximately 4 weeks)
-
-**Phase 1: Foundation (Days 1-2)**
-- Story 8.1: Infrastructure & Storybook setup
-
-**Phase 2: Primitives (Days 3-5)**
-- Story 8.2: Buttons, Inputs, Badges
-- Story 8.3: Feedback & Navigation
-
-**Phase 3: Composites (Days 6-9)**
-- Story 8.4: Cards, Dialogs, Tabs
-- Story 8.5: Form & Command
-
-**Phase 4: Domain Components (Days 10-13)**
-- Story 8.6: Resume & Job components
-- Story 8.7: AI & Progress components
-
-**Phase 5: Sections (Days 14-18)**
-- Story 8.8: Layout & Navigation
-- Story 8.9: AI Studio & Complete flows
-
-**Phase 6: Integration (Days 19)**
-- Story 8.10: Platform integration & validation
-
----
-
-### Epic Risks & Mitigations
-
-**Risk 1: Component Design Mismatch**
-**Risk:** Components don't match demo design aesthetics exactly
-**Likelihood:** High (already happened with yellow mockups)
-**Impact:** High (user dissatisfaction, rework)
-**Mitigation:**
-- Reference demo files directly in each story's acceptance criteria
-- Visual comparison screenshots in Storybook stories
-- User review after each story completion
-
-**Risk 2: Platform Variant Complexity**
-**Risk:** Supporting extension + dashboard variants adds complexity
-**Likelihood:** Medium
-**Impact:** Medium (increased development time)
-**Mitigation:**
-- Start with shared components, add platform variants only when needed
-- Use `platform` prop pattern consistently
-- Document variant strategy in Story 8.1
-
-**Risk 3: Storybook Learning Curve**
-**Risk:** Team unfamiliar with Storybook setup/usage
-**Likelihood:** Low-Medium
-**Impact:** Low (delays Story 8.1)
-**Mitigation:**
-- Detailed setup instructions in Story 8.1
-- Example stories as templates
-- Storybook documentation links
-
-**Risk 4: Theming Inconsistencies**
-**Risk:** Blue theme not applied consistently across all components
-**Likelihood:** Medium
-**Impact:** Medium (visual inconsistency)
-**Mitigation:**
-- Core theme tokens defined upfront in Story 8.1
-- All components use CSS variables (not hardcoded colors)
-- Theme switcher in Storybook for testing
-
-**Risk 5: Accessibility Gaps**
-**Risk:** Components miss WCAG AA requirements
-**Likelihood:** Medium
-**Impact:** High (legal/usability issues)
-**Mitigation:**
-- Accessibility checklist in each story's AC
-- Automated testing with axe-core in Storybook
-- Keyboard navigation testing
-
----
-
-### Epic Dependencies
-
-**Depends On:**
-- None (foundational work)
-
-**Blocks:**
-- Extension UI implementation (Epic 9+)
-- Dashboard UI implementation (Epic 10+)
-- All user-facing feature development
-
----
-
-### Epic Definition of Done
-
-- ✅ All 10 stories completed and marked `done` in sprint-status.yaml
-- ✅ Storybook accessible at `http://localhost:6006` with all components
-- ✅ Blue primary color (`hsl(221.2 83.2% 53.3%)`) applied throughout
-- ✅ Light + dark themes working in all components
-- ✅ Extension can import and use all components from `@jobswyft/ui`
-- ✅ Dashboard can import and use all components from `@jobswyft/ui`
-- ✅ All components have Storybook stories demonstrating:
-  - All variants
-  - All states (default, hover, active, disabled, loading, error)
-  - Platform variants (extension vs dashboard where applicable)
-  - Accessibility features (keyboard nav, screen reader)
-- ✅ Visual regression testing confirms components match demo design
-- ✅ Accessibility audit passes (Lighthouse 95+, axe-core 0 violations)
-- ✅ Components tested in actual extension sidebar (320-420px) and dashboard (responsive)
-- ✅ Documentation in Storybook includes usage examples and guidelines

@@ -82,16 +82,3 @@ development_status:
   7-2-feedback-api: done
   epic-7-retrospective: optional
 
-  # Epic 8: Component Library Foundation (CRITICAL - Blocks UI implementation)
-  epic-8: backlog
-  8-1-component-library-infrastructure: backlog
-  8-2-primitive-components-buttons-inputs: backlog
-  8-3-primitive-components-feedback-navigation: backlog
-  8-4-composite-components-cards-dialogs: backlog
-  8-5-composite-components-form-command: backlog
-  8-6-domain-components-resume-job: backlog
-  8-7-domain-components-ai-progress: backlog
-  8-8-section-components-layout-navigation: backlog
-  8-9-section-components-ai-studio: backlog
-  8-10-platform-integration-validation: backlog
-  epic-8-retrospective: optional
