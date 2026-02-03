@@ -17,9 +17,10 @@ stepsCompleted:
   - step-e-03-edit
 workflowStatus: complete
 completedAt: 2026-01-29
-lastEdited: 2026-01-31
+lastEdited: 2026-02-02
 inputDocuments:
   - PRD.md
+  - storybook-demo/docs/PRD.md (developer specification merge source)
 workflowType: 'prd'
 projectContext:
   productName: Jobswyft
@@ -37,6 +38,22 @@ classification:
   complexity: Medium (low regulatory, medium-high technical)
   projectContext: brownfield
 editHistory:
+  - date: 2026-02-02
+    changes: |
+      - Merged requirements from developer specification document
+      - Added Sidebar State Model (4 states: Logged Out, Non-Job Page, Job Page, Application Page)
+      - Added Shared Component Library subsection (packages/ui)
+      - FR14: Changed to auto-scan on job page detection; added FR14a, FR14b for URL patterns and manual fallback
+      - FR13a-c: Added Resume Blocks feature (expandable sections, quick copy)
+      - FR26a: Added cover letter length selector
+      - FR33a-c: Added outreach tone, length, custom instructions
+      - FR39a-b, FR41a: Added autofill DOM preview and tick-off state
+      - FR64: Expanded to 4-state model; added FR64a-b for AI/Autofill unlock conditions
+      - FR65: Fixed subjective adjective (validation finding)
+      - FR78-80: Added specificity for feedback types, context, storage (validation finding)
+      - User Journeys: Updated all 4 personas to reflect auto-scan behavior
+      - Product Scope: Added pricing tier details (generation amounts)
+      - Executive Summary: Added auto-detection to differentiator
   - date: 2026-01-31
     changes: |
       - FR19: Clarified application questions are extracted ephemerally (not persisted)
@@ -79,7 +96,7 @@ editHistory:
 
 **Vision:** Transform job applications from a soul-crushing grind into a streamlined, confident experience.
 
-**Differentiator:** Apply 5x faster without leaving the job posting page. Privacy-first AI that never stores your generated content.
+**Differentiator:** Apply 5x faster without leaving the job posting page. Automatic job detection and scanning—no manual steps. Privacy-first AI that never stores your generated content.
 
 **Target Users:** Job seekers across all career stages (students to executives) and industries.
 
@@ -261,6 +278,17 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 
 **MVP Monetization:** Free tier only (5 generations + referral bonus). Paid subscriptions deferred to post-MVP.
 
+**Planned Pricing Tiers (Post-MVP):**
+
+| Tier | Price | Generations/Month | Notes |
+|------|-------|-------------------|-------|
+| Free | $0 | 5 lifetime | +5 per referral signup |
+| Starter | $4.99/mo | 300 | Entry-level paid |
+| Pro | $9.99/mo | 1,000 | Core revenue tier |
+| Power | $19.99/mo | 3,000 | High-volume users |
+
+Unused generations roll over to next billing period.
+
 **MVP Success Gate:** A user can install, authenticate, scan a job, generate a cover letter, autofill an application, track the job, and provide feedback - end to end.
 
 ### Growth Features (Post-MVP)
@@ -338,9 +366,9 @@ A Reddit thread mentions Jobswyft. He installs it. Skeptical, but desperate.
 
 **Rising Action:**
 
-Marcus lands on a job posting at a Series B startup. He clicks the Jobswyft icon. A sidebar slides in—clean, unobtrusive. He signs in with Google. Uploads his resume. One click: **Scan Page**.
+Marcus lands on a job posting at a Series B startup. He clicks the Jobswyft icon. A sidebar slides in—clean, unobtrusive. He signs in with Google. Uploads his resume.
 
-Two seconds later, the job details appear: title, company, full description, even the salary range buried in paragraph six. *"How did it find that?"*
+The sidebar instantly recognizes the job page—no button click needed. Two seconds later, the job details appear: title, company, full description, even the salary range buried in paragraph six. *"How did it find that?"*
 
 He hits **Match**. The AI analyzes his resume against the job. Strengths: distributed systems, team leadership. Gaps: no Kubernetes experience mentioned. *"Fair point,"* he thinks.
 
@@ -352,7 +380,7 @@ He tweaks one sentence. Hits **Autofill**. The application form populates. Name,
 
 Marcus submits the application. He checks the time: 4 minutes. Not 22. *Four minutes.*
 
-He grins. Opens the next tab. Scans. Generates. Autofills. Submits. Tab after tab.
+He grins. Opens the next tab. Auto-scan detects the job. Generates. Autofills. Submits. Tab after tab.
 
 By 10:30 PM, he's submitted 12 high-quality applications. Each with a tailored cover letter. Each in under 5 minutes.
 
@@ -365,7 +393,7 @@ He tells his laid-off coworker about Jobswyft. *"Dude, this thing paid for itsel
 Marcus upgrades to Pro.
 
 **Requirements Revealed:**
-- Fast, accurate page scanning (< 2 sec)
+- Automatic job page detection and scanning (< 2 sec)
 - AI Match analysis showing strengths/gaps
 - Cover letter generation with tone + custom instructions
 - Autofill that handles standard fields reliably
@@ -396,11 +424,9 @@ First thing she sees: **Sign in with Google**. No email/password. No friction. S
 
 Next: **Upload Resume**. She drags her PDF. A progress bar. *"Parsing..."* Done. Her resume appears in the tray at the top.
 
-The sidebar shows her current state: *"Job page detected. Ready to scan."*
+The sidebar instantly detects the job page and begins scanning automatically. A subtle progress indicator appears.
 
-She hesitates. *"What does 'scan' even mean?"* She hovers over the button—a tooltip explains: *"Extract job details from this page so AI tools can help you apply."*
-
-She clicks **Scan Page**. The job details populate. Title: Marketing Manager. Company: GlowUp Beauty. Salary: $95K-$115K. Full job description.
+Within two seconds, the job details populate. Title: Marketing Manager. Company: GlowUp Beauty. Salary: $95K-$115K. Full job description. *"It just... knew?"*
 
 *"Okay... that's kind of impressive."*
 
@@ -461,7 +487,7 @@ He exhales. *"Thank god."*
 
 He navigates to the Jobs tab. His old saved jobs are there—marked as "Applied" or "Interviewed." A time capsule of his last search. He smiles seeing the job he landed (status: "Offer Accepted").
 
-He opens a new job posting—VP of Engineering at a growth-stage startup. Clicks **Scan Page**. Instant. Familiar. The UI hasn't changed much—maybe cleaner, but the muscle memory is there.
+He opens a new job posting—VP of Engineering at a growth-stage startup. The sidebar auto-detects the page and scans instantly. Familiar. The UI hasn't changed much—maybe cleaner, but the muscle memory is there.
 
 He clicks **Match**. His resume is strong for this role—90% alignment. The AI notes his experience scaling teams from 20→100 engineers.
 
@@ -513,7 +539,7 @@ Jenna installs it.
 
 She opens the job posting. Clicks the Jobswyft icon. Signs in. Uploads her resume (nervous—is it good enough?).
 
-She clicks **Scan Page**. The job details appear. She reads the AI's extraction: *"Looking for early-career engineers excited about fintech infrastructure..."*
+The sidebar recognizes the job page and scans automatically. The job details appear. She reads the AI's extraction: *"Looking for early-career engineers excited about fintech infrastructure..."*
 
 She clicks **Match**. Her heart pounds.
 
@@ -604,9 +630,10 @@ jobswyft/
 ├── apps/
 │   ├── api/                    # FastAPI backend (Python)
 │   ├── web/                    # Next.js dashboard (TypeScript)
-│   └── extension/              # Plasmo extension (TypeScript)
+│   └── extension/              # WXT extension (TypeScript)
 ├── packages/
-│   └── api-client/             # Generated TypeScript client from OpenAPI
+│   ├── api-client/             # Generated TypeScript client from OpenAPI
+│   └── ui/                     # Shared component library (Extension + Dashboard)
 ├── specs/
 │   └── openapi.yaml            # API contract (source of truth)
 └── pnpm-workspace.yaml
@@ -636,6 +663,29 @@ jobswyft/
 | **Supabase MCP** | AI-assisted database operations |
 
 **Secrets Management:** Environment variables stored in Railway (API) and Vercel (Dashboard).
+
+### Shared Component Library
+
+**Purpose:** Centralized UI component library ensuring visual consistency between extension sidebar and web dashboard.
+
+**Package Location:** `packages/ui/`
+
+**Shared Components:**
+- Buttons (primary, secondary, ghost, destructive)
+- Form inputs (text, textarea, select, file upload)
+- Cards and containers
+- Modals and dialogs
+- Typography system
+- Icons (consistent icon set)
+- Loading states and skeletons
+- Toast notifications
+
+**Architecture Principles:**
+- Framework-agnostic core with React wrappers
+- Tailwind CSS for styling (shared config)
+- Independently versioned within monorepo
+- Changes propagate to both surfaces without code duplication
+- Storybook for component documentation and testing
 
 ### API Contract Design
 
@@ -687,6 +737,22 @@ npx openapi-typescript-codegen \
 - `tabs` - Tab detection for job pages
 - `identity` - Google OAuth flow
 - `host_permissions: <all_urls>` - Work on any job board
+
+**Sidebar State Model:**
+
+The extension sidebar operates in four distinct states based on authentication and page context:
+
+| State | Condition | Available Features |
+|-------|-----------|-------------------|
+| **Logged Out** | User not authenticated | Google Sign-In button only |
+| **Non-Job Page** | Authenticated, page is not a job posting | Resume tray, Dashboard link; AI Studio and Autofill disabled |
+| **Job Page** | Authenticated, job posting detected | Resume tray, auto-scan displays job card; AI Studio locked until application page |
+| **Application Page** | Authenticated, job application form detected | Full features: Resume tray, AI Studio unlocked, Autofill enabled |
+
+**State Transitions:**
+- Sidebar opens → Check auth → Logged Out or check page type
+- Page navigation → Re-evaluate page type → Update available features
+- Logout → Clear tokens → Return to Logged Out state
 
 ### Dashboard-Specific Requirements
 
@@ -752,10 +818,15 @@ npx openapi-typescript-codegen \
 - **FR11:** Users can view their list of uploaded resumes
 - **FR12:** Users can delete individual resumes
 - **FR13:** Users can switch between resumes when applying to jobs
+- **FR13a:** Users can view parsed resume content organized in expandable block sections
+- **FR13b:** Users can expand individual resume blocks to view full content (skills, experience, education, etc.)
+- **FR13c:** Users can copy resume block content to clipboard with single click
 
 ### Job Page Scanning
 
-- **FR14:** Users can trigger a scan of the current job posting page
+- **FR14:** System automatically scans job posting pages when detected via URL pattern matching
+- **FR14a:** System detects job pages using configurable URL patterns for major job boards
+- **FR14b:** Users can manually trigger scan if automatic detection fails
 - **FR15:** System extracts job title from job posting pages
 - **FR16:** System extracts company name from job posting pages
 - **FR17:** System extracts full job description from job posting pages
@@ -776,6 +847,7 @@ npx openapi-typescript-codegen \
 **Cover Letter:**
 
 - **FR26:** Users can generate a tailored cover letter
+- **FR26a:** Users can select a length for cover letter generation (e.g., brief, standard, detailed)
 - **FR27:** Users can select a tone for cover letter generation (e.g., confident, friendly, enthusiastic)
 - **FR28:** Users can provide custom instructions for cover letter generation
 - **FR29:** Users can regenerate cover letter with feedback on what to change
@@ -789,6 +861,9 @@ npx openapi-typescript-codegen \
 **Outreach Messages:**
 
 - **FR33:** Users can generate outreach messages for recruiters/hiring managers
+- **FR33a:** Users can select a tone for outreach message generation
+- **FR33b:** Users can select a length for outreach message generation (e.g., brief, standard)
+- **FR33c:** Users can provide custom instructions for outreach message generation
 - **FR34:** Users can regenerate outreach messages with feedback on what to change
 
 **Common AI Capabilities:**
@@ -801,8 +876,11 @@ npx openapi-typescript-codegen \
 ### Form Autofill
 
 - **FR39:** Users can autofill application form fields with their profile data
+- **FR39a:** System displays detected form fields in sidebar before autofill execution
+- **FR39b:** Users can review which fields will be filled before triggering autofill
 - **FR40:** System maps user data to appropriate form fields automatically
 - **FR41:** System highlights fields that were autofilled
+- **FR41a:** System shows visual tick-off state in sidebar for successfully filled fields
 - **FR42:** Users can undo the last autofill action
 - **FR43:** Autofill includes resume upload when a file upload field is detected
 - **FR44:** Autofill includes generated cover letter when available
@@ -834,9 +912,11 @@ npx openapi-typescript-codegen \
 
 - **FR62:** Users can open the extension sidebar from any webpage
 - **FR63:** Users can close the extension sidebar
-- **FR64:** Sidebar displays appropriate state based on page type (job page vs non-job page)
-- **FR65:** Sidebar displays resume tray for quick resume access
-- **FR66:** AI Studio tools are locked until a successful scan is completed
+- **FR64:** Sidebar displays one of four states: Logged Out (sign-in only), Non-Job Page (resume tray enabled, AI disabled), Job Page (auto-scan, AI locked), Application Page (full features)
+- **FR64a:** AI Studio tools unlock only when user is on a job application page
+- **FR64b:** Autofill functionality enables only when user is on a job application page
+- **FR65:** Sidebar displays resume tray for resume access when user is authenticated
+- **FR66:** AI Studio tools are locked until user navigates to application page with valid scan data
 - **FR67:** Users can navigate to the web dashboard from the sidebar
 
 ### Web Dashboard
@@ -857,9 +937,11 @@ npx openapi-typescript-codegen \
 
 ### User Feedback
 
-- **FR78:** Users can submit feedback about the product (UI placement TBD)
-- **FR79:** System captures feedback with optional context (current page, feature used)
-- **FR80:** Backend stores user feedback for analysis
+- **FR78:** Users can submit feedback about the product via in-app feedback form (accessible from sidebar and dashboard)
+- **FR78a:** Feedback form supports categorization: bug report, feature request, general feedback
+- **FR79:** System captures feedback with context: current page URL, sidebar state, last action performed, browser version
+- **FR79a:** Users can optionally attach a screenshot with their feedback
+- **FR80:** Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
 
 ## Non-Functional Requirements
 
