@@ -2,6 +2,7 @@
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 status: complete
 completedAt: '2026-01-30'
+lastUpdated: '2026-02-02'
 inputDocuments:
   - prd.md
   - job-jet/CLAUDE.md (reference - development preferences)
@@ -9,11 +10,16 @@ inputDocuments:
   - job-jet/v3-database-schema.md (reference - database design)
   - job-jet/docs/project-context.md (reference - implementation rules)
   - job-jet/v3-master-specification.md (reference - UI/UX spec)
+  - storybook-demo/packages (reference - UI component architecture)
 workflowType: 'architecture'
 project_name: 'jobswyft-docs'
 user_name: 'jobswyft'
 date: '2026-01-30'
 prototypeRepo: '/Users/enigma/Documents/Projects/job-jet/'
+uiReferenceRepo: '/Users/enigma/Documents/Projects/storybook-demo/'
+revisions:
+  - date: '2026-02-02'
+    change: 'Added UI Package Architecture - design-tokens, shared ui library with Storybook, hybrid Tailwind + CSS Modules approach'
 ---
 
 # Architecture Decision Document - Jobswyft
@@ -145,6 +151,8 @@ jobswyft/
 │   ├── web/              # Next.js dashboard
 │   └── api/              # FastAPI backend
 ├── packages/
+│   ├── design-tokens/    # Style Dictionary → CSS vars, JS, JSON
+│   ├── ui/               # Shared component library with Storybook
 │   └── types/            # Shared TypeScript types
 ├── specs/
 │   └── openapi.yaml      # API contract (source of truth)
@@ -168,8 +176,11 @@ jobswyft/
 - Python 3.11+ (api) - mypy strict mode
 
 **Styling Solution:**
-- Tailwind CSS 4.x (extension + web)
-- shadcn/ui components (accessible, customizable)
+- Design Tokens (Style Dictionary) → single source of truth for all visual decisions
+- Tailwind CSS 4.x configured to use design token CSS variables
+- CSS Modules for complex component-specific styling (glassmorphism, animations)
+- shadcn/ui primitives for interactive components (Select, Dialog, Dropdown, Tooltip)
+- Custom components for domain-specific UI (JobCard, ExtensionSidebar)
 
 **Build Tooling:**
 - Vite (via WXT for extension)
@@ -192,13 +203,15 @@ jobswyft/
 
 ### Post-Initialization Setup Required
 
-| App | Additional Setup |
-|-----|------------------|
-| Extension | + Tailwind, + Zustand, + shadcn/ui, + Supabase client |
-| Web | + shadcn/ui, + Supabase auth helpers, + React Query |
+| App/Package | Additional Setup |
+|-------------|------------------|
+| design-tokens | Style Dictionary config, token JSON files, build scripts |
+| ui | Storybook, Tailwind (using design-tokens), shadcn/ui base, CSS Modules |
+| Extension | + Zustand, + @jobswyft/ui, + @jobswyft/design-tokens, + Supabase client |
+| Web | + @jobswyft/ui, + @jobswyft/design-tokens, + Supabase auth helpers, + React Query |
 | API | + FastAPI routers structure, + Supabase SDK, + AI provider clients |
 
-**Note:** Project initialization using these commands should be the first implementation story.
+**Note:** Package initialization order: design-tokens → ui → apps (extension, web).
 
 ### Deployment & Tooling (MVP)
 
@@ -218,6 +231,462 @@ jobswyft/
 - Backend: Comprehensive structured logging (ERROR, WARN, INFO)
 - Logs viewable on Railway dashboard (no streaming infrastructure for MVP)
 - Key operations logged: auth, AI generation, errors
+
+---
+
+## UI Package Architecture
+
+### Design Philosophy
+
+**Single Source of Truth:** All visual decisions (colors, spacing, typography, shadows, transitions) are defined once in `packages/design-tokens` and consumed everywhere. Changes propagate automatically across extension, dashboard, and Storybook.
+
+**Hybrid Styling Approach:**
+- **Design Tokens** → CSS Variables (foundation)
+- **Tailwind CSS** → Layout utilities, responsive, basic states (speed)
+- **CSS Modules** → Complex component styling, glassmorphism, animations (precision)
+- **shadcn/ui** → Interactive primitives with accessibility (reliability)
+
+### Package: `@jobswyft/design-tokens`
+
+**Purpose:** Central design system configuration using Style Dictionary.
+
+```
+packages/design-tokens/
+├── package.json
+├── tsconfig.json
+├── src/
+│   ├── build.ts              # Style Dictionary build script
+│   ├── generate-theme-css.ts # Theme-aware CSS generation
+│   ├── index.ts              # TypeScript exports
+│   └── tokens/
+│       ├── colors.json       # Brand colors, semantic colors
+│       ├── typography.json   # Font families, sizes, weights
+│       ├── spacing.json      # Spacing scale (4px base)
+│       ├── borders.json      # Border radii
+│       ├── shadows.json      # Box shadows (including glow effects)
+│       ├── transitions.json  # Animation timings
+│       └── themes/
+│           ├── dark.json     # Dark theme overrides
+│           └── light.json    # Light theme overrides
+└── dist/
+    ├── tokens.css            # CSS custom properties
+    ├── themes.css            # Theme-specific CSS (data-theme selectors)
+    ├── tokens.js             # ES6 exports for JS usage
+    └── tokens.json           # Flat JSON for tooling
+```
+
+**Token Categories:**
+
+| Category | Examples | CSS Variable Pattern |
+|----------|----------|---------------------|
+| Colors | `--color-primary-500`, `--color-success-500` | `--color-{name}-{shade}` |
+| Typography | `--font-size-md`, `--font-weight-semibold` | `--font-{property}-{value}` |
+| Spacing | `--space-1` (4px), `--space-4` (16px) | `--space-{scale}` |
+| Borders | `--radius-md`, `--radius-2xl` | `--radius-{size}` |
+| Shadows | `--shadow-md`, `--shadow-lg` | `--shadow-{size}` |
+| Transitions | `--transition-fast`, `--transition-base` | `--transition-{speed}` |
+| Gradients | `--gradient-primary`, `--gradient-background` | `--gradient-{name}` |
+
+**Theme Variables (set via `data-theme` attribute):**
+
+| Variable | Dark Theme | Light Theme |
+|----------|------------|-------------|
+| `--theme-text-primary` | `rgba(255,255,255,1)` | `rgba(15,20,25,1)` |
+| `--theme-text-secondary` | `rgba(255,255,255,0.8)` | `rgba(15,20,25,0.7)` |
+| `--theme-glass-bg` | `rgba(255,255,255,0.05)` | `rgba(255,255,255,0.7)` |
+| `--theme-glass-border` | `rgba(255,255,255,0.1)` | `rgba(0,0,0,0.1)` |
+| `--theme-glass-hover` | `rgba(255,255,255,0.08)` | `rgba(255,255,255,0.9)` |
+| `--theme-gradient-background` | `linear-gradient(...)` | `linear-gradient(...)` |
+
+### Package: `@jobswyft/ui`
+
+**Purpose:** Shared component library with Storybook documentation.
+
+```
+packages/ui/
+├── package.json
+├── tsconfig.json
+├── vite.config.ts
+├── tailwind.config.ts        # Extends from design-tokens
+├── postcss.config.js
+├── .storybook/
+│   ├── main.ts
+│   └── preview.tsx           # Theme switcher, viewport presets
+├── src/
+│   ├── index.ts              # Public exports
+│   ├── styles/
+│   │   └── globals.css       # Imports design-tokens, base styles
+│   ├── utils/
+│   │   └── cn.ts             # clsx + tailwind-merge utility
+│   ├── providers/
+│   │   └── ThemeProvider.tsx
+│   ├── atoms/                # Basic building blocks
+│   │   ├── Button/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Button.module.css
+│   │   │   ├── Button.stories.tsx
+│   │   │   └── index.ts
+│   │   ├── Badge/
+│   │   ├── Icon/
+│   │   ├── Input/
+│   │   ├── Select/           # shadcn/ui based
+│   │   ├── Textarea/
+│   │   ├── Typography/
+│   │   ├── ProgressBar/
+│   │   └── Logo/
+│   ├── molecules/            # Compositions of atoms
+│   │   ├── Card/
+│   │   ├── Modal/            # shadcn/ui based
+│   │   ├── Dropdown/         # shadcn/ui based
+│   │   ├── Tooltip/          # shadcn/ui based
+│   │   └── FormField/
+│   ├── organisms/            # Complex, domain-specific
+│   │   ├── JobCard/
+│   │   ├── ResumeCard/
+│   │   ├── EmptyState/
+│   │   ├── Navbar/
+│   │   └── Tabs/
+│   └── compositions/         # App-specific layouts (optional)
+│       ├── extension/
+│       │   ├── ExtensionSidebar/
+│       │   ├── ExtensionPopup/
+│       │   └── FloatingActionButton/
+│       └── dashboard/
+│           └── DashboardLayout/
+└── dist/                     # Built output
+    ├── index.js
+    ├── index.mjs
+    ├── index.d.ts
+    └── styles.css
+```
+
+### Component Architecture Pattern
+
+**Hybrid: Tailwind utilities + CSS Modules + Design Tokens**
+
+```tsx
+// Button.tsx
+import { forwardRef, ButtonHTMLAttributes } from 'react';
+import { cn } from '../../utils/cn';
+import styles from './Button.module.css';
+
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'tertiary' | 'success' | 'danger';
+  size?: 'sm' | 'md' | 'lg';
+  loading?: boolean;
+  fullWidth?: boolean;
+}
+
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  ({ variant = 'primary', size = 'md', loading, fullWidth, className, children, ...props }, ref) => (
+    <button
+      ref={ref}
+      className={cn(
+        // Tailwind: layout, basic utilities
+        'inline-flex items-center justify-center gap-2',
+        fullWidth && 'w-full',
+        // CSS Module: complex visual styling
+        styles.button,
+        styles[variant],
+        styles[size],
+        loading && styles.loading,
+        className
+      )}
+      disabled={props.disabled || loading}
+      {...props}
+    >
+      {loading && <span className={styles.spinner} />}
+      {children}
+    </button>
+  )
+);
+```
+
+```css
+/* Button.module.css */
+.button {
+  font-family: var(--font-family-base);
+  font-weight: var(--font-weight-semibold);
+  border-radius: var(--radius-lg);
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.button:focus-visible {
+  outline: 2px solid var(--color-primary-500);
+  outline-offset: 2px;
+}
+
+/* Variant: Primary with gradient + glow */
+.primary {
+  background: var(--gradient-primary);
+  color: var(--color-white);
+  box-shadow: var(--shadow-md);
+}
+
+.primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(99, 102, 241, 0.5);
+}
+
+.primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Variant: Secondary with glassmorphism */
+.secondary {
+  background: var(--theme-glass-bg);
+  color: var(--theme-text-primary);
+  border: 1px solid var(--theme-glass-border);
+  backdrop-filter: blur(10px);
+}
+
+.secondary:hover:not(:disabled) {
+  background: var(--theme-glass-hover);
+}
+
+/* Sizes */
+.sm { padding: 8px 16px; font-size: var(--font-size-sm); }
+.md { padding: 12px 24px; font-size: var(--font-size-md); }
+.lg { padding: 14px 28px; font-size: var(--font-size-lg); }
+```
+
+### shadcn/ui Integration Strategy
+
+**How shadcn components inherit the design system:**
+
+1. **Install shadcn primitives** (Select, Dialog, Dropdown, Tooltip, Tabs)
+2. **Override CSS variables** in `globals.css` to use design-tokens
+3. **Customize component styles** via CSS Modules where needed
+
+```css
+/* globals.css - Map shadcn variables to design tokens */
+@layer base {
+  :root {
+    /* shadcn uses these variable names */
+    --background: var(--theme-background-primary);
+    --foreground: var(--theme-text-primary);
+    --primary: var(--color-primary-500);
+    --primary-foreground: var(--color-white);
+    --secondary: var(--theme-glass-bg);
+    --secondary-foreground: var(--theme-text-primary);
+    --muted: var(--theme-text-muted);
+    --muted-foreground: var(--theme-text-secondary);
+    --accent: var(--color-primary-500);
+    --accent-foreground: var(--color-white);
+    --destructive: var(--color-danger-500);
+    --border: var(--theme-glass-border);
+    --input: var(--theme-glass-border);
+    --ring: var(--color-primary-500);
+    --radius: var(--radius-lg);
+  }
+}
+```
+
+**shadcn Components to Use:**
+
+| Component | Why shadcn | Customization Needed |
+|-----------|-----------|---------------------|
+| Select | Complex keyboard nav, ARIA | Glassmorphism dropdown |
+| Dialog/Modal | Focus trap, escape handling | Backdrop blur, animations |
+| Dropdown Menu | Keyboard nav, positioning | Glass styling |
+| Tooltip | Positioning, delays | Match design tokens |
+| Tabs | Keyboard nav, ARIA | Custom pill variant |
+| Popover | Positioning | Glass background |
+
+**Custom Components (build from scratch):**
+
+| Component | Why Custom |
+|-----------|-----------|
+| Button | Gradient backgrounds, glow shadows, loading states |
+| Badge | Simple, full control over variants |
+| Card | Glassmorphism, interactive lift |
+| JobCard | Domain-specific, complex layout |
+| ProgressBar | Custom styling, AI credits display |
+| ExtensionSidebar | App-specific composition |
+
+### Tailwind Configuration
+
+```ts
+// tailwind.config.ts
+import type { Config } from 'tailwindcss';
+
+const config: Config = {
+  content: ['./src/**/*.{ts,tsx}'],
+  theme: {
+    extend: {
+      // Pull from design tokens CSS variables
+      colors: {
+        primary: {
+          500: 'var(--color-primary-500)',
+          600: 'var(--color-primary-600)',
+          700: 'var(--color-primary-700)',
+        },
+        // ... other colors
+      },
+      spacing: {
+        1: 'var(--space-1)',
+        2: 'var(--space-2)',
+        3: 'var(--space-3)',
+        4: 'var(--space-4)',
+        5: 'var(--space-5)',
+        6: 'var(--space-6)',
+      },
+      borderRadius: {
+        sm: 'var(--radius-sm)',
+        md: 'var(--radius-md)',
+        lg: 'var(--radius-lg)',
+        xl: 'var(--radius-xl)',
+        '2xl': 'var(--radius-2xl)',
+      },
+      fontFamily: {
+        sans: 'var(--font-family-base)',
+      },
+      fontSize: {
+        xs: 'var(--font-size-xs)',
+        sm: 'var(--font-size-sm)',
+        base: 'var(--font-size-base)',
+        md: 'var(--font-size-md)',
+        lg: 'var(--font-size-lg)',
+        xl: 'var(--font-size-xl)',
+      },
+      transitionDuration: {
+        fast: '150ms',
+        base: '200ms',
+        slow: '300ms',
+      },
+    },
+  },
+  plugins: [require('tailwindcss-animate')], // For shadcn animations
+};
+
+export default config;
+```
+
+### Storybook Configuration
+
+**Viewport Presets:**
+
+| Viewport | Dimensions | Use Case |
+|----------|------------|----------|
+| Mobile | 375×667 | Mobile web |
+| Tablet | 768×1024 | Tablet web |
+| Desktop | 1440×900 | Desktop web |
+| Extension Popup | 400×600 | Chrome popup |
+| Extension Sidebar | 400×800 | Content script sidebar |
+
+**Global Decorators:**
+- Theme switcher (dark/light via `data-theme`)
+- Viewport selector
+- Padding wrapper
+
+**Storybook Addons:**
+- `@storybook/addon-essentials` - Controls, docs, actions
+- `@storybook/addon-a11y` - Accessibility checks
+- `@storybook/addon-interactions` - Component testing
+- `@chromatic-com/storybook` - Visual regression (optional)
+
+### Application State-Aware Components
+
+Components can respond to application state via props or context:
+
+```tsx
+// JobCard with state-aware styling
+interface JobCardProps {
+  // ... other props
+  state?: 'default' | 'detected' | 'applied' | 'error';
+}
+
+// ExtensionSidebar with context awareness
+interface ExtensionSidebarProps {
+  hasResumeLoaded: boolean;
+  hasJobDetected: boolean;
+  isOffline: boolean;
+  creditBalance: number;
+}
+```
+
+**State-Driven UI Patterns:**
+
+| State | Visual Treatment |
+|-------|------------------|
+| Job Detected | Highlight border, pulse animation |
+| Resume Loaded | Active indicator, checkmark |
+| Loading | Skeleton loaders, spinners |
+| Error | Red border, error icon, message |
+| Offline | Muted colors, offline badge |
+| Low Credits | Warning badge, upgrade CTA |
+| Empty | EmptyState component with illustration |
+
+### Package Dependencies
+
+```json
+// packages/ui/package.json
+{
+  "name": "@jobswyft/ui",
+  "dependencies": {
+    "@jobswyft/design-tokens": "workspace:*",
+    "@radix-ui/react-dialog": "^1.x",
+    "@radix-ui/react-dropdown-menu": "^2.x",
+    "@radix-ui/react-select": "^2.x",
+    "@radix-ui/react-tabs": "^1.x",
+    "@radix-ui/react-tooltip": "^1.x",
+    "clsx": "^2.x",
+    "tailwind-merge": "^2.x"
+  },
+  "peerDependencies": {
+    "react": "^18.x",
+    "react-dom": "^18.x"
+  },
+  "devDependencies": {
+    "@storybook/react": "^8.x",
+    "@storybook/react-vite": "^8.x",
+    "storybook": "^8.x",
+    "tailwindcss": "^4.x",
+    "vite": "^5.x"
+  }
+}
+```
+
+### Consumer Integration (Extension/Web)
+
+```tsx
+// apps/extension/src/entrypoints/content/index.tsx
+import '@jobswyft/design-tokens/themes.css';
+import '@jobswyft/ui/styles';
+import { ExtensionSidebar, ThemeProvider } from '@jobswyft/ui';
+
+function App() {
+  return (
+    <ThemeProvider defaultTheme="dark">
+      <ExtensionSidebar
+        hasResumeLoaded={true}
+        hasJobDetected={true}
+        // ...
+      />
+    </ThemeProvider>
+  );
+}
+```
+
+```tsx
+// apps/web/src/app/layout.tsx
+import '@jobswyft/design-tokens/themes.css';
+import '@jobswyft/ui/styles';
+import { ThemeProvider } from '@jobswyft/ui';
+
+export default function RootLayout({ children }) {
+  return (
+    <html>
+      <body>
+        <ThemeProvider defaultTheme="dark">
+          {children}
+        </ThemeProvider>
+      </body>
+    </html>
+  );
+}
+```
 
 ---
 
@@ -552,7 +1021,82 @@ jobswyft/
 │   └── openapi.yaml                # API contract (source of truth)
 │
 ├── packages/
-│   └── types/
+│   ├── design-tokens/              # Central design system
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── src/
+│   │   │   ├── build.ts            # Style Dictionary build
+│   │   │   ├── generate-theme-css.ts
+│   │   │   ├── index.ts
+│   │   │   └── tokens/
+│   │   │       ├── colors.json
+│   │   │       ├── typography.json
+│   │   │       ├── spacing.json
+│   │   │       ├── borders.json
+│   │   │       ├── shadows.json
+│   │   │       ├── transitions.json
+│   │   │       └── themes/
+│   │   │           ├── dark.json
+│   │   │           └── light.json
+│   │   └── dist/
+│   │       ├── tokens.css
+│   │       ├── themes.css
+│   │       ├── tokens.js
+│   │       └── tokens.json
+│   │
+│   ├── ui/                         # Shared component library
+│   │   ├── package.json
+│   │   ├── tsconfig.json
+│   │   ├── vite.config.ts
+│   │   ├── tailwind.config.ts
+│   │   ├── postcss.config.js
+│   │   ├── .storybook/
+│   │   │   ├── main.ts
+│   │   │   └── preview.tsx
+│   │   ├── src/
+│   │   │   ├── index.ts
+│   │   │   ├── styles/
+│   │   │   │   └── globals.css
+│   │   │   ├── utils/
+│   │   │   │   └── cn.ts           # clsx wrapper for class merging
+│   │   │   ├── hooks/
+│   │   │   │   └── index.ts        # Shared UI hooks (useMediaQuery, etc.)
+│   │   │   ├── providers/
+│   │   │   │   └── ThemeProvider.tsx
+│   │   │   ├── test/
+│   │   │   │   └── setup.ts        # Vitest/RTL test setup
+│   │   │   ├── atoms/
+│   │   │   │   ├── Button/
+│   │   │   │   ├── Badge/
+│   │   │   │   ├── Icon/
+│   │   │   │   ├── Input/
+│   │   │   │   ├── Select/
+│   │   │   │   ├── Textarea/
+│   │   │   │   ├── Typography/
+│   │   │   │   ├── ProgressBar/
+│   │   │   │   └── Logo/
+│   │   │   ├── molecules/
+│   │   │   │   ├── Card/
+│   │   │   │   ├── Modal/
+│   │   │   │   ├── Dropdown/
+│   │   │   │   ├── Tooltip/
+│   │   │   │   └── FormField/
+│   │   │   ├── organisms/
+│   │   │   │   ├── JobCard/
+│   │   │   │   ├── ResumeCard/
+│   │   │   │   ├── EmptyState/
+│   │   │   │   ├── Navbar/
+│   │   │   │   └── Tabs/
+│   │   │   └── compositions/
+│   │   │       ├── extension/
+│   │   │       │   ├── ExtensionSidebar/
+│   │   │       │   ├── ExtensionPopup/
+│   │   │       │   └── FloatingActionButton/
+│   │   │       └── dashboard/
+│   │   │           └── DashboardLayout/
+│   │   └── dist/
+│   │
+│   └── types/                      # Shared TypeScript types
 │       ├── package.json
 │       ├── tsconfig.json
 │       └── src/
@@ -620,23 +1164,23 @@ jobswyft/
 │   │       └── test_usage.py
 │   │
 │   ├── web/                        # Next.js Dashboard
-│   │   ├── package.json
+│   │   ├── package.json            # Depends on @jobswyft/ui, @jobswyft/design-tokens
 │   │   ├── tsconfig.json
 │   │   ├── next.config.js
-│   │   ├── tailwind.config.js
+│   │   ├── tailwind.config.js      # Extends from @jobswyft/ui/tailwind
 │   │   ├── postcss.config.js
 │   │   ├── .env.example
 │   │   ├── README.md
 │   │   └── src/
 │   │       ├── app/
-│   │       │   ├── layout.tsx
+│   │       │   ├── layout.tsx      # Imports @jobswyft/ui styles + ThemeProvider
 │   │       │   ├── page.tsx
-│   │       │   ├── globals.css
+│   │       │   ├── globals.css     # Minimal - imports from @jobswyft/design-tokens
 │   │       │   ├── (auth)/
 │   │       │   │   ├── login/page.tsx
 │   │       │   │   └── callback/page.tsx
 │   │       │   ├── (dashboard)/
-│   │       │   │   ├── layout.tsx
+│   │       │   │   ├── layout.tsx  # Uses DashboardLayout from @jobswyft/ui
 │   │       │   │   ├── jobs/page.tsx
 │   │       │   │   ├── resumes/page.tsx
 │   │       │   │   ├── account/page.tsx
@@ -644,36 +1188,24 @@ jobswyft/
 │   │       │   └── api/
 │   │       │       └── auth/
 │   │       │           └── callback/route.ts
-│   │       ├── components/
-│   │       │   ├── ui/
-│   │       │   ├── jobs/
-│   │       │   │   ├── job-list.tsx
-│   │       │   │   ├── job-card.tsx
-│   │       │   │   └── job-status-badge.tsx
-│   │       │   ├── resumes/
-│   │       │   │   ├── resume-list.tsx
-│   │       │   │   ├── resume-card.tsx
-│   │       │   │   └── resume-upload.tsx
-│   │       │   └── layout/
-│   │       │       ├── header.tsx
-│   │       │       ├── sidebar.tsx
-│   │       │       └── footer.tsx
+│   │       ├── components/         # App-specific compositions only
+│   │       │   └── pages/          # Page-level component compositions
+│   │       │       ├── jobs-page.tsx
+│   │       │       ├── resumes-page.tsx
+│   │       │       └── account-page.tsx
 │   │       ├── lib/
 │   │       │   ├── api-client.ts
-│   │       │   ├── supabase.ts
-│   │       │   └── utils.ts
-│   │       ├── hooks/
-│   │       │   ├── use-auth.ts
-│   │       │   ├── use-jobs.ts
-│   │       │   └── use-resumes.ts
-│   │       └── types/
-│   │           └── index.ts
+│   │       │   └── supabase.ts
+│   │       └── hooks/
+│   │           ├── use-auth.ts
+│   │           ├── use-jobs.ts
+│   │           └── use-resumes.ts
 │   │
 │   └── extension/                  # WXT Chrome Extension
-│       ├── package.json
+│       ├── package.json            # Depends on @jobswyft/ui, @jobswyft/design-tokens
 │       ├── tsconfig.json
 │       ├── wxt.config.ts
-│       ├── tailwind.config.js
+│       ├── tailwind.config.js      # Extends from @jobswyft/ui/tailwind
 │       ├── postcss.config.js
 │       ├── .env.example
 │       ├── README.md
@@ -681,27 +1213,20 @@ jobswyft/
 │           ├── entrypoints/
 │           │   ├── popup/
 │           │   │   ├── index.html
-│           │   │   ├── main.tsx
-│           │   │   └── App.tsx
+│           │   │   ├── main.tsx    # Imports @jobswyft/ui styles + ThemeProvider
+│           │   │   └── App.tsx     # Uses ExtensionPopup from @jobswyft/ui
 │           │   ├── content/
-│           │   │   ├── index.tsx
-│           │   │   └── Sidebar.tsx
+│           │   │   └── index.tsx   # Uses ExtensionSidebar from @jobswyft/ui
 │           │   └── background/
 │           │       └── index.ts
-│           ├── components/
-│           │   ├── ui/
-│           │   ├── sidebar/
-│           │   │   ├── sidebar-header.tsx
-│           │   │   ├── resume-tray.tsx
-│           │   │   ├── scan-panel.tsx
-│           │   │   └── ai-studio.tsx
-│           │   ├── ai-tools/
-│           │   │   ├── match-tool.tsx
-│           │   │   ├── cover-letter-tool.tsx
-│           │   │   ├── answer-tool.tsx
-│           │   │   └── outreach-tool.tsx
-│           │   └── auth/
-│           │       └── login-button.tsx
+│           ├── features/           # Extension-specific business logic
+│           │   ├── scanning/
+│           │   │   ├── scanner.ts
+│           │   │   └── job-detector.ts
+│           │   ├── autofill/
+│           │   │   └── autofill.ts
+│           │   └── ai-tools/
+│           │       └── ai-tool-handlers.ts
 │           ├── stores/
 │           │   ├── auth-store.ts
 │           │   ├── resume-store.ts
@@ -709,15 +1234,11 @@ jobswyft/
 │           │   └── scan-store.ts
 │           ├── lib/
 │           │   ├── api-client.ts
-│           │   ├── supabase.ts
-│           │   ├── scanner.ts
-│           │   └── autofill.ts
-│           ├── hooks/
-│           │   ├── use-auth.ts
-│           │   ├── use-scan.ts
-│           │   └── use-ai-generation.ts
-│           └── types/
-│               └── index.ts
+│           │   └── supabase.ts
+│           └── hooks/
+│               ├── use-auth.ts
+│               ├── use-scan.ts
+│               └── use-ai-generation.ts
 │
 └── supabase/
     ├── config.toml
