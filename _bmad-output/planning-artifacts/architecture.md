@@ -2,7 +2,7 @@
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 status: complete
 completedAt: '2026-01-30'
-lastUpdated: '2026-02-03'
+lastUpdated: '2026-02-03-r2'
 inputDocuments:
   - prd.md
   - job-jet/CLAUDE.md (reference - development preferences)
@@ -18,6 +18,8 @@ date: '2026-01-30'
 prototypeRepo: '/Users/enigma/Documents/Projects/job-jet/'
 uiReferenceRepo: '/Users/enigma/Documents/Projects/storybook-demo/'
 revisions:
+  - date: '2026-02-03-r2'
+    change: 'Post-implementation cleanup: Rewrote UI Package Architecture to match Story 0.1-NEW reality (Tailwind v4 OKLCH, Storybook 10, Vite 7, unified radix-ui, tw-animate-css). Removed packages/design-tokens/ (tokens live in globals.css). Removed atoms/molecules/organisms directory hierarchy (using components/ui/ + components/custom/ pattern). Removed stale HSL colors, tailwind.config.ts, Storybook 8 addons, and individual @radix-ui/* references. Updated project directory tree and all cross-references.'
   - date: '2026-02-03'
     change: 'Architectural refinement: Documented Vite vs Next.js decision for packages/ui build tooling. Vite selected for component library optimization. Added custom shadcn theme specification (Nova/Stone/Amber via ui.shadcn.com preset). Updated installation commands with exact preset URL.'
   - date: '2026-02-02'
@@ -153,8 +155,7 @@ jobswyft/
 │   ├── web/              # Next.js dashboard
 │   └── api/              # FastAPI backend
 ├── packages/
-│   ├── design-tokens/    # Style Dictionary → CSS vars, JS, JSON
-│   ├── ui/               # Shared component library with Storybook
+│   ├── ui/               # Shared component library (shadcn/ui + Storybook)
 │   └── types/            # Shared TypeScript types
 ├── specs/
 │   └── openapi.yaml      # API contract (source of truth)
@@ -178,14 +179,15 @@ jobswyft/
 - Python 3.11+ (api) - mypy strict mode
 
 **Styling Solution:**
-- Design Tokens (Style Dictionary) → single source of truth for all visual decisions
-- Tailwind CSS 4.x configured to use design token CSS variables
-- CSS Modules for complex component-specific styling (glassmorphism, animations)
+- Tailwind CSS 4.x with CSS-first configuration (no `tailwind.config.ts`)
+- CSS variables in OKLCH color space defined in `globals.css` (single source of truth)
+- `@theme inline` directive maps CSS variables to Tailwind utilities
 - shadcn/ui primitives for interactive components (Select, Dialog, Dropdown, Tooltip)
-- Custom components for domain-specific UI (JobCard, ExtensionSidebar)
+- CSS Modules for complex custom effects (glassmorphism, animations) when needed
+- Custom composed components for domain-specific UI (JobCard, ExtensionSidebar)
 
 **Build Tooling:**
-- Vite (via WXT for extension)
+- Vite 7.x (packages/ui library build + WXT extension)
 - Next.js built-in (web)
 - uv + uvicorn (api)
 
@@ -207,13 +209,12 @@ jobswyft/
 
 | App/Package | Additional Setup |
 |-------------|------------------|
-| design-tokens | Style Dictionary config, token JSON files, build scripts |
-| ui | Storybook, Tailwind (using design-tokens), shadcn/ui base, CSS Modules |
-| Extension | + Zustand, + @jobswyft/ui, + @jobswyft/design-tokens, + Supabase client |
-| Web | + @jobswyft/ui, + @jobswyft/design-tokens, + Supabase auth helpers, + React Query |
+| ui | ✅ Done (Story 0.1-NEW): shadcn/ui, Tailwind v4, Storybook 10, Vite 7 |
+| Extension | + Zustand, + @jobswyft/ui, + Supabase client |
+| Web | + @jobswyft/ui, + Supabase auth helpers, + React Query |
 | API | + FastAPI routers structure, + Supabase SDK, + AI provider clients |
 
-**Note:** Package initialization order: design-tokens → ui → apps (extension, web).
+**Note:** Package initialization order: ui → apps (extension, web).
 
 ### Deployment & Tooling (MVP)
 
@@ -236,415 +237,211 @@ jobswyft/
 
 ---
 
-## UI Package Architecture (shadcn UI-Based)
+## UI Package Architecture (shadcn/ui + Tailwind v4)
 
-**⚠️ ARCHITECTURAL PIVOT (2026-02-03):** This section was rewritten to reflect a strategic pivot from custom design tokens (Style Dictionary) to shadcn UI. Previous approach (Stories 0.1 and 0.2) was superseded. See `sprint-change-proposal-2026-02-03.md` for complete rationale.
+**Implemented:** Story 0.1-NEW (2026-02-03). This section reflects the actual production setup. Previous references to Style Dictionary, `packages/design-tokens/`, HSL color format, `tailwind.config.ts`, and Storybook 8.x are superseded.
 
 ### Design Philosophy
 
 **shadcn/ui Foundation:** Component library built on Radix UI primitives with Tailwind CSS styling. Components are copied into the project (not npm packages), allowing full customization while maintaining accessibility and interaction patterns out-of-the-box.
 
 **Styling Approach:**
-- **shadcn/ui Components** → Tailwind CSS + CSS variables (theme-aware, accessible)
-- **Tailwind Utilities** → Layout, spacing, responsive design
-- **CSS Modules** → Complex custom extensions (glassmorphism, animations, gradients)
-- **Lucide Icons** → Consistent icon system (shadcn standard)
+- **Tailwind v4 CSS-first** — No `tailwind.config.ts`; all theming via `@theme inline` in `globals.css`
+- **OKLCH color space** — Perceptually uniform, modern CSS color format
+- **CSS Variables** — Framework-agnostic tokens in `globals.css` (works in WXT Shadow DOM, Next.js, Storybook)
+- **Dark mode** — `@custom-variant dark (&:is(.dark *))` + `.dark` class on root element
+- **Lucide Icons** — 1000+ tree-shakeable icons (shadcn standard)
+- **CSS Modules** — Only for complex custom effects (glassmorphism, animations) when Tailwind utilities aren't sufficient
+
+### Verified Technology Stack
+
+| Package | Version | Notes |
+|---------|---------|-------|
+| `tailwindcss` | 4.1.18 | CSS-first config, OKLCH, `@tailwindcss/vite` plugin |
+| `vite` | 7.3.1 | Library build mode, ESM output |
+| `storybook` | 10.x | Addons consolidated into core, ESM-only |
+| `@storybook/react-vite` | 10.x | Native Vite integration |
+| `shadcn` | 3.8.2 | CLI tool, generates v4-compatible output |
+| `radix-ui` | 1.4.3 | Unified package (not individual `@radix-ui/*`) |
+| `lucide-react` | 0.562.0 | Icon library |
+| `class-variance-authority` | latest | Component variant management (CVA) |
+| `tw-animate-css` | latest | Animation utilities (replaces `tailwindcss-animate`) |
+| `@fontsource-variable/figtree` | latest | Self-hosted variable font |
+| React | ^18 \|\| ^19 | Peer dependency |
 
 ### Build Tool Decision: Vite (Not Next.js)
 
-**Decision Date:** 2026-02-03
+**Decision:** Use **Vite 7.x** as the build tool for `packages/ui`.
 
-**Context:** When setting up shadcn/ui for the `packages/ui` library, there were two templating options: Vite or Next.js.
-
-**Decision:** Use **Vite** as the build tool and shadcn template.
-
-**Rationale:**
-
-| Factor | Vite | Next.js | Winner |
-|--------|------|---------|--------|
-| **Primary Use Case** | Component libraries | Full-stack applications | Vite |
-| **Build Output** | Clean JS/CSS bundles | Server + client bundles | Vite |
-| **Tooling Alignment** | Matches WXT (extension framework) | Different stack | Vite |
-| **Storybook Integration** | `@storybook/react-vite` (native) | `@storybook/nextjs` (adapter needed) | Vite |
-| **Build Speed** | 10-100x faster (ESM-native) | Webpack-based (slower) | Vite |
-| **Framework Overhead** | Minimal (library focus) | App Router, SSR, routes | Vite |
-| **shadcn Compatibility** | Library mode supported | App mode (assumes routes) | Vite |
-| **Deployment** | No deployment (library) | Requires Vercel/hosting | Vite |
-
-**What This Means:**
-- `packages/ui` is built with Vite (`vite.config.ts`, `vite build`)
-- shadcn initialization uses `--template vite` flag
-- Apps (WXT extension, Next.js dashboard) consume the built library identically
-- No Next.js-specific artifacts (routes, layouts, server components) in library code
+**Rationale:** `packages/ui` is a component library, not an application. Vite produces clean JS/CSS bundles, matches WXT's tooling, integrates natively with Storybook via `@storybook/react-vite`, and avoids Next.js overhead (App Router, SSR, server components) that is irrelevant for a library package. shadcn's Vite template is purpose-built for this use case.
 
 **Custom Theme Preset:**
 The shadcn setup uses a custom theme generated via [ui.shadcn.com](https://ui.shadcn.com):
 - **Style**: Nova (modern design patterns)
 - **Base Color**: Stone (warm neutral)
 - **Theme**: Amber (warm accent)
-- **Font**: Figtree (Google Font, screen-optimized)
-- **Border Radius**: Medium (0.5rem)
-- **Icon Library**: Lucide (1000+ tree-shakeable icons)
+- **Font**: Figtree (Google Font, screen-optimized, variable weight)
+- **Border Radius**: Medium (0.625rem)
+- **Icon Library**: Lucide
 
-**Installation Command:**
+**Initialization Command (already executed):**
 ```bash
 cd packages/ui
-pnpm dlx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite
+pnpm dlx shadcn@latest init "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite --force --yes
 ```
-
-This creates a cohesive, production-ready theme with warm neutrals (stone) and warm accents (amber), optimized for readability and modern aesthetics.
 
 ### Package: `@jobswyft/ui`
 
-**Purpose:** Shared component library using shadcn/ui primitives, customized for Jobswyft design system, documented in Storybook.
+**Purpose:** Shared component library using shadcn/ui primitives, customized for Jobswyft, documented in Storybook.
 
 ```
 packages/ui/
 ├── package.json
 ├── tsconfig.json
-├── vite.config.ts
-├── components.json          # shadcn CLI configuration
-├── tailwind.config.ts       # CSS variable theming
-├── postcss.config.js
+├── vite.config.ts              # Library build, @tailwindcss/vite plugin
+├── components.json             # shadcn CLI configuration (radix-nova style)
 ├── .storybook/
 │   ├── main.ts
-│   └── preview.tsx          # Theme switcher, viewport presets
+│   └── preview.tsx             # Theme switcher, viewport presets
 ├── src/
-│   ├── index.ts             # Public exports
+│   ├── index.ts                # Public exports (all components + cn utility)
 │   ├── styles/
-│   │   └── globals.css      # shadcn base + Tailwind + custom theme CSS
+│   │   └── globals.css         # ALL design tokens (OKLCH), @theme inline, base styles
 │   ├── lib/
-│   │   └── utils.ts         # cn() utility from shadcn
-│   ├── hooks/               # Shared UI hooks
-│   │   └── index.ts
+│   │   ├── utils.ts            # cn() utility (clsx + tailwind-merge)
+│   │   └── utils.test.ts       # Unit tests
+│   ├── hooks/                  # Shared UI hooks (future)
 │   ├── components/
-│   │   ├── ui/              # shadcn components (installed via CLI)
-│   │   │   ├── button.tsx
-│   │   │   ├── badge.tsx
-│   │   │   ├── input.tsx
-│   │   │   ├── select.tsx
-│   │   │   ├── dialog.tsx
-│   │   │   ├── card.tsx
-│   │   │   ├── tabs.tsx
-│   │   │   ├── dropdown-menu.tsx
-│   │   │   ├── tooltip.tsx
-│   │   │   ├── popover.tsx
-│   │   │   └── sheet.tsx
-│   │   └── custom/          # App-specific compositions
+│   │   ├── ui/                 # shadcn primitives (installed via CLI)
+│   │   │   ├── button.tsx      # + button.stories.tsx
+│   │   │   ├── badge.tsx       # + badge.stories.tsx
+│   │   │   ├── card.tsx        # + card.stories.tsx
+│   │   │   ├── input.tsx       # + input.stories.tsx
+│   │   │   ├── select.tsx      # + select.stories.tsx
+│   │   │   ├── dialog.tsx      # + dialog.stories.tsx
+│   │   │   └── tabs.tsx        # + tabs.stories.tsx
+│   │   └── custom/             # Domain-specific compositions (built on ui/)
 │   │       ├── job-card.tsx
 │   │       ├── resume-card.tsx
 │   │       ├── empty-state.tsx
 │   │       ├── navbar.tsx
 │   │       └── extension-sidebar.tsx
-│   └── test/
-│       └── setup.ts         # Vitest setup
-└── dist/                    # Built output
+└── dist/                       # Built output (ESM, ~20KB, deps externalized)
     ├── index.js
-    ├── index.mjs
     ├── index.d.ts
-    └── styles.css
+    └── components/ui/*.d.ts
 ```
 
-**Component Organization:**
+**No separate `tailwind.config.ts` file** — Tailwind v4 reads all config from `globals.css`.
 
-| Directory | Purpose | Examples |
-|-----------|---------|----------|
-| `components/ui/` | shadcn primitives (copied via CLI) | Button, Badge, Dialog, Select |
-| `components/custom/` | App-specific compositions | JobCard, ResumeCard, ExtensionSidebar |
-| `styles/` | Global styles, theme CSS variables | globals.css |
-| `lib/` | Utility functions | cn() for class merging |
+### Component Organization
 
-### shadcn Component Installation Pattern
+| Directory | Purpose | Source | Examples |
+|-----------|---------|--------|----------|
+| `components/ui/` | shadcn primitives | Installed via `shadcn add` CLI | Button, Badge, Card, Dialog, Select, Tabs, Input |
+| `components/custom/` | Domain-specific compositions | Hand-built using `ui/` primitives | JobCard, ResumeCard, ExtensionSidebar, EmptyState |
+| `styles/` | Design tokens + base styles | `globals.css` is the single source of truth | OKLCH tokens, `@theme inline`, font config |
+| `lib/` | Utility functions | `cn()` from shadcn | Class merging (clsx + tailwind-merge) |
 
-**Installation via CLI:**
-
+**Adding shadcn components:**
 ```bash
-# Initialize shadcn with custom theme preset (one-time setup)
 cd packages/ui
-pnpm dlx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite
-
-# Add individual components (after initialization)
-pnpm dlx shadcn@latest add button
-pnpm dlx shadcn@latest add badge
-pnpm dlx shadcn@latest add dialog
-pnpm dlx shadcn@latest add card
-pnpm dlx shadcn@latest add input
-pnpm dlx shadcn@latest add select
-pnpm dlx shadcn@latest add tabs
+pnpm dlx shadcn@latest add <component-name>
+# Example: pnpm dlx shadcn@latest add tooltip dropdown-menu popover sheet
 ```
 
-**Component Ownership:**
-- Components are **copied** into `src/components/ui/` (not npm packages)
-- Full code ownership allows direct editing for project-specific needs
-- No version conflicts or dependency management for UI components
+Components are **copied** into `src/components/ui/` — you own the code and can customize freely.
 
-**Example: shadcn Button Component**
+### Theme Configuration (globals.css)
+
+Design tokens are defined entirely in CSS using Tailwind v4's CSS-first configuration. **`globals.css` is the single source of truth for all visual design decisions.** No separate design-tokens package exists.
+
+**Architecture:**
+
+```
+globals.css
+├── @import "tailwindcss"                  # Tailwind v4 base
+├── @import "tw-animate-css"               # Animation utilities
+├── @import "shadcn/tailwind.css"          # shadcn base styles
+├── @import "@fontsource-variable/figtree" # Self-hosted font
+├── @custom-variant dark (...)             # Dark mode strategy
+├── :root { ... }                          # Light theme tokens (OKLCH)
+├── .dark { ... }                          # Dark theme tokens (OKLCH)
+├── @theme inline { ... }                  # Maps CSS vars → Tailwind utilities
+└── @layer base { ... }                    # Global base styles
+```
+
+**Token Categories (CSS Variables):**
+
+| Category | Variables | Example |
+|----------|-----------|---------|
+| **Core colors** | `--background`, `--foreground`, `--primary`, `--secondary` | `oklch(0.67 0.16 58)` (amber) |
+| **UI colors** | `--muted`, `--accent`, `--destructive`, `--border`, `--input`, `--ring` | Semantic purpose |
+| **Surface colors** | `--card`, `--popover`, `--sidebar` | Each with `-foreground` pair |
+| **Chart colors** | `--chart-1` through `--chart-5` | Amber scale |
+| **Radius** | `--radius` (base: 0.625rem) | Calculated: sm, md, lg, xl, 2xl, 3xl, 4xl |
+| **Font** | `--font-sans` | `'Figtree Variable', sans-serif` |
+
+**Key Insight:** Tokens are **framework-agnostic**. CSS variables work in any environment — WXT Shadow DOM, Next.js pages, Storybook. The `@theme inline` block maps these variables to Tailwind's utility class system without needing a JS config file.
+
+**Dark Mode:** Applied via `.dark` class on root element. Each CSS variable has a corresponding dark override. Components automatically adapt through Tailwind's `dark:` variant (compiled from `@custom-variant dark`).
+
+### Application State via Props
+
+Components handle application-level states through **props**, not a shared state architecture. shadcn + Radix already manages component-level states (hover, focus, disabled, open/closed) and theme states (dark/light) automatically.
+
+What custom compositions need to handle:
 
 ```tsx
-// src/components/ui/button.tsx (installed via shadcn CLI)
-import * as React from "react"
-import { cva, type VariantProps } from "class-variance-authority"
-import { cn } from "@/lib/utils"
-
-const buttonVariants = cva(
-  "inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50",
-  {
-    variants: {
-      variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
-      },
-      size: {
-        default: "h-10 px-4 py-2",
-        sm: "h-9 rounded-md px-3",
-        lg: "h-11 rounded-md px-8",
-      },
-    },
-    defaultVariants: {
-      variant: "default",
-      size: "default",
-    },
-  }
-)
-
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
-    VariantProps<typeof buttonVariants> {}
-
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, ...props }, ref) => {
-    return (
-      <button
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Button.displayName = "Button"
-
-export { Button, buttonVariants }
-```
-
-**Customization Approach:**
-
-After installing, edit components directly for project needs:
-- Modify variants in `buttonVariants` cva configuration
-- Add custom variants (e.g., `gradient`, `glass`)
-- Extend with additional props (e.g., `loading`, `leftIcon`)
-- Apply CSS Modules for complex effects (gradients, glassmorphism)
-
----
-
-### Theme Configuration
-
-**CSS Variables (Tailwind + shadcn):**
-
-```css
-/* src/styles/globals.css */
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
-
-@layer base {
-  :root {
-    /* shadcn semantic color system */
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --primary: 244 63% 57%;        /* #6366f1 indigo */
-    --primary-foreground: 0 0% 100%;
-    --secondary: 262 52% 62%;      /* #8b5cf6 purple */
-    --secondary-foreground: 0 0% 100%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 84.2% 60.2%;  /* #ef4444 red */
-    --destructive-foreground: 0 0% 100%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 244 63% 57%;
-    --radius: 0.5rem;
-  }
-
-  .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-    --primary: 244 63% 67%;        /* Lighter for dark mode */
-    --primary-foreground: 222.2 47.4% 11.2%;
-    --secondary: 262 52% 72%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 100%;
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 244 63% 67%;
-  }
+// components/custom/job-card.tsx — state-aware via props
+interface JobCardProps {
+  state?: 'default' | 'detected' | 'applied' | 'error'
+  isOffline?: boolean
 }
 
-/* Custom extensions for glassmorphism, gradients */
-@layer utilities {
-  .glass-bg {
-    background: rgba(255, 255, 255, 0.05);
-    backdrop-filter: blur(12px) saturate(180%);
-    border: 1px solid rgba(255, 255, 255, 0.1);
-  }
-
-  .dark .glass-bg {
-    background: rgba(255, 255, 255, 0.05);
-  }
-
-  .light .glass-bg {
-    background: rgba(255, 255, 255, 0.7);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-  }
+// components/custom/extension-sidebar.tsx — context-aware via props
+interface ExtensionSidebarProps {
+  hasResumeLoaded: boolean
+  hasJobDetected: boolean
+  isOffline: boolean
+  creditBalance: number
 }
 ```
 
-**Tailwind Configuration:**
+| Application State | Visual Treatment | Handled By |
+|-------------------|------------------|------------|
+| Job Detected | Highlight border, pulse animation | `JobCard` prop |
+| Resume Loaded | Active indicator, checkmark | `ResumeCard` prop |
+| Loading | Skeleton loaders, spinners | Component prop or Suspense |
+| Error | Destructive variant, error icon, message | Component prop |
+| Offline | Muted colors, offline badge | Component prop (extension only) |
+| Low Credits | Warning badge, upgrade CTA | Component prop |
+| Empty | EmptyState composition | Conditional rendering |
 
-```typescript
-// tailwind.config.ts
-import type { Config } from "tailwindcss"
+Both WXT and Next.js consume these identically — `import { JobCard } from '@jobswyft/ui'`. The consuming app determines the state and passes it as props. No special framework-specific handling needed in the component library.
 
-const config = {
-  darkMode: ["class"],
-  content: [
-    './src/**/*.{ts,tsx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
-        muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
-        },
-      },
-      borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
-      },
-    },
-  },
-  plugins: [require("tailwindcss-animate")],
-} satisfies Config
-
-export default config
-```
-
----
-
-### Lucide Icons (shadcn Standard)
-
-**Installation:**
+### Lucide Icons
 
 ```bash
-pnpm add lucide-react
+# Already installed: lucide-react@0.562.0
 ```
 
-**Usage:**
-
 ```tsx
-import { Sparkles, Heart, Search, Bell } from "lucide-react"
+import { Sparkles, Briefcase, Calendar } from "lucide-react"
 
-// In components
 <Button>
   <Sparkles className="mr-2 h-4 w-4" />
   Generate Match
 </Button>
 ```
 
-**Icon Mapping from Previous Custom Icons:**
+All 63 icons from the original design have direct Lucide equivalents. Icons are tree-shakeable — only used icons are bundled.
 
-| Previous Custom Icon | Lucide Equivalent |
-|---------------------|-------------------|
-| Sparkles | `Sparkles` |
-| Brain | `Brain` |
-| Target | `Target` |
-| Briefcase | `Briefcase` |
-| Calendar | `Calendar` |
-| Check | `Check` |
-| X | `X` |
-| AlertCircle | `AlertCircle` |
-| ... | (63+ icons available) |
+### Storybook Configuration (v10)
 
-**Advantages:**
-- ✅ 1000+ icons available
-- ✅ Consistent stroke width (2px)
-- ✅ Tree-shakeable (only bundled icons used)
-- ✅ shadcn standard (documented examples)
+Storybook 10 consolidates addons into core — no separate `@storybook/addon-essentials` needed.
 
-### Custom Styling Extensions
-
-While shadcn components provide the base styling, custom CSS modules can extend them for app-specific visual effects:
-
-```css
-/* src/components/custom/JobCard.module.css */
-.glassmorphism {
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.pulseDetected {
-  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes pulse {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.7; }
-}
-```
-
-**Usage:**
-
-```tsx
-import { Card } from "@/components/ui/card"
-import styles from "./JobCard.module.css"
-import { cn } from "@/lib/utils"
-
-export function JobCard({ detected }: { detected: boolean }) {
-  return (
-    <Card className={cn(
-      styles.glassmorphism,
-      detected && styles.pulseDetected
-    )}>
-      {/* Card content */}
-    </Card>
-  )
-}
-```
-
-### Storybook Configuration
+**Theme Switching:** Toolbar toggle applies `.dark` class on story root container.
 
 **Viewport Presets:**
 
@@ -654,163 +451,33 @@ export function JobCard({ detected }: { detected: boolean }) {
 | Tablet | 768×1024 | Tablet web |
 | Desktop | 1440×900 | Desktop web |
 | Extension Popup | 400×600 | Chrome popup |
-| Extension Sidebar | 400×800 | Content script sidebar |
 
-**Global Decorators:**
-- Theme switcher (dark/light via `data-theme`)
-- Viewport selector
-- Padding wrapper
-
-**Storybook Addons:**
-- `@storybook/addon-essentials` - Controls, docs, actions
-- `@storybook/addon-a11y` - Accessibility checks
-- `@storybook/addon-interactions` - Component testing
-- `@chromatic-com/storybook` - Visual regression (optional)
-
-### Application State-Aware Components
-
-Components can respond to application state via props or context:
-
-```tsx
-// JobCard with state-aware styling
-interface JobCardProps {
-  // ... other props
-  state?: 'default' | 'detected' | 'applied' | 'error';
-}
-
-// ExtensionSidebar with context awareness
-interface ExtensionSidebarProps {
-  hasResumeLoaded: boolean;
-  hasJobDetected: boolean;
-  isOffline: boolean;
-  creditBalance: number;
-}
-```
-
-**State-Driven UI Patterns:**
-
-| State | Visual Treatment |
-|-------|------------------|
-| Job Detected | Highlight border, pulse animation |
-| Resume Loaded | Active indicator, checkmark |
-| Loading | Skeleton loaders, spinners |
-| Error | Red border, error icon, message |
-| Offline | Muted colors, offline badge |
-| Low Credits | Warning badge, upgrade CTA |
-| Empty | EmptyState component with illustration |
-
-### Package Dependencies
-
-```json
-// packages/ui/package.json
-{
-  "name": "@jobswyft/ui",
-  "dependencies": {
-    "clsx": "^2.1.1",
-    "tailwind-merge": "^2.2.0",
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
-  },
-  "devDependencies": {
-    "@storybook/addon-a11y": "^8.0.0",
-    "@storybook/addon-essentials": "^8.0.0",
-    "@storybook/addon-interactions": "^8.0.0",
-    "@storybook/addon-links": "^8.0.0",
-    "@storybook/blocks": "^8.0.0",
-    "@storybook/react": "^8.0.0",
-    "@storybook/react-vite": "^8.0.0",
-    "@storybook/test": "^8.0.0",
-    "@testing-library/jest-dom": "^6.1.5",
-    "@testing-library/react": "^14.1.2",
-    "@types/react": "^18.2.47",
-    "@types/react-dom": "^18.2.18",
-    "@vitejs/plugin-react": "^4.2.1",
-    "autoprefixer": "^10.4.16",
-    "jsdom": "^23.0.1",
-    "postcss": "^8.4.32",
-    "storybook": "^8.0.0",
-    "tailwindcss": "^3.4.0",
-    "typescript": "^5.3.3",
-    "vite": "^5.0.10",
-    "vite-plugin-dts": "^3.7.0",
-    "vitest": "^1.1.0"
-  }
-}
-```
-
-**Note:** Radix UI dependencies are added automatically by shadcn CLI when components are installed (e.g., `@radix-ui/react-dialog` when adding Dialog component).
+**Autodocs:** Enabled via `tags: ['autodocs']` in preview config.
 
 ### Consumer Integration (Extension/Web)
 
-**Extension Content Script:**
+Both apps use the same import pattern:
 
 ```tsx
-// apps/extension/src/entrypoints/content/index.tsx
+// 1. Import styles (once, in root layout/entry)
 import '@jobswyft/ui/styles'
-import { ExtensionSidebar } from '@jobswyft/ui'
 
-function App() {
-  return (
-    <div className="jobswyft-extension" data-theme="dark">
-      <ExtensionSidebar
-        hasResumeLoaded={true}
-        hasJobDetected={true}
-        creditBalance={50}
-        // ...
-      />
-    </div>
-  )
-}
-```
+// 2. Import components
+import { Button, Card, Badge } from '@jobswyft/ui'
 
-**Web Application:**
-
-```tsx
-// apps/web/src/app/layout.tsx
-import '@jobswyft/ui/styles'
-import type { Metadata } from 'next'
-
-export const metadata: Metadata = {
-  title: 'Jobswyft Dashboard',
-  description: 'AI-powered job application assistant',
-}
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
-  return (
-    <html lang="en" className="dark">
-      <body className="min-h-screen bg-background font-sans antialiased">
-        {children}
-      </body>
-    </html>
-  )
-}
-```
-
-**Using UI Components:**
-
-```tsx
-// apps/web/src/app/dashboard/page.tsx
-import { Button } from '@jobswyft/ui'
+// 3. Import icons separately (tree-shakeable)
 import { Sparkles } from 'lucide-react'
 
-export default function DashboardPage() {
-  return (
-    <div className="container py-8">
-      <h1 className="text-3xl font-bold">Dashboard</h1>
-      <Button>
-        <Sparkles className="mr-2 h-4 w-4" />
-        Generate Match
-      </Button>
-    </div>
-  )
+// 4. Dark mode via class on root element
+<html className="dark">        {/* Next.js */}
+<div className="dark">          {/* WXT Shadow DOM */}
+```
+
+**Package exports:**
+```json
+{
+  ".": { "import": "./dist/index.js", "types": "./dist/index.d.ts" },
+  "./styles": "./src/styles/globals.css"
 }
 ```
 
@@ -1147,80 +814,38 @@ jobswyft/
 │   └── openapi.yaml                # API contract (source of truth)
 │
 ├── packages/
-│   ├── design-tokens/              # Central design system
+│   ├── ui/                         # Shared component library (shadcn/ui + Tailwind v4)
 │   │   ├── package.json
 │   │   ├── tsconfig.json
-│   │   ├── src/
-│   │   │   ├── build.ts            # Style Dictionary build
-│   │   │   ├── generate-theme-css.ts
-│   │   │   ├── index.ts
-│   │   │   └── tokens/
-│   │   │       ├── colors.json
-│   │   │       ├── typography.json
-│   │   │       ├── spacing.json
-│   │   │       ├── borders.json
-│   │   │       ├── shadows.json
-│   │   │       ├── transitions.json
-│   │   │       └── themes/
-│   │   │           ├── dark.json
-│   │   │           └── light.json
-│   │   └── dist/
-│   │       ├── tokens.css
-│   │       ├── themes.css
-│   │       ├── tokens.js
-│   │       └── tokens.json
-│   │
-│   ├── ui/                         # Shared component library
-│   │   ├── package.json
-│   │   ├── tsconfig.json
-│   │   ├── vite.config.ts
-│   │   ├── tailwind.config.ts
-│   │   ├── postcss.config.js
+│   │   ├── vite.config.ts          # Library build + @tailwindcss/vite plugin
+│   │   ├── components.json         # shadcn CLI config (radix-nova, stone/amber)
 │   │   ├── .storybook/
 │   │   │   ├── main.ts
-│   │   │   └── preview.tsx
+│   │   │   └── preview.tsx         # Theme switcher, viewport presets
 │   │   ├── src/
-│   │   │   ├── index.ts
+│   │   │   ├── index.ts            # Public exports (components + cn utility)
 │   │   │   ├── styles/
-│   │   │   │   └── globals.css
-│   │   │   ├── utils/
-│   │   │   │   └── cn.ts           # clsx wrapper for class merging
-│   │   │   ├── hooks/
-│   │   │   │   └── index.ts        # Shared UI hooks (useMediaQuery, etc.)
-│   │   │   ├── providers/
-│   │   │   │   └── ThemeProvider.tsx
-│   │   │   ├── test/
-│   │   │   │   └── setup.ts        # Vitest/RTL test setup
-│   │   │   ├── atoms/
-│   │   │   │   ├── Button/
-│   │   │   │   ├── Badge/
-│   │   │   │   ├── Icon/
-│   │   │   │   ├── Input/
-│   │   │   │   ├── Select/
-│   │   │   │   ├── Textarea/
-│   │   │   │   ├── Typography/
-│   │   │   │   ├── ProgressBar/
-│   │   │   │   └── Logo/
-│   │   │   ├── molecules/
-│   │   │   │   ├── Card/
-│   │   │   │   ├── Modal/
-│   │   │   │   ├── Dropdown/
-│   │   │   │   ├── Tooltip/
-│   │   │   │   └── FormField/
-│   │   │   ├── organisms/
-│   │   │   │   ├── JobCard/
-│   │   │   │   ├── ResumeCard/
-│   │   │   │   ├── EmptyState/
-│   │   │   │   ├── Navbar/
-│   │   │   │   └── Tabs/
-│   │   │   └── compositions/
-│   │   │       ├── extension/
-│   │   │       │   ├── ExtensionSidebar/
-│   │   │       │   ├── ExtensionPopup/
-│   │   │       │   └── FloatingActionButton/
-│   │   │       └── dashboard/
-│   │   │           └── DashboardLayout/
-│   │   └── dist/
+│   │   │   │   └── globals.css     # ALL design tokens (OKLCH), @theme inline, base
+│   │   │   ├── lib/
+│   │   │   │   ├── utils.ts        # cn() utility (clsx + tailwind-merge)
+│   │   │   │   └── utils.test.ts
+│   │   │   ├── hooks/              # Shared UI hooks (future)
+│   │   │   └── components/
+│   │   │       ├── ui/             # shadcn primitives (installed via CLI)
+│   │   │       │   ├── button.tsx  # + *.stories.tsx for each
+│   │   │       │   ├── badge.tsx
+│   │   │       │   ├── card.tsx
+│   │   │       │   ├── input.tsx
+│   │   │       │   ├── select.tsx
+│   │   │       │   ├── dialog.tsx
+│   │   │       │   └── tabs.tsx
+│   │   │       └── custom/         # Domain-specific compositions
+│   │   │           ├── job-card.tsx
+│   │   │           ├── resume-card.tsx
+│   │   │           ├── empty-state.tsx
+│   │   │           ├── navbar.tsx
+│   │   │           └── extension-sidebar.tsx
+│   │   └── dist/                   # Built output (~20KB ESM, deps externalized)
 │   │
 │   └── types/                      # Shared TypeScript types
 │       ├── package.json
@@ -1290,18 +915,16 @@ jobswyft/
 │   │       └── test_usage.py
 │   │
 │   ├── web/                        # Next.js Dashboard
-│   │   ├── package.json            # Depends on @jobswyft/ui, @jobswyft/design-tokens
+│   │   ├── package.json            # Depends on @jobswyft/ui
 │   │   ├── tsconfig.json
 │   │   ├── next.config.js
-│   │   ├── tailwind.config.js      # Extends from @jobswyft/ui/tailwind
-│   │   ├── postcss.config.js
 │   │   ├── .env.example
 │   │   ├── README.md
 │   │   └── src/
 │   │       ├── app/
-│   │       │   ├── layout.tsx      # Imports @jobswyft/ui styles + ThemeProvider
+│   │       │   ├── layout.tsx      # Imports @jobswyft/ui/styles
 │   │       │   ├── page.tsx
-│   │       │   ├── globals.css     # Minimal - imports from @jobswyft/design-tokens
+│   │       │   ├── globals.css     # Minimal - app-specific overrides only
 │   │       │   ├── (auth)/
 │   │       │   │   ├── login/page.tsx
 │   │       │   │   └── callback/page.tsx
@@ -1328,18 +951,16 @@ jobswyft/
 │   │           └── use-resumes.ts
 │   │
 │   └── extension/                  # WXT Chrome Extension
-│       ├── package.json            # Depends on @jobswyft/ui, @jobswyft/design-tokens
+│       ├── package.json            # Depends on @jobswyft/ui
 │       ├── tsconfig.json
 │       ├── wxt.config.ts
-│       ├── tailwind.config.js      # Extends from @jobswyft/ui/tailwind
-│       ├── postcss.config.js
 │       ├── .env.example
 │       ├── README.md
 │       └── src/
 │           ├── entrypoints/
 │           │   ├── popup/
 │           │   │   ├── index.html
-│           │   │   ├── main.tsx    # Imports @jobswyft/ui styles + ThemeProvider
+│           │   │   ├── main.tsx    # Imports @jobswyft/ui/styles
 │           │   │   └── App.tsx     # Uses ExtensionPopup from @jobswyft/ui
 │           │   ├── content/
 │           │   │   └── index.tsx   # Uses ExtensionSidebar from @jobswyft/ui
