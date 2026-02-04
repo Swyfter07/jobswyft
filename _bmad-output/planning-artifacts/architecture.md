@@ -2,7 +2,7 @@
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 status: complete
 completedAt: '2026-01-30'
-lastUpdated: '2026-02-02'
+lastUpdated: '2026-02-03'
 inputDocuments:
   - prd.md
   - job-jet/CLAUDE.md (reference - development preferences)
@@ -18,6 +18,8 @@ date: '2026-01-30'
 prototypeRepo: '/Users/enigma/Documents/Projects/job-jet/'
 uiReferenceRepo: '/Users/enigma/Documents/Projects/storybook-demo/'
 revisions:
+  - date: '2026-02-03'
+    change: 'Architectural refinement: Documented Vite vs Next.js decision for packages/ui build tooling. Vite selected for component library optimization. Added custom shadcn theme specification (Nova/Stone/Amber via ui.shadcn.com preset). Updated installation commands with exact preset URL.'
   - date: '2026-02-02'
     change: 'Added UI Package Architecture - design-tokens, shared ui library with Storybook, hybrid Tailwind + CSS Modules approach'
 ---
@@ -248,6 +250,50 @@ jobswyft/
 - **CSS Modules** → Complex custom extensions (glassmorphism, animations, gradients)
 - **Lucide Icons** → Consistent icon system (shadcn standard)
 
+### Build Tool Decision: Vite (Not Next.js)
+
+**Decision Date:** 2026-02-03
+
+**Context:** When setting up shadcn/ui for the `packages/ui` library, there were two templating options: Vite or Next.js.
+
+**Decision:** Use **Vite** as the build tool and shadcn template.
+
+**Rationale:**
+
+| Factor | Vite | Next.js | Winner |
+|--------|------|---------|--------|
+| **Primary Use Case** | Component libraries | Full-stack applications | Vite |
+| **Build Output** | Clean JS/CSS bundles | Server + client bundles | Vite |
+| **Tooling Alignment** | Matches WXT (extension framework) | Different stack | Vite |
+| **Storybook Integration** | `@storybook/react-vite` (native) | `@storybook/nextjs` (adapter needed) | Vite |
+| **Build Speed** | 10-100x faster (ESM-native) | Webpack-based (slower) | Vite |
+| **Framework Overhead** | Minimal (library focus) | App Router, SSR, routes | Vite |
+| **shadcn Compatibility** | Library mode supported | App mode (assumes routes) | Vite |
+| **Deployment** | No deployment (library) | Requires Vercel/hosting | Vite |
+
+**What This Means:**
+- `packages/ui` is built with Vite (`vite.config.ts`, `vite build`)
+- shadcn initialization uses `--template vite` flag
+- Apps (WXT extension, Next.js dashboard) consume the built library identically
+- No Next.js-specific artifacts (routes, layouts, server components) in library code
+
+**Custom Theme Preset:**
+The shadcn setup uses a custom theme generated via [ui.shadcn.com](https://ui.shadcn.com):
+- **Style**: Nova (modern design patterns)
+- **Base Color**: Stone (warm neutral)
+- **Theme**: Amber (warm accent)
+- **Font**: Figtree (Google Font, screen-optimized)
+- **Border Radius**: Medium (0.5rem)
+- **Icon Library**: Lucide (1000+ tree-shakeable icons)
+
+**Installation Command:**
+```bash
+cd packages/ui
+pnpm dlx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite
+```
+
+This creates a cohesive, production-ready theme with warm neutrals (stone) and warm accents (amber), optimized for readability and modern aesthetics.
+
 ### Package: `@jobswyft/ui`
 
 **Purpose:** Shared component library using shadcn/ui primitives, customized for Jobswyft design system, documented in Storybook.
@@ -313,13 +359,18 @@ packages/ui/
 **Installation via CLI:**
 
 ```bash
-# Initialize shadcn in the project
-npx shadcn-ui@latest init
+# Initialize shadcn with custom theme preset (one-time setup)
+cd packages/ui
+pnpm dlx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite
 
-# Add individual components
-npx shadcn-ui@latest add button
-npx shadcn-ui@latest add badge
-npx shadcn-ui@latest add dialog
+# Add individual components (after initialization)
+pnpm dlx shadcn@latest add button
+pnpm dlx shadcn@latest add badge
+pnpm dlx shadcn@latest add dialog
+pnpm dlx shadcn@latest add card
+pnpm dlx shadcn@latest add input
+pnpm dlx shadcn@latest add select
+pnpm dlx shadcn@latest add tabs
 ```
 
 **Component Ownership:**

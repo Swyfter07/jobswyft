@@ -42,10 +42,11 @@ story_location: _bmad-output/implementation-artifacts
 development_status:
   # Epic 0: UI Component Library Migration (PRIORITY)
   # NOTE: Pivoted to shadcn UI approach on 2026-02-03 (see sprint-change-proposal-2026-02-03.md)
+  # NOTE: Architectural decision documented 2026-02-03: Vite (not Next.js) for packages/ui build tooling
   epic-0: in-progress
   0-1-foundation-design-tokens-ui-scaffold: superseded  # Replaced by shadcn UI approach
   0-2-core-atoms-icons-typography-badge-button: superseded  # Replaced by shadcn UI approach
-  # 0-1-NEW-shadcn-ui-setup: backlog  # To be created - shadcn installation & component migration
+  0-1-NEW-shadcn-ui-setup: ready-for-dev
   0-3-form-atoms-input-textarea-select-progressbar-logo: backlog  # Requires rewrite for shadcn
   0-4-molecules-card-modal: backlog  # Requires rewrite for shadcn
   0-5-organisms-navbar-jobcard-tabs-emptystate: backlog  # Requires rewrite for shadcn

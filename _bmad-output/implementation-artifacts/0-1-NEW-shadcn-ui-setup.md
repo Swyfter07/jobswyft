@@ -126,63 +126,59 @@ so that **the Extension and Dashboard have an accessible, customizable, producti
 
 ## Tasks / Subtasks
 
+- [ ] **Task 0: Scaffold packages/ui from scratch** (prerequisite)
+  - [ ] Create `packages/ui/` directory
+  - [ ] Initialize `package.json` with latest deps: Tailwind v4, Vite 7.x, Storybook 10.x
+  - [ ] Configure `tsconfig.json` with `@/` path alias
+  - [ ] Configure `vite.config.ts` for library build with `@tailwindcss/vite` plugin
+  - [ ] Create minimal `src/styles/globals.css` with `@import "tailwindcss"`
+  - [ ] Create minimal `src/index.ts`
+  - [ ] Set up Storybook 10 with `@storybook/react-vite`
+  - [ ] Verify `pnpm build` and `pnpm storybook` work on empty package
+
 - [ ] **Task 1: shadcn CLI Initialization with Custom Theme** (AC: #1, #2)
   - [ ] Navigate to `packages/ui/` directory
   - [ ] Run the custom preset command:
     ```bash
-    pnpm dlx shadcn@latest create --preset "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite
+    pnpm dlx shadcn@latest init "https://ui.shadcn.com/init?base=radix&style=nova&baseColor=stone&theme=amber&iconLibrary=lucide&font=figtree&menuAccent=bold&menuColor=default&radius=medium&template=vite&rtl=false" --template vite --force --yes
     ```
   - [ ] Verify `components.json` created with correct configuration (Vite template, stone/amber theme)
   - [ ] Verify `src/lib/utils.ts` contains `cn()` utility (clsx + tailwind-merge)
   - [ ] Verify `src/styles/globals.css` contains:
     - Figtree font-face declarations
-    - Stone base color CSS variables for `:root` and `.dark`
-    - Amber accent color CSS variables
-  - [ ] Verify `tailwind.config.ts` includes:
-    - Stone/amber color mappings via CSS variables
-    - Figtree font family
-    - Medium border radius (0.5rem)
-    - `tailwindcss-animate` plugin
-    - `darkMode: "class"`
+    - Stone base color CSS variables for `:root` and `.dark` (OKLCH format)
+    - Amber accent color CSS variables (OKLCH format)
+  - [ ] Verify Tailwind v4 CSS-first config works (no `tailwind.config.ts` needed)
 
 - [ ] **Task 2: Install Core shadcn Components** (AC: #3)
-  - [ ] Run `pnpm dlx shadcn@latest add button`
-  - [ ] Run `pnpm dlx shadcn@latest add badge`
-  - [ ] Run `pnpm dlx shadcn@latest add card`
-  - [ ] Run `pnpm dlx shadcn@latest add input`
-  - [ ] Run `pnpm dlx shadcn@latest add select`
-  - [ ] Run `pnpm dlx shadcn@latest add dialog`
-  - [ ] Run `pnpm dlx shadcn@latest add tabs`
-  - [ ] Verify all components in `src/components/ui/` directory
+  - [ ] Run `pnpm dlx shadcn@latest add button badge card input select dialog tabs`
+  - [ ] Verify all 7 components in `src/components/ui/` directory
   - [ ] Verify each component imports from correct paths (`@/lib/utils`, Radix UI primitives)
 
 - [ ] **Task 3: Lucide Icons Setup** (AC: #4)
-  - [ ] Add `lucide-react` to dependencies: `pnpm add lucide-react`
-  - [ ] Create icon mapping table (63 previous icons → Lucide equivalents)
-  - [ ] Document common icon patterns in Dev Notes
+  - [ ] Verify `lucide-react` installed by shadcn preset
+  - [ ] Icon mapping table already documented in Dev Notes (63 icons)
 
 - [ ] **Task 4: Create Storybook Stories** (AC: #5)
-  - [ ] Create `src/components/ui/Button/Button.stories.tsx` with all variants
-  - [ ] Create `src/components/ui/Badge/Badge.stories.tsx` with all variants
-  - [ ] Create `src/components/ui/Card/Card.stories.tsx` with composition examples
-  - [ ] Create `src/components/ui/Input/Input.stories.tsx`
-  - [ ] Create `src/components/ui/Select/Select.stories.tsx`
-  - [ ] Create `src/components/ui/Dialog/Dialog.stories.tsx` with trigger example
-  - [ ] Create `src/components/ui/Tabs/Tabs.stories.tsx` with multiple tabs
+  - [ ] Create `src/components/ui/button.stories.tsx` with all variants
+  - [ ] Create `src/components/ui/badge.stories.tsx` with all variants
+  - [ ] Create `src/components/ui/card.stories.tsx` with composition examples
+  - [ ] Create `src/components/ui/input.stories.tsx`
+  - [ ] Create `src/components/ui/select.stories.tsx`
+  - [ ] Create `src/components/ui/dialog.stories.tsx` with trigger example
+  - [ ] Create `src/components/ui/tabs.stories.tsx` with multiple tabs
   - [ ] Verify theme toggle works in all stories
   - [ ] Verify viewport presets functional
 
 - [ ] **Task 5: Update Package Exports** (AC: #6)
   - [ ] Update `packages/ui/src/index.ts` to export all shadcn components
   - [ ] Export `cn` utility from `src/lib/utils.ts`
-  - [ ] Verify no design-tokens imports remain
   - [ ] Test exports with `pnpm build` in packages/ui/
 
 - [ ] **Task 6: Validate Multi-Surface Consumption** (AC: #7)
-  - [ ] Test import in extension: Create test file importing Button
-  - [ ] Test import in web: Create test file importing Button
+  - [ ] Verify build produces dist/ with correct outputs
   - [ ] Verify dark theme class works: `<div className="dark">`
-  - [ ] Run Storybook: `pnpm storybook` and manually test all components
+  - [ ] Run Storybook and visually verify all components match theme creator
 
 ---
 
@@ -476,4 +472,48 @@ This story establishes the **foundation for the entire Jobswyft UI system** by:
 A production-ready, accessible, customizable component library that both surfaces (extension and dashboard) can consume identically. All future UI work builds on this foundation.
 
 **Next:** Story 0.2 will build domain-specific components (JobCard, ResumeCard, etc.) on top of these shadcn primitives.
+
+---
+
+## Dev Agent Record
+
+### Attempt 1 Learnings (CRITICAL - Read before re-implementing)
+
+1. **shadcn preset URL generates Tailwind v4 syntax** - The preset URL outputs OKLCH colors, `@import "shadcn/tailwind.css"`, `@import "tw-animate-css"`, and CSS-first config. These are ALL Tailwind v4 features. Do NOT attempt to use with Tailwind v3.
+2. **Use `init` not `create`** - `shadcn create` scaffolds a brand new project (asks for project name). `shadcn init` configures an existing project. Use `init` with the preset URL as a positional argument.
+3. **Tailwind v4 has no `tailwind.config.ts`** - Config is CSS-first via `@theme` directive. The `@tailwindcss/vite` plugin replaces PostCSS setup. No `autoprefixer` needed.
+4. **Tailwind v4 uses `@import "tailwindcss"`** - Replaces `@tailwind base; @tailwind components; @tailwind utilities;`
+5. **`tailwindcss-animate` is deprecated** - Replaced by `tw-animate-css` in Tailwind v4.
+6. **Never downgrade generated output without flagging** - The agent should have raised the v3/v4 incompatibility and asked the user before manually rewriting CSS.
+
+### Target Stack for Re-implementation
+
+| Package | Version | Notes |
+|---------|---------|-------|
+| `tailwindcss` | 4.x | CSS-first config, OKLCH, `@tailwindcss/vite` plugin |
+| `vite` | 7.x | Latest stable, requires Node 20.19+ (we have 24.4.1) |
+| `storybook` | 10.x | Latest major, ESM-only |
+| `@storybook/react-vite` | 10.x | Must match storybook major |
+| `shadcn` | latest | CLI tool, generates v4-compatible output |
+
+### Debug Log
+
+- Attempt 1: Used Tailwind v3.4, shadcn preset generated v4 output, agent silently downgraded to HSL/v3 format
+- Result: Components did not match theme creator visually (missing Nova styling, wrong color format)
+- Decision: Nuke entire packages/ui, upgrade to Tailwind v4 + Vite 7 + Storybook 10, start fresh
+
+---
+
+## File List
+
+(To be populated after re-implementation)
+
+---
+
+## Change Log
+
+| Date | Change | Details |
+|------|--------|---------|
+| 2026-02-03 | Attempt 1 failed | Tailwind v3/v4 mismatch, components didn't match theme creator |
+| 2026-02-03 | Full cleanup | Deleted entire packages/ui, reset story to ready-for-dev |
 
