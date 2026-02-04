@@ -2,6 +2,10 @@
 stepsCompleted:
   - step-01-validate-prerequisites
   - step-02-design-epics
+  - step-03-create-stories
+  - step-04-final-validation
+workflowStatus: complete
+completedAt: '2026-02-03'
 inputDocuments:
   - _bmad-output/planning-artifacts/prd.md
   - _bmad-output/planning-artifacts/architecture.md
@@ -9,6 +13,9 @@ revisionHistory:
   - date: 2026-02-03
     epic: Epic 0
     change: "Strategic pivot from custom design system to shadcn UI. Stories 0.1 and 0.2 superseded. See sprint-change-proposal-2026-02-03.md"
+  - date: 2026-02-03
+    epic: Epic 0
+    change: "Fresh pass on Epic 0 stories. Comprehensive UI component extraction from updated PRD (renumbered FRs) and Architecture (Tailwind v4/shadcn/Storybook 10). Scope: 19 shadcn primitives + 13 custom compositions, all with Storybook stories."
 ---
 
 # Jobswyft - Epic Breakdown
@@ -263,62 +270,542 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 - Tavily: Web search for research
 - Context7: Latest library documentation
 
-### FR Coverage Map
+**UI Component Library Requirements (Epic 0 Fresh Pass):**
 
-| FR | Epic | Description |
-|----|------|-------------|
-| FR1-FR6 | Epic 1 | Authentication & Account Management |
-| FR7-FR13 (incl. FR13a-c) | Epic 2 | Resume Management |
-| FR14-FR22 (incl. FR14a-b) | Epic 3 | Job Page Scanning |
-| FR23-FR25 | Epic 4 | AI Match Analysis |
-| FR26-FR30 (incl. FR26a) | Epic 4 | AI Cover Letter Generation |
-| FR31-FR32 | Epic 4 | AI Answer Generation |
-| FR33-FR34 (incl. FR33a-c) | Epic 4 | AI Outreach Messages |
-| FR35-FR38 | Epic 4 | AI Common Capabilities |
-| FR39-FR44 (incl. FR39a-b, FR41a) | Epic 5 | Form Autofill |
-| FR45-FR53 | Epic 6 | Job Tracking |
-| FR54-FR56, FR60-FR61 | Epic 1 | Usage & Subscription (MVP) |
-| FR57-FR58 | Post-MVP | Subscription Management |
-| FR59 | Epic 1 | Referral Bonus |
-| FR62-FR67 (incl. FR64a-b) | Epic 3 | Extension Sidebar Experience |
-| FR68-FR72 | Epic 6 | Web Dashboard |
-| FR73-FR77 | Epic 7 | Data Privacy & Controls |
-| FR78-FR80 (incl. FR78a, FR79a) | Epic 6 | User Feedback |
+**shadcn Primitives (components/ui/) — 19 components:**
+- Button (FR26,FR29,FR37,FR42,FR48,FR79), Badge (FR23b,FR55,FR59), Card (FR23c,FR49,FR52)
+- Input (FR21,FR28,FR33), Textarea (FR28,FR36c,FR54), Select (FR27,FR26a,FR36a,FR36b)
+- Dialog (FR6,FR79,FR80), Tabs (FR69,FR31), Tooltip (Journey 2), Sheet (FR67,FR68)
+- Dropdown Menu (FR12,FR51,FR53), Popover (FR22,FR25), Label (FR21,FR42a)
+- Separator (layout), ScrollArea (FR34,FR50), Avatar (FR5), Skeleton (NFR5,loading)
+- Progress (FR8,NFR6), Sonner/Toast (FR41,FR40)
+
+**Custom Compositions (components/custom/) — 13 components:**
+- JobCard (FR15-FR18,FR23b-c,FR49): job details + inline auto-match, states: default/detected/scanning/applied/error
+- ResumeCard (FR11,FR10,FR13a-c): resume entry with active indicator, expandable parsed blocks, copy per block
+- ResumeTray (FR70,FR13): compact sidebar resume selector
+- MatchScoreDisplay (FR23b-c): score % + green/yellow pills side-by-side
+- AIToolPanel (FR26-FR30,FR31-FR35,FR36-FR37): shared AI generation layout (options, instructions, output, copy/edit)
+- ChatInterface (FR31-FR35): message bubbles, suggestion chips, text input, session controls
+- AutofillPreview (FR42a-b,FR44a): field list with fill status, tick-off state
+- EmptyState (layout): illustrated placeholder for empty lists
+- Navbar (FR72,FR73-FR76): dashboard navigation with user avatar, tier badge
+- ExtensionSidebar (FR69,FR69a-b): sidebar shell with 4-state rendering
+- FeedbackForm (FR83-FR85): category selector, text area, optional screenshot
+- CreditBadge (FR57-FR58,FR64-FR65): compact credit display with warning state
+- ScanIndicator (FR14,FR22): scanning progress + missing field indicators
+
+**Application State Props (from Architecture):**
+- Loading → Skeleton loaders, spinners (JobCard, ResumeCard, AIToolPanel)
+- Error → Destructive variant, error icon, message (all interactive)
+- Offline → Muted colors, offline badge (ExtensionSidebar, CreditBadge)
+- Low Credits → Warning badge, upgrade CTA (CreditBadge, AIToolPanel)
+- Empty → EmptyState composition (job list, resume list)
+
+### FR Coverage Map (Epic 0 — UI Component Library)
+
+**Already existing (from Story 0.1-NEW):** Button, Badge, Card, Input, Dialog, Select, Tabs — all with stories.
+
+| FR | Story | Component |
+|----|-------|-----------|
+| FR5 | 0.2 | Avatar |
+| FR8, NFR6 | 0.2 | Progress |
+| FR40, FR41 | 0.2 | Sonner/Toast |
+| NFR5, Loading states | 0.2 | Skeleton |
+| Layout | 0.2 | Separator |
+| FR28, FR36c, FR54 | 0.3 | Textarea |
+| FR21, FR42a | 0.3 | Label |
+| Journey 2 (tooltips) | 0.3 | Tooltip |
+| FR34, FR50 | 0.3 | ScrollArea |
+| FR67, FR68 | 0.3 | Sheet |
+| FR22, FR25 | 0.3 | Popover |
+| FR12, FR51, FR53 | 0.3 | Dropdown Menu |
+| FR15-FR18, FR23b-c, FR49 | 0.4 | JobCard |
+| FR23b-c | 0.4 | MatchScoreDisplay |
+| FR14, FR22 | 0.4 | ScanIndicator |
+| Layout | 0.4 | EmptyState |
+| FR10, FR11, FR13a-c | 0.5 | ResumeCard |
+| FR70, FR13 | 0.5 | ResumeTray |
+| FR26-FR30, FR36-FR37 | 0.5 | AIToolPanel |
+| FR31-FR35 | 0.5 | ChatInterface |
+| FR57-FR58, FR64-FR65 | 0.5 | CreditBadge |
+| FR42a-b, FR44a | 0.6 | AutofillPreview |
+| FR83-FR85 | 0.6 | FeedbackForm |
+| FR72, FR73-FR76 | 0.6 | Navbar |
+| FR69, FR69a-b | 0.6 | ExtensionSidebar |
 
 ## Epic List
 
-### Epic 0: UI Component Library (shadcn UI-Based)
+### Epic 0: UI Component Library (shadcn + Storybook)
 
-**⚠️ STRATEGIC PIVOT (2026-02-03):** This epic pivoted from a custom design system approach (Style Dictionary tokens + hand-built atoms) to shadcn UI after completing Stories 0.1 and 0.2. See `sprint-change-proposal-2026-02-03.md` for complete rationale.
+Developers have a complete, documented component library with Storybook stories covering all UI patterns needed across Extension and Dashboard surfaces. Every component is visually tested in dark/light themes and all viewport presets (Mobile, Tablet, Desktop, Extension Popup).
 
-Establish shadcn UI as the component library foundation for Extension and Dashboard surfaces, providing accessible, customizable components built on Radix UI primitives with Tailwind CSS theming.
-
-**Covers:**
-- shadcn/ui CLI installation and configuration
-- Core component library (Button, Badge, Input, Select, Dialog, Card, Tabs, Dropdown, etc.)
-- Storybook documentation with theme toggle (dark/light)
-- Lucide icons for visual consistency
-- Multi-surface consumption patterns (Extension + Dashboard)
-
-**Surfaces:** All (infrastructure) - Extension content scripts, extension popup, dashboard pages
+**Scope:** 12 new shadcn primitives + 13 custom compositions (7 primitives already exist from 0.1-NEW).
+**Surfaces:** All (infrastructure) — Extension content scripts, extension popup, dashboard pages.
 
 **Key Architectural Decisions:**
 - **Accessibility First:** Radix UI primitives provide battle-tested keyboard navigation, focus management, and ARIA patterns
 - **Customization:** Components copied into repo (not npm package), allowing full control while maintaining interaction patterns
-- **Theming:** Tailwind CSS + CSS variables for dark/light theme support
+- **Theming:** Tailwind v4 CSS-first + OKLCH CSS variables for dark/light theme support
 - **Maintenance:** Community-driven updates, lower maintenance burden vs custom components
-- **Development Velocity:** Configuration-based setup ~50% faster than building atoms from scratch
+- **Development Velocity:** Configuration-based setup, shadcn CLI for primitive installation
 
 **Superseded Stories (Rolled Back):**
-- ~~Story 0.1: Foundation (Design Tokens + UI Scaffold)~~ - **SUPERSEDED** - Replaced by shadcn approach
-- ~~Story 0.2: Core Atoms (Button, Badge, Icon, Typography)~~ - **SUPERSEDED** - Replaced by shadcn primitives
+- ~~Story 0.1: Foundation (Design Tokens + UI Scaffold)~~ — SUPERSEDED by shadcn approach
+- ~~Story 0.2: Core Atoms (Button, Badge, Icon, Typography)~~ — SUPERSEDED by shadcn primitives
 
-**Current Stories:**
-- Story 0.1-NEW: shadcn UI Setup & Initial Component Migration (backlog - to be created)
-- Story 0.3: Form Components & Advanced UI (backlog - requires rewrite for shadcn)
-- Story 0.4: Complex Components (Dialog, Sheet, Popover) (backlog - requires rewrite for shadcn)
-- Story 0.5: Business Components (JobCard, ResumeCard, Navbar) (backlog - requires rewrite for shadcn)
-- Story 0.6: Surface-Specific Compositions (ExtensionSidebar, ExtensionPopup) (backlog - requires rewrite for shadcn)
+**Already Existing (from Story 0.1-NEW):** Button, Badge, Card, Input, Dialog, Select, Tabs — all with stories.
+
+**Story Progression:**
+
+| Story | Title | Components | Status |
+|-------|-------|------------|--------|
+| 0.1-NEW | shadcn UI Setup & Scaffold | Infrastructure (Tailwind v4, Storybook 10, Vite 7) + Button, Badge, Card, Input, Dialog, Select, Tabs | **DONE** |
+| 0.2 | Display & Feedback Primitives | Avatar, Separator, Skeleton, Progress, Sonner/Toast (5) | backlog |
+| 0.3 | Form & Overlay Primitives | Textarea, Label, Tooltip, ScrollArea, Sheet, Popover, Dropdown Menu (7) | backlog |
+| 0.4 | Job & Match Compositions | JobCard, MatchScoreDisplay, ScanIndicator, EmptyState (4) | backlog |
+| 0.5 | Resume & AI Studio Compositions | ResumeCard, ResumeTray, AIToolPanel, ChatInterface, CreditBadge (5) | backlog |
+| 0.6 | Application & Layout Compositions | AutofillPreview, FeedbackForm, Navbar, ExtensionSidebar (4) | backlog |
+
+**Dependency Flow:**
+```
+0.1-NEW (DONE) → 0.2 → 0.3 → 0.4 ──→ 0.6
+                              └→ 0.5 ──┘
+```
+
+---
+
+### Story 0.2: Display & Feedback Primitives
+
+**As a** developer building Jobswyft surfaces,
+**I want** display and feedback primitives (Avatar, Separator, Skeleton, Progress, Toast) installed with comprehensive Storybook stories,
+**So that** I can compose user profile displays, visual dividers, loading states, progress indicators, and notification feedback across the Extension and Dashboard.
+
+**Acceptance Criteria:**
+
+**Given** the shadcn CLI is available in `packages/ui`
+**When** I run `pnpm dlx shadcn@latest add avatar separator skeleton progress sonner`
+**Then** all 5 components are installed to `src/components/ui/`
+**And** each component uses the project's OKLCH design tokens and Tailwind v4 styling
+
+**Given** Avatar is installed
+**When** I render `<Avatar>` with an image src
+**Then** it displays the user's profile image in a circular container
+**And** when the image fails to load, it falls back to `<AvatarFallback>` showing initials
+
+_Storybook stories: WithImage, WithFallback, Sizes (sm/md/lg), dark/light_
+
+**Given** Separator is installed
+**When** I render `<Separator>`
+**Then** it displays a horizontal divider using the `--border` design token
+**And** it supports `orientation="vertical"` for vertical dividers
+
+_Storybook stories: Horizontal, Vertical, WithLabel, dark/light_
+
+**Given** Skeleton is installed
+**When** I render `<Skeleton className="h-4 w-[200px]">`
+**Then** it displays an animated placeholder matching the specified dimensions
+**And** it uses the `--muted` design token for the shimmer effect
+
+_Storybook stories: TextLine, CardSkeleton, AvatarSkeleton, ListSkeleton, dark/light_
+
+**Given** Progress is installed
+**When** I render `<Progress value={60}>`
+**Then** it displays a progress bar filled to 60% using the `--primary` design token
+**And** it supports values from 0-100 and an indeterminate state (no value prop)
+
+_Storybook stories: Default (50%), Empty (0%), Complete (100%), Indeterminate, Animated, dark/light_
+
+**Given** Sonner (Toast) is installed
+**When** I call `toast("Job saved successfully")` with `<Toaster>` mounted
+**Then** a toast notification appears with the message, auto-dismisses after timeout
+**And** it supports variants: success, error, info, warning, and action buttons
+
+_Storybook stories: Success, Error, Warning, Info, WithDescription, WithAction, dark/light_
+
+**Given** all 5 components are installed and stories written
+**When** I check `src/index.ts`
+**Then** Avatar, AvatarImage, AvatarFallback, Separator, Skeleton, Progress, Toaster, and `toast` are exported
+**And** `pnpm build` succeeds without errors
+
+**Given** Storybook is running
+**When** I view any new component story
+**Then** it renders correctly in all 4 viewport presets (Mobile 375x667, Tablet 768x1024, Desktop 1440x900, Extension Popup 400x600)
+**And** it renders correctly in both dark and light themes via the toolbar toggle
+
+---
+
+### Story 0.3: Form & Overlay Primitives
+
+**As a** developer building Jobswyft surfaces,
+**I want** form primitives (Textarea, Label, Tooltip) and overlay/navigation primitives (ScrollArea, Sheet, Popover, Dropdown Menu) installed with comprehensive Storybook stories,
+**So that** I can build interactive forms with validation labels, scrollable content areas, slide-out panels, contextual popovers, and action menus across the Extension and Dashboard.
+
+**Acceptance Criteria:**
+
+**Given** the shadcn CLI is available in `packages/ui`
+**When** I run `pnpm dlx shadcn@latest add textarea label tooltip scroll-area sheet popover dropdown-menu`
+**Then** all 7 components are installed to `src/components/ui/`
+**And** each component uses the project's OKLCH design tokens and Tailwind v4 styling
+
+**Given** Textarea is installed
+**When** I render `<Textarea placeholder="Custom instructions...">`
+**Then** it displays a multi-line text input styled consistently with the existing Input component
+**And** it supports `disabled`, `rows`, and standard HTML textarea attributes
+
+_Storybook stories: Default, WithPlaceholder, Disabled, WithLabel, CharacterCount (composition example), dark/light_
+
+**Given** Label is installed
+**When** I render `<Label htmlFor="tone">Tone</Label>` paired with a form control
+**Then** it displays a styled label that associates with the form control via `htmlFor`
+**And** clicking the label focuses the associated input
+
+_Storybook stories: Default, WithInput, WithSelect, WithTextarea, Required (with asterisk composition), dark/light_
+
+**Given** Tooltip is installed
+**When** I render a `<Tooltip>` wrapping a trigger element
+**Then** hovering the trigger shows a tooltip with the provided content after a short delay
+**And** the tooltip positions itself automatically and supports `side` prop (top/right/bottom/left)
+
+_Storybook stories: Default, Sides (top/right/bottom/left), WithIcon, LongContent, dark/light_
+
+**Given** ScrollArea is installed
+**When** I render `<ScrollArea className="h-[300px]">` wrapping content taller than 300px
+**Then** it displays a custom-styled scrollbar that matches the design system
+**And** it supports both vertical and horizontal scrolling via `<ScrollBar orientation="horizontal">`
+
+_Storybook stories: Vertical, Horizontal, Both, LongList, dark/light_
+
+**Given** Sheet is installed
+**When** I render `<Sheet>` with a trigger and content
+**Then** clicking the trigger slides in a panel from the specified side (default: right)
+**And** it supports `side` prop (top/right/bottom/left), displays an overlay backdrop, and closes on backdrop click or Escape key
+
+_Storybook stories: Right (default), Left, Top, Bottom, WithForm, LongContent, dark/light_
+
+**Given** Popover is installed
+**When** I render `<Popover>` with a trigger and content
+**Then** clicking the trigger displays a floating content panel anchored to the trigger
+**And** it supports `side` and `align` props for positioning, closes on outside click or Escape
+
+_Storybook stories: Default, WithForm, Sides (top/bottom/left/right), dark/light_
+
+**Given** Dropdown Menu is installed
+**When** I render `<DropdownMenu>` with trigger, items, and sub-items
+**Then** clicking the trigger opens a floating menu with selectable items
+**And** it supports keyboard navigation (arrow keys, Enter, Escape), separators, labels, checkboxes, radio groups, and sub-menus
+
+_Storybook stories: Default, WithIcons, WithCheckbox, WithRadioGroup, WithSubMenu, WithSeparators, dark/light_
+
+**Given** all 7 components are installed and stories written
+**When** I check `src/index.ts`
+**Then** all components and their subcomponents are exported (Textarea, Label, Tooltip, TooltipTrigger, TooltipContent, TooltipProvider, ScrollArea, ScrollBar, Sheet, SheetTrigger, SheetContent, SheetHeader, SheetFooter, SheetTitle, SheetDescription, SheetClose, Popover, PopoverTrigger, PopoverContent, DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuLabel, DropdownMenuCheckboxItem, DropdownMenuRadioGroup, DropdownMenuRadioItem, DropdownMenuSub, DropdownMenuSubTrigger, DropdownMenuSubContent)
+**And** `pnpm build` succeeds without errors
+
+**Given** Storybook is running
+**When** I view any new component story
+**Then** it renders correctly in all 4 viewport presets (Mobile, Tablet, Desktop, Extension Popup)
+**And** it renders correctly in both dark and light themes via the toolbar toggle
+
+---
+
+### Story 0.4: Job & Match Compositions
+
+**As a** developer building the Extension sidebar and Dashboard,
+**I want** job-related custom compositions (JobCard, MatchScoreDisplay, ScanIndicator, EmptyState) with comprehensive Storybook stories,
+**So that** I can render job detection results with inline match analysis, scanning feedback, and empty-state placeholders across both surfaces.
+
+**Acceptance Criteria:**
+
+**Given** the `src/components/custom/` directory does not exist
+**When** Story 0.4 implementation begins
+**Then** `src/components/custom/` is created as the directory for all domain-specific compositions
+**And** each component is built using shadcn primitives from `components/ui/` (Card, Badge, Progress, etc.)
+
+**Given** JobCard is implemented
+**When** I render `<JobCard>` with job data props (`title`, `company`, `description`, `location`, `salary`, `employmentType`, `sourceUrl`)
+**Then** it displays the job details in a Card layout with title and company prominently shown
+**And** optional fields (location, salary, employmentType) render only when provided
+**And** the description is truncated with an expand/collapse toggle
+
+**Given** JobCard receives a `state` prop
+**When** state is `"default"` — renders with standard card styling
+**When** state is `"detected"` — renders with a highlighted border and subtle pulse animation
+**When** state is `"scanning"` — renders with a skeleton placeholder for job fields and a ScanIndicator
+**When** state is `"applied"` — renders with a muted style and "Applied" badge
+**When** state is `"error"` — renders with a destructive border and error message
+
+**Given** JobCard receives `matchData` prop (optional)
+**When** matchData is provided with `score`, `strengths[]`, and `gaps[]`
+**Then** a MatchScoreDisplay renders inline below the job details within the card
+
+_Storybook stories: Default, Detected, Scanning, Applied, Error, WithMatch, WithoutMatch, MinimalFields, AllFields, dark/light_
+
+**Given** MatchScoreDisplay is implemented
+**When** I render `<MatchScoreDisplay score={87} strengths={["Python", "Team Leadership"]} gaps={["Kubernetes"]}>`
+**Then** it displays the match score as a percentage (87%) with appropriate color coding (green ≥70%, yellow 40-69%, red <40%)
+**And** strengths render as green Badge components in a row
+**And** gaps render as yellow/amber Badge components in a row
+**And** strengths and gaps are displayed side-by-side in a two-column layout
+
+**Given** MatchScoreDisplay receives varying data
+**When** strengths array is empty — the strengths column shows "No strong matches"
+**When** gaps array is empty — the gaps column shows "No gaps identified"
+**When** arrays have more than 5 items — remaining items are collapsed with a "+N more" indicator
+
+_Storybook stories: HighMatch (90%+), GoodMatch (70-89%), ModerateMatch (40-69%), LowMatch (<40%), ManySkills, NoStrengths, NoGaps, dark/light_
+
+**Given** ScanIndicator is implemented
+**When** I render `<ScanIndicator state="scanning">`
+**Then** it shows an animated scanning indicator (progress or spinner) with "Scanning page..." text
+
+**When** I render `<ScanIndicator state="success">`
+**Then** it shows a success icon with "Scan complete" text that auto-fades after 2 seconds
+
+**When** I render `<ScanIndicator state="error" message="Could not extract job title">`
+**Then** it shows a destructive-styled indicator with the error message
+
+**When** I render `<ScanIndicator state="partial" missingFields={["salary", "location"]}>`
+**Then** it shows a warning indicator listing the missing optional fields
+
+_Storybook stories: Scanning, Success, Error, PartialWithMissing, dark/light_
+
+**Given** EmptyState is implemented
+**When** I render `<EmptyState icon={Briefcase} title="No saved jobs" description="Jobs you save will appear here">`
+**Then** it displays a centered layout with the Lucide icon, title text, and description text
+**And** it optionally renders an action button via `action` prop (`{ label: string, onClick: () => void }`)
+
+**Given** EmptyState is used in different contexts
+**When** used for jobs — shows Briefcase icon with job-related messaging
+**When** used for resumes — shows FileText icon with resume-related messaging
+**When** used for chat — shows MessageSquare icon with chat-related messaging
+
+_Storybook stories: NoJobs, NoResumes, NoChat, WithAction, CustomIcon, dark/light_
+
+**Given** all 4 custom compositions are implemented and stories written
+**When** I check `src/index.ts`
+**Then** JobCard, MatchScoreDisplay, ScanIndicator, and EmptyState are exported with their prop type interfaces
+**And** `pnpm build` succeeds without errors
+
+**Given** Storybook is running
+**When** I view any custom composition story
+**Then** it renders correctly in all 4 viewport presets (Mobile, Tablet, Desktop, Extension Popup)
+**And** it renders correctly in both dark and light themes
+**And** interactive elements (expand/collapse, +N more) function in stories
+
+---
+
+### Story 0.5: Resume & AI Studio Compositions
+
+**As a** developer building the Extension sidebar and Dashboard,
+**I want** resume and AI studio custom compositions (ResumeCard, ResumeTray, AIToolPanel, ChatInterface, CreditBadge) with comprehensive Storybook stories,
+**So that** I can render resume management UI, AI generation tool interfaces, chat conversations, and credit balance indicators across both surfaces.
+
+**Acceptance Criteria:**
+
+**Given** ResumeCard is implemented
+**When** I render `<ResumeCard fileName="Marcus_Resume_2026.pdf" uploadedAt="2026-01-15" isActive={true}>`
+**Then** it displays the file name, upload date, and an active indicator (checkmark/highlight) when `isActive` is true
+**And** when `isActive` is false, the active indicator is hidden and styling is neutral
+
+**Given** ResumeCard receives `parsedData` prop with sections (skills, experience, education, contact)
+**When** the card is rendered
+**Then** each section renders as a collapsible block via a clickable header
+**And** clicking a section header expands/collapses that section's content
+**And** each expanded section shows a copy-to-clipboard button that copies the section text
+
+**Given** ResumeCard receives action callbacks
+**When** `onSetActive` is provided — a "Set Active" action is available (hidden when already active)
+**When** `onDelete` is provided — a "Delete" action is available via the DropdownMenu
+**Then** clicking the action triggers the corresponding callback
+
+_Storybook stories: Active, Inactive, WithParsedData, ExpandedBlocks, NoParsedData, WithActions, dark/light_
+
+**Given** ResumeTray is implemented
+**When** I render `<ResumeTray activeResume={{ fileName, id }} resumes={[...]} onSwitch={fn}>`
+**Then** it displays a compact bar showing the active resume name (truncated if long)
+**And** clicking the tray opens a dropdown/popover listing all resumes with the active one indicated
+**And** selecting a different resume calls `onSwitch(resumeId)`
+
+**Given** ResumeTray receives an empty `resumes` array
+**When** rendered
+**Then** it shows a compact "Upload Resume" prompt instead of a resume name
+
+_Storybook stories: WithActiveResume, MultipleResumes, SingleResume, NoResumes, LongFileName, dark/light_
+
+**Given** AIToolPanel is implemented
+**When** I render `<AIToolPanel tool="cover_letter" onGenerate={fn}>`
+**Then** it displays a panel layout with:
+1. **Options section** — tone selector (`<Select>`) and length selector (`<Select>`) appropriate to the tool
+2. **Custom instructions** — a `<Textarea>` for user input (FR28, FR36c)
+3. **Generate button** — a `<Button>` with the tool-specific label (e.g., "Generate Cover Letter")
+4. **Credit cost** — displays "1 credit" indicator next to the generate button
+
+**Given** AIToolPanel is in `loading` state
+**When** `isGenerating={true}` is passed
+**Then** the generate button shows a loading spinner and is disabled
+**And** the options and textarea are disabled
+
+**Given** AIToolPanel receives `output` prop with generated text
+**When** rendered
+**Then** the output area displays the generated text in an editable `<Textarea>`
+**And** a "Copy" button triggers copy-to-clipboard with toast confirmation (FR40, FR41)
+**And** a "Regenerate" button is shown allowing regeneration with feedback (FR29, FR37)
+
+**Given** AIToolPanel is used for different tools
+**When** `tool="cover_letter"` — shows tone + length selectors, label "Generate Cover Letter"
+**When** `tool="outreach"` — shows tone + length selectors, label "Generate Outreach"
+**When** `tool="detailed_match"` — shows no tone/length selectors, label "Run Detailed Analysis"
+
+_Storybook stories: CoverLetterEmpty, CoverLetterLoading, CoverLetterWithOutput, OutreachEmpty, DetailedMatchEmpty, WithCustomInstructions, CreditExhausted, dark/light_
+
+**Given** ChatInterface is implemented
+**When** I render `<ChatInterface messages={[]} suggestions={["What skills match?", "What gaps exist?"]} onSend={fn}>`
+**Then** it displays:
+1. **Message area** — a `<ScrollArea>` for conversation history
+2. **Suggestion chips** — clickable Badge-style chips for pre-generated questions (FR32)
+3. **Input area** — text input with send button
+
+**Given** ChatInterface receives `messages` array
+**When** messages contain `{ role: "user", content: "..." }` entries
+**Then** user messages render right-aligned with primary background
+**When** messages contain `{ role: "assistant", content: "..." }` entries
+**Then** AI messages render left-aligned with muted background
+**And** each AI message has a copy-to-clipboard button
+
+**Given** ChatInterface receives `isLoading={true}`
+**When** the AI is generating a response
+**Then** a typing indicator (animated dots) appears in the message area
+**And** the send button is disabled
+
+**Given** the user clicks a suggestion chip
+**When** `onSend` is called with the suggestion text
+**Then** the suggestion chips section hides after first message is sent
+
+**Given** ChatInterface receives `onNewSession` callback
+**When** rendered
+**Then** a "New Chat" button appears in the header
+**And** clicking it calls `onNewSession` (FR35)
+
+_Storybook stories: Empty, WithSuggestions, ConversationHistory, Loading, LongConversation, dark/light_
+
+**Given** CreditBadge is implemented
+**When** I render `<CreditBadge remaining={3} total={5} tier="free">`
+**Then** it displays "3/5 credits" in a compact badge format
+
+**When** `remaining` is 1 or less
+**Then** the badge switches to a warning style (amber/yellow color)
+
+**When** `remaining` is 0
+**Then** the badge shows destructive styling with text "No credits"
+**And** if `tier="free"`, displays "Upgrade coming soon" tooltip on hover (FR65)
+
+**Given** CreditBadge receives `dailyAutoMatch` prop
+**When** `tier="free"` and `dailyAutoMatch={{ remaining: 12, total: 20 }}` is provided
+**Then** it displays a secondary indicator "12/20 auto matches today" (FR58)
+
+_Storybook stories: FullCredits, LowCredits, NoCredits, FreeTierWithAutoMatch, PaidTier, dark/light_
+
+**Given** all 5 custom compositions are implemented and stories written
+**When** I check `src/index.ts`
+**Then** ResumeCard, ResumeTray, AIToolPanel, ChatInterface, and CreditBadge are exported with their prop type interfaces
+**And** `pnpm build` succeeds without errors
+
+**Given** Storybook is running
+**When** I view any Story 0.5 composition
+**Then** it renders correctly in all 4 viewport presets (Mobile, Tablet, Desktop, Extension Popup)
+**And** it renders correctly in both dark and light themes
+**And** interactive elements (expand/collapse, dropdowns, copy, send) function in stories
+
+---
+
+### Story 0.6: Application & Layout Compositions
+
+**As a** developer building the Extension sidebar and Dashboard,
+**I want** application and layout compositions (AutofillPreview, FeedbackForm, Navbar, ExtensionSidebar) with comprehensive Storybook stories,
+**So that** I can render autofill field previews, feedback capture forms, dashboard navigation, and the full extension sidebar shell across both surfaces.
+
+**Acceptance Criteria:**
+
+**Given** AutofillPreview is implemented
+**When** I render `<AutofillPreview fields={[{ label: "Name", value: "Marcus Chen", status: "pending" }, ...]}>`
+**Then** it displays a list of detected form fields with their labels and values to be filled
+**And** each field shows a status indicator: `"pending"` (unfilled), `"filled"` (green checkmark tick-off), `"skipped"` (grey dash)
+
+**Given** AutofillPreview receives `onExecute` and `onUndo` callbacks
+**When** status is all `"pending"` — "Autofill" button is enabled, "Undo" is hidden
+**When** some or all fields are `"filled"` — "Autofill" is disabled, "Undo" button appears
+**Then** clicking the respective button calls the callback
+
+_Storybook stories: AllPending, AllFilled, PartialFill, WithSkipped, EmptyFields, dark/light_
+
+**Given** FeedbackForm is implemented
+**When** I render `<FeedbackForm onSubmit={fn}>`
+**Then** it displays:
+1. **Category selector** — radio group or segmented control for "Bug Report", "Feature Request", "General Feedback" (FR83a)
+2. **Content textarea** — for the feedback message
+3. **Screenshot toggle** — optional attachment indicator (FR84a)
+4. **Submit button** — calls `onSubmit({ category, content, hasScreenshot })`
+
+**Given** FeedbackForm validation
+**When** category is not selected or content is empty
+**Then** the submit button is disabled
+
+**Given** FeedbackForm receives `isSubmitting={true}`
+**When** rendered
+**Then** the submit button shows a loading state and all inputs are disabled
+
+_Storybook stories: Empty, BugReport, FeatureRequest, GeneralFeedback, Submitting, dark/light_
+
+**Given** Navbar is implemented
+**When** I render `<Navbar user={{ name, email, avatarUrl }} tier="free" activePage="jobs">`
+**Then** it displays:
+1. **Logo/brand** — Jobswyft branding on the left
+2. **Navigation links** — Jobs, Resumes, Account, Privacy (FR73-FR76) with active state highlighting
+3. **Right section** — CreditBadge + Avatar with dropdown (profile, sign out)
+
+**Given** Navbar receives `onNavigate` callback
+**When** a navigation link is clicked
+**Then** `onNavigate(pageName)` is called with the page identifier
+
+**Given** Navbar is viewed on mobile viewport
+**When** screen width is below tablet breakpoint
+**Then** navigation links collapse into a hamburger menu (Sheet-based)
+
+_Storybook stories: Desktop, Tablet, Mobile, FreeTier, PaidTier, AllPages (jobs/resumes/account/privacy active), dark/light_
+
+**Given** ExtensionSidebar is implemented
+**When** I render `<ExtensionSidebar state="logged_out">`
+**Then** it displays only a Google Sign-In button centered in the sidebar (FR69)
+
+**When** I render `<ExtensionSidebar state="non_job_page" user={...} resumes={[...]}>`
+**Then** it displays ResumeTray at the top, a message "Navigate to a job posting to get started", and a dashboard link (FR72)
+**And** AI Studio tools and Autofill are not rendered
+
+**When** I render `<ExtensionSidebar state="job_page" user={...} resumes={[...]} jobData={...} matchData={...}>`
+**Then** it displays ResumeTray, JobCard with inline MatchScoreDisplay, and a message "Go to the application page to unlock AI tools"
+**And** AI Studio tabs are visible but disabled/locked (FR69a, FR71)
+
+**When** I render `<ExtensionSidebar state="application_page" user={...} resumes={[...]} jobData={...} matchData={...}>`
+**Then** it displays the full sidebar: ResumeTray, JobCard with match, AI Studio Tabs (Match/Cover Letter/Outreach/Chat), AutofillPreview, and CreditBadge
+**And** all tools are fully interactive (FR69a, FR69b)
+
+**Given** ExtensionSidebar receives `isOffline={true}`
+**When** rendered in any state
+**Then** an offline banner appears at the top with muted styling
+
+_Storybook stories: LoggedOut, NonJobPage, JobPage, ApplicationPage, Offline, WithLowCredits, dark/light_
+
+**Given** all 4 custom compositions are implemented and stories written
+**When** I check `src/index.ts`
+**Then** AutofillPreview, FeedbackForm, Navbar, and ExtensionSidebar are exported with their prop type interfaces
+**And** `pnpm build` succeeds without errors
+
+**Given** Storybook is running
+**When** I view any Story 0.6 composition
+**Then** it renders correctly in all 4 viewport presets (Mobile, Tablet, Desktop, Extension Popup)
+**And** it renders correctly in both dark and light themes
+**And** interactive elements function in stories
 
 ---
 
