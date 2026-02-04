@@ -5,6 +5,10 @@ stepsCompleted:
 inputDocuments:
   - _bmad-output/planning-artifacts/prd.md
   - _bmad-output/planning-artifacts/architecture.md
+revisionHistory:
+  - date: 2026-02-03
+    epic: Epic 0
+    change: "Strategic pivot from custom design system to shadcn UI. Stories 0.1 and 0.2 superseded. See sprint-change-proposal-2026-02-03.md"
 ---
 
 # Jobswyft - Epic Breakdown
@@ -283,11 +287,38 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 
 ## Epic List
 
-### Epic 0: Platform Foundation
-Establish the technical foundation that enables all user experiences - monorepo structure, database schema, API skeleton, and shared packages (design-tokens, ui, types).
+### Epic 0: UI Component Library (shadcn UI-Based)
 
-**Covers:** Architecture requirements (monorepo, DB schema, API skeleton, shared packages)
-**Surfaces:** All (infrastructure)
+**⚠️ STRATEGIC PIVOT (2026-02-03):** This epic pivoted from a custom design system approach (Style Dictionary tokens + hand-built atoms) to shadcn UI after completing Stories 0.1 and 0.2. See `sprint-change-proposal-2026-02-03.md` for complete rationale.
+
+Establish shadcn UI as the component library foundation for Extension and Dashboard surfaces, providing accessible, customizable components built on Radix UI primitives with Tailwind CSS theming.
+
+**Covers:**
+- shadcn/ui CLI installation and configuration
+- Core component library (Button, Badge, Input, Select, Dialog, Card, Tabs, Dropdown, etc.)
+- Storybook documentation with theme toggle (dark/light)
+- Lucide icons for visual consistency
+- Multi-surface consumption patterns (Extension + Dashboard)
+
+**Surfaces:** All (infrastructure) - Extension content scripts, extension popup, dashboard pages
+
+**Key Architectural Decisions:**
+- **Accessibility First:** Radix UI primitives provide battle-tested keyboard navigation, focus management, and ARIA patterns
+- **Customization:** Components copied into repo (not npm package), allowing full control while maintaining interaction patterns
+- **Theming:** Tailwind CSS + CSS variables for dark/light theme support
+- **Maintenance:** Community-driven updates, lower maintenance burden vs custom components
+- **Development Velocity:** Configuration-based setup ~50% faster than building atoms from scratch
+
+**Superseded Stories (Rolled Back):**
+- ~~Story 0.1: Foundation (Design Tokens + UI Scaffold)~~ - **SUPERSEDED** - Replaced by shadcn approach
+- ~~Story 0.2: Core Atoms (Button, Badge, Icon, Typography)~~ - **SUPERSEDED** - Replaced by shadcn primitives
+
+**Current Stories:**
+- Story 0.1-NEW: shadcn UI Setup & Initial Component Migration (backlog - to be created)
+- Story 0.3: Form Components & Advanced UI (backlog - requires rewrite for shadcn)
+- Story 0.4: Complex Components (Dialog, Sheet, Popover) (backlog - requires rewrite for shadcn)
+- Story 0.5: Business Components (JobCard, ResumeCard, Navbar) (backlog - requires rewrite for shadcn)
+- Story 0.6: Surface-Specific Compositions (ExtensionSidebar, ExtensionPopup) (backlog - requires rewrite for shadcn)
 
 ---
 

@@ -14,7 +14,9 @@
     },
     "./styles": "./dist/styles.css"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -23,8 +25,7 @@
     "build-storybook": "storybook build"
   },
   "dependencies": {
-    "@jobswyft/design-tokens": "workspace:*",
-    "clsx": "^2.1.0",
+    "clsx": "^2.1.1",
     "tailwind-merge": "^2.2.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0"

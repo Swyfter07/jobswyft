@@ -1,8 +1,8 @@
 /* Import design tokens */
-@import '@jobswyft/design-tokens/tokens.css';
+@import "@jobswyft/design-tokens/tokens.css";
 
 /* Import theme system */
-@import '@jobswyft/design-tokens/themes.css';
+@import "@jobswyft/design-tokens/themes.css";
 
 /* Tailwind base, components, and utilities */
 @tailwind base;
@@ -42,9 +42,6 @@
 /* Light theme explicit color scheme */
 [data-theme="light"] {
   color-scheme: light;
-  /* Glassmorphism backdrop filters */
-  --glass-blur: blur(12px);
-  --glass-saturation: saturate(180%);
 }
 
 body {
@@ -59,24 +56,4 @@ button {
 :focus-visible {
   outline: 2px solid var(--color-primary-500);
   outline-offset: 2px;
-}
-
-/* Glassmorphism utility classes */
-[data-theme="light"] .glass-effect {
-  backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturation);
-}
-
-[data-theme="light"] .glass-bg {
-  background: var(--theme-glass-bg);
-  backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  border: 1px solid var(--theme-glass-border);
-}
-
-[data-theme="light"] .section-glass {
-  background: var(--theme-section-bg);
-  backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  -webkit-backdrop-filter: var(--glass-blur) var(--glass-saturation);
-  border: 1px solid var(--theme-section-border);
 }

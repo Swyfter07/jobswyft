@@ -17,7 +17,7 @@ stepsCompleted:
   - step-e-03-edit
 workflowStatus: complete
 completedAt: 2026-01-29
-lastEdited: 2026-02-02
+lastEdited: 2026-02-03
 inputDocuments:
   - PRD.md
   - storybook-demo/docs/PRD.md (developer specification merge source)
@@ -38,6 +38,27 @@ classification:
   complexity: Medium (low regulatory, medium-high technical)
   projectContext: brownfield
 editHistory:
+  - date: 2026-02-03
+    changes: |
+      - Fixed implementation leakage (validation findings):
+        - FR23b: Changed "pills" to "visual indicators"
+        - NFR10: Changed "TLS 1.3" to "industry-standard transport security protocols"
+        - NFR12: Changed "blob storage" to "file storage"
+        - NFR29: Changed "horizontal scaling" to "scaling to handle increased concurrent user load"
+        - NFR32: Changed "Supabase SDK" to "backend service"
+        - NFR33: Changed "Stripe integration" to "payment processing system"
+        - NFR37: Removed "OpenAPI spec" reference, kept "API contract"
+  - date: 2026-02-03
+    changes: |
+      - Restructured Match Analysis: Split into Auto Match (free, high-level, 20/day for free users) and Detailed Match (1 credit, deep analysis)
+      - Removed Answer Generation tool from AI Studio
+      - Added Chat capability with pre-generated question suggestions (1 credit per message)
+      - Updated credit system: Auto match free with rate limits, paid features unchanged
+      - Updated all 4 user journeys to reflect auto match and chat
+      - Updated Success Criteria metrics for new tool structure
+      - Updated MVP scope to include auto match and chat
+      - Renumbered FRs: Match (FR23-FR25), Chat (FR31-FR35), subsequent FRs +3
+      - Updated NFRs for auto match and detailed match performance targets
   - date: 2026-02-02
     changes: |
       - Merged requirements from developer specification document
@@ -96,7 +117,7 @@ editHistory:
 
 **Vision:** Transform job applications from a soul-crushing grind into a streamlined, confident experience.
 
-**Differentiator:** Apply 5x faster without leaving the job posting page. Automatic job detection and scanning—no manual steps. Privacy-first AI that never stores your generated content.
+**Differentiator:** Apply 5x faster without leaving the job posting page. Automatic job detection, scanning, and instant match analysis—no manual steps. Privacy-first AI that never stores your generated content.
 
 **Target Users:** Job seekers across all career stages (students to executives) and industries.
 
@@ -198,12 +219,17 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 | Fallback scan success | **85%+** on unknown sites | AI extraction handles edge cases |
 | Required fields extraction | **99%+** accuracy | Title, company, description |
 | Scan speed | **<2 seconds** | Feel instant |
+| Auto match generation | **<2 seconds** post-scan | High-level analysis (score, skills, gaps) |
+| Auto match accuracy | **90%+** relevance | Match insights align with user perception |
 
 **AI Studio Performance:**
 
 | Metric | Target | Notes |
 |--------|--------|-------|
-| Generation latency | **<5 seconds** | Cover letter, match, answer, outreach |
+| Auto match latency | **<2 seconds** | High-level analysis on scan |
+| Detailed match latency | **<5 seconds** | Deep analysis on demand |
+| Generation latency | **<5 seconds** | Cover letter, outreach, chat |
+| Chat response time | **<5 seconds** | Per message |
 | Output quality rating | **4.5+/5** user satisfaction | "Sounds like me" test |
 | AI failure rate | **<1%** | Graceful degradation |
 | Token efficiency | **<$0.02/generation** average | Sustainable unit economics |
@@ -263,10 +289,11 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 - [ ] Resume upload + AI parsing (up to 5 resumes)
 - [ ] Active resume selection
 - [ ] Scan Page functionality (hybrid: rules + AI fallback)
-- [ ] All 4 AI Studio tools: Match, Cover Letter, Answer, Outreach
+- [ ] Auto match analysis (instant, high-level, rate-limited for free users)
+- [ ] All 4 AI Studio tools: Match (detailed analysis), Cover Letter, Outreach, Chat
 - [ ] Autofill with single-step undo
 - [ ] Usage balance display
-- [ ] Free tier (5 generations) + paid tier integration
+- [ ] Free tier (5 generations + 20 auto matches/day) + paid tier integration
 
 **Core Dashboard (Must Ship):**
 
@@ -289,7 +316,7 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 
 Unused generations roll over to next billing period.
 
-**MVP Success Gate:** A user can install, authenticate, scan a job, generate a cover letter, autofill an application, track the job, and provide feedback - end to end.
+**MVP Success Gate:** A user can install, authenticate, scan a job with instant match analysis, use chat for questions, generate a cover letter, autofill an application, track the job, and provide feedback - end to end.
 
 ### Growth Features (Post-MVP)
 
@@ -370,7 +397,7 @@ Marcus lands on a job posting at a Series B startup. He clicks the Jobswyft icon
 
 The sidebar instantly recognizes the job page—no button click needed. Two seconds later, the job details appear: title, company, full description, even the salary range buried in paragraph six. *"How did it find that?"*
 
-He hits **Match**. The AI analyzes his resume against the job. Strengths: distributed systems, team leadership. Gaps: no Kubernetes experience mentioned. *"Fair point,"* he thinks.
+Below the job card, an instant match analysis appears: **87% match**. Green pills show his strengths: "Distributed Systems", "Team Leadership". Yellow pills flag gaps: "Kubernetes". Side-by-side layout. *"It already knows where I'm strong,"* he thinks.
 
 He clicks **Cover Letter**. Selects "Confident" tone. Adds a custom note: "Mention my open-source contributions." Five seconds later, a cover letter appears. It sounds like him—but sharper. It highlights his system design work and connects it to the startup's scaling challenges.
 
@@ -394,7 +421,7 @@ Marcus upgrades to Pro.
 
 **Requirements Revealed:**
 - Automatic job page detection and scanning (< 2 sec)
-- AI Match analysis showing strengths/gaps
+- Auto match analysis (instant, high-level) showing score, strengths, gaps as pills
 - Cover letter generation with tone + custom instructions
 - Autofill that handles standard fields reliably
 - Speed optimized for high-volume appliers
@@ -428,11 +455,9 @@ The sidebar instantly detects the job page and begins scanning automatically. A 
 
 Within two seconds, the job details populate. Title: Marketing Manager. Company: GlowUp Beauty. Salary: $95K-$115K. Full job description. *"It just... knew?"*
 
-*"Okay... that's kind of impressive."*
+Below the job card, an instant match analysis appears: **82% match**. Green pills: "Brand Campaigns", "DTC Experience". Yellow pills: "TikTok Marketing". Side-by-side layout. Clear, visual, instant feedback.
 
-She clicks **Match**. The AI compares her resume to the job. It highlights her brand campaign experience as a strength. Flags that the job wants TikTok expertise—her resume doesn't mention it (even though she has it).
-
-*"Huh. I should update my resume."*
+*"Okay... that's kind of impressive. And I do have TikTok experience—I should update my resume."*
 
 She clicks **Cover Letter**. Chooses "Friendly" tone. The output is... actually good? It mentions GlowUp's recent product launch (pulled from the job description) and connects it to her DTC experience.
 
@@ -455,10 +480,10 @@ A week later, she's used all 5 free generations. She gets an interview at GlowUp
 **Requirements Revealed:**
 - Frictionless onboarding (Google OAuth, no forms)
 - Clear UI with helpful tooltips for new users
-- Immediate value demonstration on first scan
-- Match analysis that surfaces actionable insights
+- Immediate value demonstration on first scan (auto match included)
+- Auto match analysis that surfaces actionable insights instantly
 - Trust-building through transparency (no hidden actions)
-- Free tier that's generous enough to prove value
+- Free tier that's generous enough to prove value (20 auto matches/day)
 - Upgrade path feels natural, not pushy
 
 ---
@@ -489,7 +514,7 @@ He navigates to the Jobs tab. His old saved jobs are there—marked as "Applied"
 
 He opens a new job posting—VP of Engineering at a growth-stage startup. The sidebar auto-detects the page and scans instantly. Familiar. The UI hasn't changed much—maybe cleaner, but the muscle memory is there.
 
-He clicks **Match**. His resume is strong for this role—90% alignment. The AI notes his experience scaling teams from 20→100 engineers.
+The instant match analysis appears: **92% match**. Green pills: "Team Scaling (20→100)", "M&A Integration", "Engineering Leadership". No yellow pills—he's a strong fit. The AI confidence is reassuring.
 
 He clicks **Cover Letter**. Same flow. Tone: "Executive." Custom instruction: "Emphasize my M&A integration experience." The output is polished—boardroom-ready.
 
@@ -539,15 +564,11 @@ Jenna installs it.
 
 She opens the job posting. Clicks the Jobswyft icon. Signs in. Uploads her resume (nervous—is it good enough?).
 
-The sidebar recognizes the job page and scans automatically. The job details appear. She reads the AI's extraction: *"Looking for early-career engineers excited about fintech infrastructure..."*
+The sidebar recognizes the job page and scans automatically. The job details appear. Below, the instant match analysis loads: **78% match**.
 
-She clicks **Match**. Her heart pounds.
+Green pills: "Python", "Payment Systems Project", "Banking Internship". Yellow pills: "Production Kubernetes".
 
-The results load:
-- **Strengths**: Python experience, capstone project on payment systems, internship at a bank
-- **Gaps**: No production Kubernetes experience (mentioned in job description)
-
-Jenna exhales. *"Okay, I actually do have relevant stuff."* The Match analysis saw things in her resume she'd undervalued.
+Jenna exhales. *"Okay, I actually do have relevant stuff."* The auto match saw things in her resume she'd undervalued. The visual layout makes it clear—she's closer than she thought.
 
 She clicks **Cover Letter**. Pauses at tone selection. Chooses "Enthusiastic." Adds custom instruction: *"I'm a new grad—make it sound genuine, not desperate."*
 
@@ -576,7 +597,8 @@ Jenna upgrades to Starter before her free generations run out. She tells her stu
 *"It's like having a career coach that doesn't make you feel dumb."*
 
 **Requirements Revealed:**
-- Match analysis that builds confidence (surface hidden strengths)
+- Auto match analysis that builds confidence instantly (surface hidden strengths)
+- Match score and visual pills (green/yellow) make feedback clear and encouraging
 - Cover letter generation that sounds authentic, not corporate
 - Tone options that serve different experience levels
 - Custom instructions for personal touch
@@ -599,10 +621,10 @@ Jenna upgrades to Starter before her free generations run out. She tells her stu
 
 | Pattern | Requirement |
 |---------|-------------|
-| All users scan before generating | Scan must be fast, reliable, prerequisite to AI |
+| All users scan and see instant match | Scan + auto match must be fast, reliable, immediate value |
 | All users edit AI output | Outputs must be editable, not locked |
 | All users value personalization | Custom instructions, tone selection matter |
-| Trust is earned in first 5 minutes | Onboarding must prove value immediately |
+| Trust is earned in first 5 minutes | Onboarding must prove value immediately (auto match helps) |
 | Return users expect continuity | Data must persist across sessions/subscriptions |
 
 ## Multi-Surface Product Requirements
@@ -840,9 +862,12 @@ The extension sidebar operates in four distinct states based on authentication a
 
 **Match Analysis:**
 
-- **FR23:** Users can generate a resume-to-job match analysis
-- **FR24:** Match analysis displays user's strengths relative to the job
-- **FR25:** Match analysis displays skill gaps relative to the job
+- **FR23:** System automatically generates high-level match analysis upon successful job scan
+- **FR23a:** Auto match analysis is free for all users with rate limits: 20 per day for free tier, unlimited for paid tiers
+- **FR23b:** Auto match displays match score (0-100%), skills strengths as green visual indicators, skill gaps as yellow visual indicators
+- **FR23c:** Auto match layout presents strengths and gaps side-by-side within job card
+- **FR24:** Users can trigger detailed match analysis (costs 1 AI credit)
+- **FR25:** Detailed match analysis provides comprehensive strengths, gaps, and recommendations beyond high-level view
 
 **Cover Letter:**
 
@@ -853,95 +878,102 @@ The extension sidebar operates in four distinct states based on authentication a
 - **FR29:** Users can regenerate cover letter with feedback on what to change
 - **FR30:** Users can export generated cover letters as PDF
 
-**Answer Generation:**
+**Chat:**
 
-- **FR31:** Users can generate answers to application questions
-- **FR32:** Users can regenerate answers with feedback on what to change
+- **FR31:** Users can open chat interface from AI Studio
+- **FR32:** System generates question suggestions based on extracted job posting content
+- **FR33:** Users can ask questions via chat (costs 1 AI credit per message)
+- **FR34:** Chat displays conversation history within current session
+- **FR35:** Users can start new chat session to clear history
 
 **Outreach Messages:**
 
-- **FR33:** Users can generate outreach messages for recruiters/hiring managers
-- **FR33a:** Users can select a tone for outreach message generation
-- **FR33b:** Users can select a length for outreach message generation (e.g., brief, standard)
-- **FR33c:** Users can provide custom instructions for outreach message generation
-- **FR34:** Users can regenerate outreach messages with feedback on what to change
+- **FR36:** Users can generate outreach messages for recruiters/hiring managers
+- **FR36a:** Users can select a tone for outreach message generation
+- **FR36b:** Users can select a length for outreach message generation (e.g., brief, standard)
+- **FR36c:** Users can provide custom instructions for outreach message generation
+- **FR37:** Users can regenerate outreach messages with feedback on what to change
 
 **Common AI Capabilities:**
 
-- **FR35:** Users can edit any AI-generated output before using it
-- **FR36:** AI outputs and extracted application questions are ephemeral and not stored on the server
-- **FR37:** Users can copy any AI-generated output to clipboard with a single click
-- **FR38:** System provides visual feedback when AI output is copied
+- **FR38:** Users can edit any AI-generated output before using it
+- **FR39:** AI outputs and extracted application questions are ephemeral and not stored on the server
+- **FR40:** Users can copy any AI-generated output to clipboard with a single click
+- **FR41:** System provides visual feedback when AI output is copied
 
 ### Form Autofill
 
-- **FR39:** Users can autofill application form fields with their profile data
-- **FR39a:** System displays detected form fields in sidebar before autofill execution
-- **FR39b:** Users can review which fields will be filled before triggering autofill
-- **FR40:** System maps user data to appropriate form fields automatically
-- **FR41:** System highlights fields that were autofilled
-- **FR41a:** System shows visual tick-off state in sidebar for successfully filled fields
-- **FR42:** Users can undo the last autofill action
-- **FR43:** Autofill includes resume upload when a file upload field is detected
-- **FR44:** Autofill includes generated cover letter when available
+- **FR42:** Users can autofill application form fields with their profile data
+- **FR42a:** System displays detected form fields in sidebar before autofill execution
+- **FR42b:** Users can review which fields will be filled before triggering autofill
+- **FR43:** System maps user data to appropriate form fields automatically
+- **FR44:** System highlights fields that were autofilled
+- **FR44a:** System shows visual tick-off state in sidebar for successfully filled fields
+- **FR45:** Users can undo the last autofill action
+- **FR46:** Autofill includes resume upload when a file upload field is detected
+- **FR47:** Autofill includes generated cover letter when available
 
 ### Job Tracking
 
-- **FR45:** Users can save a job from the extension via a dedicated "Save Job" button
-- **FR46:** System automatically sets job status to "Applied" when saving from extension
-- **FR47:** Users can view their list of saved/tracked jobs in the dashboard
-- **FR48:** Users can update the status of a tracked job (applied, interviewed, offer, rejected)
-- **FR49:** Users can view details of a saved job
-- **FR50:** Users can delete a job from their tracked list
-- **FR51:** Users can add notes to a saved job
-- **FR52:** Users can edit notes on a saved job
-- **FR53:** Users can view notes when reviewing a saved job
+- **FR48:** Users can save a job from the extension via a dedicated "Save Job" button
+- **FR49:** System automatically sets job status to "Applied" when saving from extension
+- **FR50:** Users can view their list of saved/tracked jobs in the dashboard
+- **FR51:** Users can update the status of a tracked job (applied, interviewed, offer, rejected)
+- **FR52:** Users can view details of a saved job
+- **FR53:** Users can delete a job from their tracked list
+- **FR54:** Users can add notes to a saved job
+- **FR55:** Users can edit notes on a saved job
+- **FR56:** Users can view notes when reviewing a saved job
 
 ### Usage & Subscription Management
 
-- **FR54:** Users can view their current AI generation balance
-- **FR55:** Users can view their account tier status (Free Tier in MVP)
-- **FR56:** Users receive 5 free AI generations on signup (lifetime)
-- **FR57:** Users can upgrade to a paid subscription tier (Post-MVP)
-- **FR58:** Users can manage their subscription (upgrade, downgrade, cancel) (Post-MVP)
-- **FR59:** Users earn additional free generations through referrals
-- **FR60:** System blocks AI generation when user has no remaining balance
-- **FR61:** System displays "upgrade coming soon" message when user is out of credits
+- **FR57:** Users can view their current AI generation balance
+- **FR58:** Users can view their remaining auto match analyses for the day (free tier only)
+- **FR59:** Users can view their account tier status (Free Tier in MVP)
+- **FR60:** Users receive 5 free AI generations on signup (lifetime)
+- **FR60a:** Free tier users receive 20 auto match analyses per day (resets at midnight UTC, backend configurable)
+- **FR60b:** Paid tier users receive unlimited auto match analyses
+- **FR61:** Users can upgrade to a paid subscription tier (Post-MVP)
+- **FR62:** Users can manage their subscription (upgrade, downgrade, cancel) (Post-MVP)
+- **FR63:** Users earn additional free generations through referrals
+- **FR64:** System blocks paid AI generation features (detailed match, cover letter, outreach, chat) when user has no remaining balance
+- **FR65:** System displays "upgrade coming soon" message when user is out of paid credits
+- **FR66:** System blocks auto match analysis when free tier user exceeds daily limit (20/day)
 
 ### Extension Sidebar Experience
 
-- **FR62:** Users can open the extension sidebar from any webpage
-- **FR63:** Users can close the extension sidebar
-- **FR64:** Sidebar displays one of four states: Logged Out (sign-in only), Non-Job Page (resume tray enabled, AI disabled), Job Page (auto-scan, AI locked), Application Page (full features)
-- **FR64a:** AI Studio tools unlock only when user is on a job application page
-- **FR64b:** Autofill functionality enables only when user is on a job application page
-- **FR65:** Sidebar displays resume tray for resume access when user is authenticated
-- **FR66:** AI Studio tools are locked until user navigates to application page with valid scan data
-- **FR67:** Users can navigate to the web dashboard from the sidebar
+- **FR67:** Users can open the extension sidebar from any webpage
+- **FR68:** Users can close the extension sidebar
+- **FR69:** Sidebar displays one of four states: Logged Out (sign-in only), Non-Job Page (resume tray enabled, AI disabled), Job Page (auto-scan with instant match, AI locked), Application Page (full features)
+- **FR69a:** AI Studio tools (detailed match, cover letter, outreach, chat) unlock only when user is on a job application page
+- **FR69b:** Autofill functionality enables only when user is on a job application page
+- **FR70:** Sidebar displays resume tray for resume access when user is authenticated
+- **FR71:** AI Studio tools are locked until user navigates to application page with valid scan data
+- **FR72:** Users can navigate to the web dashboard from the sidebar
 
 ### Web Dashboard
 
-- **FR68:** Users can access a dedicated jobs management page
-- **FR69:** Users can access a dedicated resume management page
-- **FR70:** Users can access an account management page
-- **FR71:** Users can access a data and privacy controls page
-- **FR72:** Dashboard displays user's current usage and subscription status
+- **FR73:** Users can access a dedicated jobs management page
+- **FR74:** Users can access a dedicated resume management page
+- **FR75:** Users can access an account management page
+- **FR76:** Users can access a data and privacy controls page
+- **FR77:** Dashboard displays user's current usage and subscription status
 
 ### Data Privacy & Controls
 
-- **FR73:** Users can view explanation of what data is stored and where
-- **FR74:** Users can initiate complete data deletion with confirmation
-- **FR75:** Data deletion requires email confirmation for security
-- **FR76:** System clears local extension data on logout
-- **FR77:** AI-generated outputs are never persisted to backend storage
+- **FR78:** Users can view explanation of what data is stored and where
+- **FR79:** Users can initiate complete data deletion with confirmation
+- **FR80:** Data deletion requires email confirmation for security
+- **FR81:** System clears local extension data on logout
+- **FR82:** AI-generated outputs are never persisted to backend storage
 
 ### User Feedback
 
-- **FR78:** Users can submit feedback about the product via in-app feedback form (accessible from sidebar and dashboard)
-- **FR78a:** Feedback form supports categorization: bug report, feature request, general feedback
-- **FR79:** System captures feedback with context: current page URL, sidebar state, last action performed, browser version
-- **FR79a:** Users can optionally attach a screenshot with their feedback
-- **FR80:** Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
+- **FR83:** Users can submit feedback about the product via in-app feedback form (accessible from sidebar and dashboard)
+- **FR83a:** Feedback form supports categorization: bug report, feature request, general feedback
+- **FR84:** System captures feedback with context: current page URL, sidebar state, last action performed, browser version
+- **FR84a:** Users can optionally attach a screenshot with their feedback
+- **FR85:** Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
 
 ## Non-Functional Requirements
 
@@ -950,8 +982,9 @@ The extension sidebar operates in four distinct states based on authentication a
 **Response Time Requirements:**
 
 - **NFR1:** Page scan completes within 2 seconds on standard job boards
-- **NFR2:** AI generation (cover letter, answers, outreach) completes within 5 seconds
-- **NFR3:** Match analysis completes within 3 seconds
+- **NFR2:** AI generation (cover letter, outreach, chat messages) completes within 5 seconds
+- **NFR3a:** Auto match analysis completes within 2 seconds of successful scan
+- **NFR3b:** Detailed match analysis completes within 5 seconds of user request
 - **NFR4:** Autofill executes within 1 second
 - **NFR5:** Sidebar opens within 500ms of user click
 - **NFR6:** Resume parsing completes within 10 seconds of upload
@@ -966,9 +999,9 @@ The extension sidebar operates in four distinct states based on authentication a
 
 **Data Protection:**
 
-- **NFR10:** All data transmitted between extension and API is encrypted (TLS 1.3)
+- **NFR10:** All data transmitted between extension and API is encrypted using industry-standard transport security protocols
 - **NFR11:** All data stored in database is encrypted at rest
-- **NFR12:** Resume files are stored in encrypted blob storage
+- **NFR12:** Resume files are stored in encrypted file storage
 - **NFR13:** OAuth tokens are stored securely (not in plaintext)
 - **NFR14:** AI-generated outputs are never persisted to backend storage
 
@@ -1004,7 +1037,7 @@ The extension sidebar operates in four distinct states based on authentication a
 
 - **NFR27:** System supports 50,000 monthly active users at 3 months post-launch (Post-MVP)
 - **NFR28:** System supports 150,000 monthly active users at 12 months post-launch (Post-MVP)
-- **NFR29:** Architecture supports horizontal scaling without code changes (Post-MVP)
+- **NFR29:** Architecture supports scaling to handle increased concurrent user load without code changes (Post-MVP)
 
 ### Integration
 
@@ -1012,8 +1045,8 @@ The extension sidebar operates in four distinct states based on authentication a
 
 - **NFR30:** System maintains compatibility with Chrome Manifest V3 requirements
 - **NFR31:** AI provider abstraction allows switching between Claude and GPT
-- **NFR32:** Supabase SDK handles auth, database, and storage operations
-- **NFR33:** Stripe integration handles subscription lifecycle events (Post-MVP)
+- **NFR32:** Backend service handles auth, database, and storage operations
+- **NFR33:** Payment processing system handles subscription lifecycle events (Post-MVP)
 
 **Browser Compatibility:**
 
@@ -1025,7 +1058,7 @@ The extension sidebar operates in four distinct states based on authentication a
 **Code Quality:**
 
 - **NFR36:** Codebase supports LLM-assisted development with clear module boundaries
-- **NFR37:** API contract (OpenAPI spec) enables independent frontend/backend development
+- **NFR37:** API contract enables independent frontend/backend development
 - **NFR38:** Each app (api, web, extension) is independently deployable
 
 **Testing (MVP):**

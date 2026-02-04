@@ -48,11 +48,6 @@ const config: Config = {
           800: 'var(--color-gray-800)',
           900: 'var(--color-gray-900)',
         },
-        glass: {
-          bg: 'var(--color-glass-bg)',
-          border: 'var(--color-glass-border)',
-          hover: 'var(--color-glass-hover)',
-        },
         theme: {
           'text-primary': 'var(--theme-text-primary)',
           'text-secondary': 'var(--theme-text-secondary)',
@@ -60,8 +55,6 @@ const config: Config = {
           'text-muted': 'var(--theme-text-muted)',
           'bg-primary': 'var(--theme-background-primary)',
           'bg-secondary': 'var(--theme-background-secondary)',
-          'glass-bg': 'var(--theme-glass-bg)',
-          'glass-border': 'var(--theme-glass-border)',
         },
       },
       fontFamily: {

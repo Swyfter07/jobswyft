@@ -4,14 +4,11 @@ import './styles/globals.css';
 // Utilities
 export { cn } from './utils';
 
-// Providers
-export { ThemeProvider, useTheme, type Theme } from './providers';
-
 // Hooks
 export * from './hooks';
 
-// Atoms
-export * from './atoms';
+// shadcn/ui components will be exported here after installation
+// Example: export { Button } from './components/ui/button';
 
 // Molecules
 export * from './molecules';
