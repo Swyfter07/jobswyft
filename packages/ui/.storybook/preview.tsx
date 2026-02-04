@@ -12,7 +12,41 @@ const preview: Preview = {
       },
     },
     backgrounds: {
-      disable: true, // Disable backgrounds since we use themes
+      default: 'gradient-purple',
+      values: [
+        {
+          name: 'gradient-purple',
+          value: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%)',
+        },
+        {
+          name: 'gradient-blue',
+          value: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 50%, #60a5fa 100%)',
+        },
+        {
+          name: 'gradient-sunset',
+          value: 'linear-gradient(135deg, #ff6b6b 0%, #f59e0b 50%, #fbbf24 100%)',
+        },
+        {
+          name: 'gradient-ocean',
+          value: 'linear-gradient(135deg, #06b6d4 0%, #0ea5e9 50%, #3b82f6 100%)',
+        },
+        {
+          name: 'gradient-green',
+          value: 'linear-gradient(135deg, #10b981 0%, #059669 50%, #34d399 100%)',
+        },
+        {
+          name: 'dark',
+          value: '#0f172a',
+        },
+        {
+          name: 'light',
+          value: '#f8fafc',
+        },
+        {
+          name: 'black',
+          value: '#000000',
+        },
+      ],
     },
     viewport: {
       viewports: {

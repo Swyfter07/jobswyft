@@ -1,7 +1,12 @@
 import type { Config } from 'tailwindcss';
+import { createTailwindPreset } from 'glasscn-ui';
 
 const config: Config = {
-  content: ['./src/**/*.{js,ts,jsx,tsx,mdx}'],
+  presets: [createTailwindPreset()],
+  content: [
+    './src/**/*.{js,ts,jsx,tsx,mdx}',
+    './node_modules/glasscn-ui/**/*.{js,ts,jsx,tsx}',
+  ],
   darkMode: ['class', '[data-theme="dark"]'],
   theme: {
     extend: {

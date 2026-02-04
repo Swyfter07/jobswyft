@@ -1,0 +1,2131 @@
+diff --git a/_bmad-output/planning-artifacts/epics.md b/_bmad-output/planning-artifacts/epics.md
+index 50641c4..7bd9568 100644
+--- a/_bmad-output/planning-artifacts/epics.md
++++ b/_bmad-output/planning-artifacts/epics.md
+@@ -6,8 +6,15 @@ stepsCompleted:
+   - step-04-final-validation
+ workflowStatus: complete
+ completedAt: '2026-01-30'
+-lastEdited: '2026-02-01'
++lastEdited: '2026-02-02'
+ editHistory:
++  - date: '2026-02-02'
++    changes: |
++      - Updated Epic 8 with UX Design Specification references
++      - Added component specifications from UX spec (Job Card, Match Score, AI Studio Panel, etc.)
++      - Added design tokens and visual foundation references
++      - Added accessibility requirements (WCAG 2.1 AA) from UX spec
++      - Cross-referenced stories with specific UX spec sections
+   - date: '2026-02-01'
+     changes: |
+       - Added Epic 8: Component Library Foundation (10 stories)
+@@ -1638,25 +1645,35 @@ feedback (
+ 
+ ## Epic 8: Component Library Foundation
+ 
+-**Epic Goal:** Build a comprehensive, production-ready component library that matches the demo design aesthetic, supports both extension and dashboard platforms, enables interactive component exploration via Storybook, and establishes the foundation for all UI implementation.
++**Epic Goal:** Build a comprehensive, production-ready component library that implements the UX Design Specification, supports both extension and dashboard platforms, enables interactive component exploration via Storybook, and establishes the foundation for all UI implementation.
+ 
+ **Epic Priority:** CRITICAL - Must be completed before extension and dashboard UI implementation can begin
+ 
++**Reference Documents:**
++- **UX Design Specification:** `_bmad-output/planning-artifacts/ux-design-specification.md`
++  - Component Strategy (custom component specs)
++  - Visual Design Foundation (design tokens, colors, typography, spacing)
++  - UX Consistency Patterns (buttons, forms, feedback, navigation)
++  - Responsive Design & Accessibility (WCAG 2.1 AA)
++
+ **Epic Value:**
+ - Provides reusable components across extension + dashboard (DRY principle)
+ - Interactive Storybook playground for component exploration and iteration
+-- Consistent theming with blue primary color matching demo design
++- Implements "Glassmorphic Clarity" design direction from UX spec
++- Consistent theming with blue primary color (`hsl(221.2 83.2% 53.3%)`)
+ - Platform-aware components (extension compact, dashboard standard)
+ - Enables parallel UI development once components are ready
+ 
+ **Epic Success Criteria:**
+ - ✅ Storybook accessible at `http://localhost:6006` with all components documented
+-- ✅ All primitive components match demo design aesthetics exactly
+-- ✅ Blue primary color (`hsl(221.2 83.2% 53.3%)`) applied throughout
+-- ✅ Dual theme support (light + dark) working in Storybook
++- ✅ All components implement UX Design Specification requirements
++- ✅ Custom components built per UX spec: Job Card, Match Score, AI Studio Panel, Resume Block, Copy Button, Credits Counter, Sidebar State Banner
++- ✅ Blue primary color (`hsl(221.2 83.2% 53.3%)`) and full design token system from UX spec
++- ✅ Dual theme support (dark sidebar, light dashboard) per UX spec visual foundation
+ - ✅ Extension and dashboard can import components from `@jobswyft/ui`
+ - ✅ Components tested in isolation with all variants, states, and interactions
+-- ✅ Zero visual regressions from demo design
++- ✅ Accessibility compliance: WCAG 2.1 AA per UX spec requirements
++- ✅ Motion/animation system per UX spec (timing functions, duration scale)
+ 
+ ---
+ 
+@@ -1716,10 +1733,12 @@ packages/ui/                          # Shared component library
+ │   │       ├── navbar/
+ │   │       ├── footer/
+ │   │       └── ... (5-8 sections)
+-│   ├── themes/
+-│   │   ├── core.css                 # Blue primary, shared tokens
+-│   │   ├── extension.css            # Extension overrides (compact)
+-│   │   └── dashboard.css            # Dashboard overrides (standard)
++│   ├── themes/                       # From UX Spec: Visual Design Foundation
++│   │   ├── tokens.css                # Design tokens (colors, typography, spacing, borders, shadows)
++│   │   ├── core.css                  # Blue primary (hsl(221.2 83.2% 53.3%)), semantic colors
++│   │   ├── glassmorphism.css         # Glass effects for sidebar (--glass-bg, --glass-border, --glass-blur)
++│   │   ├── extension.css             # Extension overrides (dark theme, compact, 320-420px)
++│   │   └── dashboard.css             # Dashboard overrides (light theme, standard, responsive)
+ │   ├── hooks/                       # Shared React hooks
+ │   ├── utils/                       # cn(), formatters, etc.
+ │   └── index.tsx                    # Public API exports
+@@ -1738,14 +1757,16 @@ apps/web/
+     └── styles/theme.css             # Imports @jobswyft/ui/themes/dashboard.css
+ ```
+ 
+-**Design Principles**
++**Design Principles** (from UX Design Specification)
+ 
+-1. **Match Demo Design Exactly:** Reference `/Users/enigma/Documents/Projects/job-jet/demo/final` components, not generic designs
+-2. **Blue Primary:** `hsl(221.2 83.2% 53.3%)` throughout (not yellow)
++1. **Glassmorphic Clarity:** Implement the unified design direction - glassmorphism aesthetics with functional clarity
++2. **Blue Primary:** `hsl(221.2 83.2% 53.3%)` throughout with full semantic color palette
+ 3. **Component Isolation:** Each component developed in Storybook first, then integrated
+-4. **Platform Awareness:** Extension = compact (12px padding, 36px buttons), Dashboard = standard (16px padding, 40px buttons)
+-5. **Style Override Support:** `className` prop on all components for special cases
+-6. **Accessibility:** WCAG AA compliance, keyboard navigation, screen reader support
++4. **Platform Awareness:** Extension = dark theme, compact (320-420px), Dashboard = light theme, responsive
++5. **Design Tokens:** All styling via CSS variables from UX spec (--color-*, --space-*, --radius-*, etc.)
++6. **Style Override Support:** `className` prop on all components for special cases
++7. **Accessibility:** WCAG 2.1 AA compliance per UX spec (4.5:1 contrast, 44×44px touch targets, keyboard nav)
++8. **Motion System:** Animation timing from UX spec (--ease-out, --ease-in-out, --duration-fast/base/slow)
+ 
+ ---
+ 
+@@ -1753,7 +1774,13 @@ apps/web/
+ 
+ **Story 8.1: Component Library Infrastructure & Storybook Setup**
+ 
+-**Story Goal:** Set up `packages/ui` monorepo package, configure Storybook, establish blue theme tokens, install tooling
++**Story Goal:** Set up `packages/ui` monorepo package, configure Storybook, implement design tokens from UX spec, install tooling
++
++**UX Spec References:**
++- Visual Design Foundation: Color System (primary palette, semantic colors, glassmorphism, neutrals)
++- Visual Design Foundation: Typography System (font stack, type scale, font weights)
++- Visual Design Foundation: Spacing & Layout Foundation (spacing scale, border radius)
++- Design Direction Decision: Motion & Animation (timing functions, duration scale)
+ 
+ **Estimated Effort:** 1 day
+ 
+@@ -1765,7 +1792,12 @@ apps/web/
+ 
+ **Story 8.2: Primitive Components - Buttons, Inputs, Badges**
+ 
+-**Story Goal:** Build Level 1 primitives (Button, Input, Textarea, Badge, Checkbox, Radio, Switch) matching demo design
++**Story Goal:** Build Level 1 primitives (Button, Input, Textarea, Badge, Checkbox, Radio, Switch) per UX spec patterns
++
++**UX Spec References:**
++- UX Consistency Patterns: Button Patterns (hierarchy: Primary/Secondary/Ghost/Destructive/Link, placement rules, loading states)
++- UX Consistency Patterns: Form Patterns (field states: Default/Focus/Filled/Error/Disabled, validation timing, layout)
++- Component Strategy: Atomic Design Hierarchy (Atoms level)
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1777,7 +1809,12 @@ apps/web/
+ 
+ **Story 8.3: Primitive Components - Feedback & Navigation**
+ 
+-**Story Goal:** Build Tooltip, Spinner, Icon wrapper, Separator, Skeleton (loading states)
++**Story Goal:** Build Tooltip, Spinner, Icon wrapper, Separator, Skeleton (loading states) per UX spec patterns
++
++**UX Spec References:**
++- UX Consistency Patterns: Feedback Patterns (toast notifications, inline feedback, feedback copy guidelines)
++- UX Consistency Patterns: Empty & Loading States (skeleton patterns, loading state durations)
++- Design Direction Decision: Key Animations (Skeleton Shimmer, Scan Pulse)
+ 
+ **Estimated Effort:** 1 day
+ 
+@@ -1789,7 +1826,13 @@ apps/web/
+ 
+ **Story 8.4: Composite Components - Cards, Dialogs, Tabs**
+ 
+-**Story Goal:** Build Card, Dialog/Modal, Tabs, Popover, Accordion/Collapsible, Alert
++**Story Goal:** Build Card, Dialog/Modal, Tabs, Popover, Accordion/Collapsible, Alert per UX spec patterns
++
++**UX Spec References:**
++- UX Consistency Patterns: Modal & Overlay Patterns (dialog types, behavior, confirmation dialogs)
++- UX Consistency Patterns: Navigation Patterns (tab navigation, back navigation)
++- Component Strategy: Atomic Design Hierarchy (Molecules level)
++- Design Direction Decision: Component Visual Language (Cards types: Content/Action/Status/List Item)
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1801,7 +1844,13 @@ apps/web/
+ 
+ **Story 8.5: Composite Components - Form & Command**
+ 
+-**Story Goal:** Build Select, Combobox, Command Palette (Cmd+K), Copy Button with feedback, File Upload
++**Story Goal:** Build Select, Combobox, Command Palette (Cmd+K), Copy Button with feedback, File Upload per UX spec patterns
++
++**UX Spec References:**
++- UX Consistency Patterns: Form Patterns (field states, validation timing, form layout, field widths)
++- UX Consistency Patterns: Keyboard Navigation (global shortcuts, focus indicators)
++- Design Direction Decision: Component Visual Language (Form Elements styles)
++- Component Strategy: Copy Button specification (animation sequence, props interface)
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1813,7 +1862,13 @@ apps/web/
+ 
+ **Story 8.6: Domain Components - Resume & Job**
+ 
+-**Story Goal:** Build Resume Selector, Resume Card, Job Info Card, Application Status Badge, Match Score Display
++**Story Goal:** Build Resume Block, Job Card, Match Score - implementing UX spec component specifications
++
++**UX Spec References:**
++- Job Card: anatomy, states (Scanning/Loaded/Saved/Error), props interface
++- Match Score: anatomy, states (Calculating/High/Medium/Low), props interface
++- Resume Block: anatomy, states (Collapsed/Expanded/Copying/Copied), props interface
++- Sidebar State Banner: states and banner content per sidebar state
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1825,7 +1880,12 @@ apps/web/
+ 
+ **Story 8.7: Domain Components - AI & Progress**
+ 
+-**Story Goal:** Build AI Output Panel (edit/copy/regenerate), Progress Checklist, Skill Chips (copyable)
++**Story Goal:** Build AI Studio Panel, Copy Button, Credits Counter - implementing UX spec component specifications
++
++**UX Spec References:**
++- AI Studio Panel: anatomy, states (Ready/Generating/Generated/Error), props interface, tabs (Cover Letter/Q&A/Outreach)
++- Copy Button: anatomy, animation sequence (click→checkmark→"Copied!"→reset), props interface
++- Credits Counter: anatomy, states (Healthy/Low/Exhausted/Updating), props interface
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1837,7 +1897,13 @@ apps/web/
+ 
+ **Story 8.8: Section Components - Layout & Navigation**
+ 
+-**Story Goal:** Build Navbar (extension + dashboard variants), Footer (progress + credits), Settings Panel
++**Story Goal:** Build Navbar (extension + dashboard variants), Footer (progress + credits), Settings Panel per UX spec patterns
++
++**UX Spec References:**
++- Design Direction Decision: Sidebar Design Direction (layout structure, 48px header, 40px footer)
++- Design Direction Decision: Dashboard Design Direction (200px left nav, top bar layout)
++- UX Consistency Patterns: Navigation Patterns (sidebar navigation, dashboard navigation)
++- Component Strategy: Atomic Design Hierarchy (Compositions level)
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1849,7 +1915,13 @@ apps/web/
+ 
+ **Story 8.9: Section Components - AI Studio & Complete Flows**
+ 
+-**Story Goal:** Build AI Studio section (tabs + content areas), Job Details section, Resume section, complete workflows
++**Story Goal:** Build AI Studio section (tabs + content areas), Job Details section, Resume section, complete workflows per UX spec
++
++**UX Spec References:**
++- User Journey Flows: AI Content Generation Flow (generation controls, tone selector, output handling)
++- User Journey Flows: Core Application Loop (Marcus's Power User Flow)
++- Component Strategy: AI Studio Panel (full anatomy and behavior)
++- Core User Experience: Experience Mechanics (steps 1-6 of core loop)
+ 
+ **Estimated Effort:** 3 days
+ 
+@@ -1861,7 +1933,13 @@ apps/web/
+ 
+ **Story 8.10: Platform Integration & Validation**
+ 
+-**Story Goal:** Integrate components into extension and dashboard, validate platform variants, fix responsive issues, visual regression testing
++**Story Goal:** Integrate components into extension and dashboard, validate platform variants, fix responsive issues, accessibility audit
++
++**UX Spec References:**
++- Responsive Design & Accessibility: Responsive Strategy (extension fixed 320-420px, dashboard fully responsive)
++- Responsive Design & Accessibility: Breakpoint Strategy (dashboard breakpoints: sm/md/lg/xl/2xl)
++- Responsive Design & Accessibility: Accessibility Strategy (WCAG 2.1 AA, ARIA implementation, screen reader announcements)
++- Responsive Design & Accessibility: Testing Strategy (automated testing, manual checklists, device matrix)
+ 
+ **Estimated Effort:** 2 days
+ 
+@@ -1964,16 +2042,25 @@ apps/web/
+ 
+ - ✅ All 10 stories completed and marked `done` in sprint-status.yaml
+ - ✅ Storybook accessible at `http://localhost:6006` with all components
+-- ✅ Blue primary color (`hsl(221.2 83.2% 53.3%)`) applied throughout
+-- ✅ Light + dark themes working in all components
++- ✅ **UX Spec Compliance:**
++  - All 7 custom components implemented per UX spec (Job Card, Match Score, AI Studio Panel, Resume Block, Copy Button, Credits Counter, Sidebar State Banner)
++  - All design tokens from Visual Design Foundation implemented
++  - All UX Consistency Patterns followed (buttons, forms, feedback, navigation, modals, empty/loading states)
++  - Motion/animation system from Design Direction Decision implemented
++- ✅ Blue primary color (`hsl(221.2 83.2% 53.3%)`) and full color palette applied
++- ✅ Glassmorphism effects for sidebar per UX spec
++- ✅ Light (dashboard) + dark (extension) themes working
+ - ✅ Extension can import and use all components from `@jobswyft/ui`
+ - ✅ Dashboard can import and use all components from `@jobswyft/ui`
+ - ✅ All components have Storybook stories demonstrating:
+-  - All variants
+-  - All states (default, hover, active, disabled, loading, error)
++  - All variants per UX spec component specifications
++  - All states (per component state tables in UX spec)
+   - Platform variants (extension vs dashboard where applicable)
+-  - Accessibility features (keyboard nav, screen reader)
+-- ✅ Visual regression testing confirms components match demo design
+-- ✅ Accessibility audit passes (Lighthouse 95+, axe-core 0 violations)
++  - Accessibility features (WCAG 2.1 AA per UX spec)
++- ✅ Accessibility audit passes per UX spec requirements:
++  - Color contrast 4.5:1 minimum
++  - Touch targets 44×44px minimum
++  - Full keyboard navigation
++  - Screen reader compatibility
+ - ✅ Components tested in actual extension sidebar (320-420px) and dashboard (responsive)
+ - ✅ Documentation in Storybook includes usage examples and guidelines
+diff --git a/_bmad-output/planning-artifacts/ux-design-specification.md b/_bmad-output/planning-artifacts/ux-design-specification.md
+new file mode 100644
+index 0000000..f3752fa
+--- /dev/null
++++ b/_bmad-output/planning-artifacts/ux-design-specification.md
+@@ -0,0 +1,1842 @@
++---
++stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
++inputDocuments:
++  - prd.md
++  - architecture.md
++  - project-context.md
++  - epics.md
++workflowStatus: complete
++startedAt: '2026-02-02'
++completedAt: '2026-02-02'
++projectContext:
++  productName: Jobswyft
++  productType: Multi-Surface Product (Extension + Dashboard + API)
++  primarySurface: Chrome Extension Sidebar
++  secondarySurface: Web Dashboard
++  targetUsers: Job seekers across all career stages
++  primaryColors: Blue (hsl(221.2 83.2% 53.3%))
++---
++
++# UX Design Specification - Jobswyft
++
++**Author:** jobswyft
++**Date:** 2026-02-02
++
++---
++
++## Executive Summary
++
++### Project Vision
++
++Jobswyft is an AI-powered job application assistant that transforms the application process from tedious repetition into a streamlined, confidence-building experience. The core promise: **Apply 5x faster** without leaving the job posting page.
++
++**Key Differentiators:**
++- Automatic job page detection and scanning—no manual steps
++- AI-powered content generation (cover letters, answers, outreach) that sounds authentic
++- Privacy-first approach: AI outputs are never stored on servers
++- Unified experience across Chrome extension sidebar and web dashboard
++
++### Target Users
++
++**Primary Personas:**
++
++1. **The Active Job Hunter (Marcus)** - High-volume applier needing speed and efficiency
++2. **The First-Time User (Aisha)** - Skeptical adopter requiring trust-building and immediate value
++3. **The Returning User (David)** - Executive expecting data persistence and premium experience
++4. **The New Grad (Jenna)** - Early-career user needing confidence and authentic voice
++
++**Universal User Needs:**
++- Editable AI outputs (not locked-in content)
++- Personalization through tone selection and custom instructions
++- Immediate value demonstration within first 5 minutes
++- Consistent experience across extension and dashboard
++
++### Key Design Challenges
++
++1. **Compact Sidebar Experience** - Fit comprehensive AI tools in 320-420px width without cognitive overload
++2. **Multi-State Interface** - Clear visual distinction between 4 sidebar states (Logged Out, Non-Job Page, Job Page, Application Page)
++3. **First-Impression Trust** - Convert skeptical users through immediate, tangible value demonstration
++4. **Authentic AI Voice** - Generated content must sound like the user, not robotic or generic
++5. **Cross-Surface Cohesion** - Extension and dashboard must feel like one unified product
++
++### Design Opportunities
++
++1. **Auto-Scan Delight** - Transform job detection into a satisfying "magic moment" with smooth visual feedback
++2. **Resume Intelligence** - Expandable resume blocks with quick-copy create efficiency that competitors lack
++3. **Application Journey Tracking** - Progress visualization can drive engagement and return visits
++4. **Confidence Coaching** - Match analysis can actively surface hidden user strengths, building confidence
++5. **Micro-Interactions** - Thoughtful animations and feedback can elevate perceived quality
++
++## Core User Experience
++
++### Defining Experience
++
++The core Jobswyft experience is the **Scan → Generate → Apply** loop. Users land on a job posting, the extension automatically detects and scans the page, and within seconds they have access to AI-powered tools that help them apply with confidence.
++
++**Core Action:** Generate a tailored cover letter that sounds authentic, not robotic.
++
++**Core Loop:** Open sidebar → Auto-scan job → Generate content → Autofill or copy → Save job → Next tab
++
++The experience must feel like a superpower—users should finish 5 applications in the time it used to take for one.
++
++### Platform Strategy
++
++| Platform | Role | Key Constraints |
++|----------|------|-----------------|
++| **Chrome Extension Sidebar** | Primary interface for job application workflow | 320-420px width, Shadow DOM isolation, < 500ms open time |
++| **Web Dashboard** | Job tracking, resume management, account settings | Responsive design, SEO-optimized landing page |
++| **Cross-Platform Sync** | Real-time sync between extension and dashboard | Authentication state, resume selection, job list |
++
++**Interaction Model:**
++- Mouse/keyboard primary (power users optimizing for speed)
++- Touch-friendly dashboard for mobile job tracking
++- Keyboard shortcuts for power users (Cmd+C to copy, Cmd+Enter to regenerate)
++
++**Offline Behavior:**
++- Cached resume list viewable offline
++- Cached job list accessible offline
++- AI features require network connection with graceful degradation
++
++### Effortless Interactions
++
++| Interaction | Target | Implementation |
++|-------------|--------|----------------|
++| Sidebar open | < 500ms | Lazy load, preconnect to API |
++| Job detection | Automatic | URL pattern matching + content analysis |
++| Job scan | < 2 seconds | Hybrid: rules engine + AI fallback |
++| Resume switch | One click | Inline selector with active indicator |
++| Content copy | One click + feedback | Copy button with checkmark animation |
++| Autofill | One click | Field mapping + visual highlight |
++| Tab workflow | Zero relearning | Consistent UI, remembered preferences |
++
++**Eliminating Competitor Friction:**
++- No manual job description pasting
++- No multi-step wizards for generation
++- No "upgrade to copy" paywalls
++- No re-authentication on return visits
++
++### Critical Success Moments
++
++**First-Time User Journey (< 5 minutes to value):**
++
++| Minute | Moment | Success Indicator |
++|--------|--------|-------------------|
++| 0-1 | Install + Sign in | Google OAuth completes without friction |
++| 1-2 | Resume upload | PDF uploaded and parsed successfully |
++| 2-3 | First scan | Job details appear automatically |
++| 3-4 | First generation | Cover letter makes user smile |
++| 4-5 | First application | Autofill works, job saved |
++
++**Make-or-Break Interactions:**
++
++1. **Auto-Scan Magic** - If the scan fails on a common job board, trust is broken immediately
++2. **Cover Letter Voice** - If output sounds robotic, users won't trust any AI feature
++3. **Autofill Accuracy** - Wrong data in wrong fields damages credibility
++4. **Return Experience** - If data is missing or user needs to re-authenticate, momentum dies
++
++### Experience Principles
++
++1. **Invisible Until Needed**
++   - Sidebar appears contextually when relevant
++   - Auto-scan happens silently without user action
++   - Features unlock progressively based on state
++
++2. **One-Click Everything**
++   - Copy generated content: one click
++   - Autofill application: one click
++   - Switch active resume: one click
++   - Save job to tracker: one click
++
++3. **Sound Like You, Not AI**
++   - Tone selection lets users control voice
++   - Custom instructions personalize output
++   - Regenerate with feedback refines results
++   - Editable outputs—never locked in
++
++4. **Show Progress, Build Confidence**
++   - Match analysis highlights user strengths
++   - Skill gaps framed as opportunities
++   - Application tracker shows momentum
++   - Credits display shows value delivered
++
++5. **Trust Through Transparency**
++   - Clear indication of what data is scanned
++   - AI outputs explicitly marked as ephemeral
++   - No hidden storage or sharing
++   - Easy data deletion at any time
++
++### User Mental Model
++
++**How Users Currently Solve This Problem:**
++Job seekers today open multiple tabs—job board, company career page, resume document, cover letter template, notes app. They copy-paste job descriptions into AI tools (ChatGPT, Claude), then manually format outputs. The mental model is "gather → compose → submit," with significant context-switching.
++
++**Mental Model Jobswyft Creates:**
++"I'm on a job page. My assistant sees what I see. I generate, tweak, apply." The sidebar becomes an extension of the user's thought process—not a separate tool to switch to.
++
++**Expectation Mapping:**
++
++| User Expectation | Jobswyft Response |
++|------------------|-------------------|
++| "I'll need to paste the job description" | Already scanned—no action needed |
++| "I'll need to open my resume file" | Resume already loaded from account |
++| "AI will sound generic" | Tone selection + custom instructions → sounds like them |
++| "I'll lose this if I close the tab" | Job auto-saved, accessible in dashboard |
++| "This will take forever to set up" | Value in under 5 minutes |
++
++**Points of Potential Confusion:**
++- Users may not realize the sidebar auto-detected the job (need visual confirmation)
++- Users may wonder where their generated content "goes" (need ephemeral badge)
++- Users may expect autofill to work on every site (need graceful fallback messaging)
++
++### Experience Mechanics
++
++**The Core Loop in Detail:**
++
++**1. Initiation: Landing on a Job Page**
++- User opens any job posting (LinkedIn, Indeed, company career page, etc.)
++- Extension icon subtly pulses or badge updates (visual cue without interruption)
++- User clicks extension icon OR uses keyboard shortcut to open sidebar
++- Sidebar opens in < 500ms
++
++**2. Auto-Scan: The Magic Moment**
++- Sidebar immediately shows "Scanning..." state (< 2 seconds)
++- Progress indicator: subtle scanning animation (not a spinner)
++- Job details populate: title, company, location, requirements
++- Visual confirmation: checkmark appears, job card animates in
++- **If scan fails:** Graceful fallback with "Add job details manually" option
++
++**3. Match Analysis: Building Confidence**
++- Match score appears (e.g., "78% Match")
++- Strengths listed first (skills, experience alignment)
++- Gaps framed as "Areas to address" with suggested talking points
++- User feels informed, not judged
++
++**4. Content Generation: The Core Action**
++- User selects content type (Cover Letter, Q&A, Outreach)
++- One-click generation with visible progress
++- AI Studio panel shows generation controls:
++  - Tone selector (Professional, Conversational, Enthusiastic)
++  - Custom instructions field
++  - Regenerate button
++- Content appears in editable textarea
++- **Copy button prominent** with satisfying feedback animation
++
++**5. Application: Completing the Loop**
++- **Autofill path:** User clicks "Autofill" → fields highlight as they populate → success confirmation
++- **Manual path:** User copies content → checkmark animation → pastes into application
++- Job automatically saved to tracker with status "Applied"
++- Counter increments ("3 applications today")
++
++**6. Next Tab: Maintaining Momentum**
++- User opens next job posting
++- Extension remembers:
++  - Active resume selection
++  - Tone preference
++  - Custom instructions
++- Loop restarts seamlessly—zero relearning
++
++### Novel vs. Established Patterns
++
++**Established Patterns We Embrace:**
++
++| Pattern | Source | Application in Jobswyft |
++|---------|--------|------------------------|
++| Sidebar overlay | Browser DevTools, Notion | Non-intrusive, doesn't block page content |
++| Card-based content | Material Design, iOS | Job details, resume blocks, generated content |
++| Copy-to-clipboard feedback | Modern SaaS tools | Checkmark animation, brief highlight |
++| Progress indicators | Universal | Scan progress, generation progress |
++| Tabbed navigation | Web standard | AI Studio tabs (Cover Letter, Q&A, Outreach) |
++
++**Novel Patterns We Innovate:**
++
++| Innovation | Description | Why Novel |
++|------------|-------------|-----------|
++| **Auto-scan on page load** | Extension detects job posting without user action | Eliminates the "paste job description" anti-pattern |
++| **Ephemeral AI output** | Generated content never persists to servers | Trust-building through architectural transparency |
++| **Match-first generation** | Show job fit analysis before content generation | Builds confidence, informs tone selection |
++| **Resume-aware context** | AI uses active resume without explicit prompt | Reduces friction, improves output relevance |
++| **One-click autofill** | Map generated answers to application form fields | Bridges generation → application gap |
++
++**User Education Strategy:**
++- First-time tooltip: "We automatically scan job pages—no copy-paste needed"
++- Empty state messaging in AI Studio explains ephemeral nature
++- Autofill preview shows which fields will be filled before action
++
++## Desired Emotional Response
++
++### Primary Emotional Goals
++
++**Core Emotional Promise:** Empowerment through effortless competence.
++
++Users should feel like they suddenly got better at job applications—not like they're relying on a tool. The AI is a collaborator that makes them sound like their best selves, not a replacement that speaks for them.
++
++**Target Emotional States:**
++
++| Emotion | Description | Design Priority |
++|---------|-------------|-----------------|
++| **Empowered** | "I'm in control of my job search" | Critical |
++| **Confident** | "My applications are strong" | Critical |
++| **Efficient** | "I'm not wasting time anymore" | High |
++| **Authentic** | "This still sounds like me" | High |
++| **Delighted** | "That was unexpectedly satisfying" | Medium |
++
++### Emotional Journey Mapping
++
++**Before Jobswyft:**
++- Exhausted from repetitive applications
++- Dreading cover letters
++- Imposter syndrome when writing about themselves
++- Overwhelmed by volume of job search tasks
++
++**During First Use:**
++- Curious → Surprised → Delighted → Confident
++- Key transition: "Wait, it just... worked?"
++
++**During Core Loop (Scan → Generate → Apply):**
++- Focused, not distracted
++- Confident in output quality
++- Satisfied with speed
++- Proud of personalized content
++
++**After Completing Applications:**
++- Accomplished (visible progress)
++- Motivated to continue
++- Eager to return
++
++**On Return Visits:**
++- Comfortable (familiar patterns)
++- Efficient (muscle memory)
++- Trusting (data persistence)
++
++### Micro-Emotions
++
++**Emotions to Cultivate:**
++
++| Micro-Emotion | Trigger Moment | Design Solution |
++|---------------|----------------|-----------------|
++| **Surprise** | Auto-scan works instantly | Smooth animation, no loading spinner |
++| **Trust** | First data interaction | Clear privacy messaging, ephemeral badges |
++| **Accomplishment** | Job saved to tracker | Satisfying confirmation, counter increment |
++| **Authenticity** | Reading generated content | Tone selection, edit capability, "regenerate" |
++| **Delight** | Copy button feedback | Checkmark animation, haptic-like visual |
++
++**Emotions to Prevent:**
++
++| Negative Emotion | Risk Trigger | Prevention Strategy |
++|------------------|--------------|---------------------|
++| **Confusion** | Complex UI, hidden features | Progressive disclosure, clear state indicators |
++| **Anxiety** | Data concerns, AI uncertainty | Transparency messaging, easy deletion |
++| **Imposter Syndrome** | "AI did this, not me" | Framing as enhancement, not replacement |
++| **Frustration** | Scan failures, autofill errors | Graceful fallbacks, clear error recovery |
++| **Distrust** | Hidden data practices | Privacy-first messaging throughout |
++
++### Design Implications
++
++**To Create Confidence:**
++- Always show current state (which resume, what's scanned)
++- Progress indicators for all async operations
++- Consistent interaction patterns across features
++- Clear success/failure feedback
++
++**To Build Trust:**
++- Explicit "AI outputs are never saved" messaging
++- Visible data controls in sidebar footer
++- Easy logout and data deletion paths
++- No dark patterns or surprise behaviors
++
++**To Deliver Delight:**
++- Auto-scan should feel magical (< 2s, smooth animation)
++- Copy feedback should feel satisfying (checkmark, brief highlight)
++- Match analysis should lead with strengths
++- Application saved should celebrate the moment
++
++**To Maintain Authenticity:**
++- Always allow editing before use
++- Tone selector prominent in generation UI
++- "Regenerate with feedback" as primary refinement
++- Custom instructions honored visibly
++
++### Emotional Design Principles
++
++1. **Lead with Wins**
++   - Show strengths before gaps in match analysis
++   - Celebrate successful actions before prompting next steps
++   - Frame limitations as opportunities, not failures
++
++2. **Explain, Don't Surprise**
++   - State changes should be visible and understandable
++   - AI actions should be transparent (what data is being used)
++   - Errors should include clear recovery paths
++
++3. **Respect User Agency**
++   - All AI output is editable
++   - User chooses when to save, copy, or apply
++   - No auto-posting or irreversible actions without confirmation
++
++4. **Build Momentum**
++   - Application counter creates progress visibility
++   - Quick wins early (scan → match in < 30 seconds)
++   - Return visits should feel like continuing, not restarting
++
++5. **Fail Gracefully**
++   - Scan failures offer manual input as fallback
++   - AI failures don't consume credits
++   - Network errors show cached data where possible
++
++## UX Pattern Analysis & Inspiration
++
++### Design Philosophy: Original & Self-Directed
++
++Jobswyft's UX will not be derivative of existing products. The design approach is intentionally original—built from first principles based on:
++
++1. **User Journey Understanding** - Deep persona analysis (Marcus, Aisha, David, Jenna)
++2. **Emotional Design Goals** - Empowerment through effortless competence
++3. **Experience Principles** - Invisible until needed, one-click everything, authentic voice
++4. **Platform Constraints** - 320-420px sidebar, cross-surface consistency
++
++**Design Stance:** We create patterns others will study, not patterns we copy.
++
++### Foundational Design Decisions
++
++Rather than borrowing from competitors, Jobswyft's UX emerges from:
++
++| Foundation | Source | Design Implication |
++|------------|--------|-------------------|
++| **Core Loop** | User journey analysis | Scan → Generate → Apply as the atomic unit |
++| **State Model** | Platform requirements | 4-state sidebar (Logged Out, Non-Job, Job Page, Application) |
++| **Interaction Model** | Efficiency principles | One-click actions, zero multi-step wizards |
++| **Emotional Framework** | User psychology | Lead with wins, build confidence, respect agency |
++| **Visual Identity** | Brand positioning | Blue primary, professional yet approachable |
++
++### Anti-Patterns to Avoid
++
++While not copying competitors, we acknowledge common UX failures to consciously avoid:
++
++| Anti-Pattern | Why It Fails | Jobswyft Alternative |
++|--------------|--------------|---------------------|
++| **Clipboard-paste job descriptions** | Manual friction, breaks flow | Auto-scan detection |
++| **Multi-step generation wizards** | Slow, tedious, breaks momentum | Single-screen AI Studio |
++| **Robotic AI voice** | Feels inauthentic, damages trust | Tone selection + custom instructions |
++| **Upgrade walls before value** | Breaks trust, prevents conversion | 5 free generations upfront |
++| **Hidden data practices** | Creates anxiety | Privacy-first transparency |
++| **Complex onboarding flows** | Delays first value | < 5 minutes to first application |
++
++### Design Inspiration Strategy
++
++**Approach:** Ground-up design from established principles
++
++**Sources of Truth:**
++1. PRD user journeys and emotional targets
++2. Experience principles defined in this document
++3. Platform constraints (sidebar width, cross-surface sync)
++4. Demo design aesthetic (blue theme, glassmorphism)
++
++**Validation Method:**
++- Does it serve the core loop?
++- Does it respect the emotional framework?
++- Does it maintain one-click efficiency?
++- Does it build trust and confidence?
++
++**Goal:** Create UX patterns distinctive enough that competitors will reference Jobswyft as inspiration.
++
++## Design System Foundation
++
++### Design System Choice
++
++**Approach:** Custom design system with themeable primitives
++
++Jobswyft uses a hybrid design system that combines:
++- **Style Dictionary** for design tokens (single source of truth)
++- **Tailwind CSS** for utility-first styling
++- **CSS Modules** for complex component styling
++- **shadcn/ui** for accessible interactive primitives
++- **Custom components** for domain-specific UI
++
++This approach provides the speed of established patterns while maintaining the visual uniqueness that defines Jobswyft's brand.
++
++### Rationale for Selection
++
++| Factor | Decision Driver |
++|--------|-----------------|
++| **Visual Uniqueness** | Custom design tokens enable distinctive brand identity (blue glassmorphism aesthetic) |
++| **Development Speed** | shadcn/ui primitives eliminate accessibility reinvention |
++| **Cross-Surface Consistency** | Shared `@jobswyft/ui` package serves both extension and dashboard |
++| **Maintainability** | Atomic design hierarchy (atoms → molecules → organisms → compositions) |
++| **Documentation** | Storybook enables interactive component exploration and testing |
++
++### Implementation Approach
++
++**Package Structure:**
++```
++packages/
++├── design-tokens/       # Style Dictionary source files
++│   ├── tokens/          # colors.json, typography.json, spacing.json...
++│   └── dist/            # tokens.css, themes.css, tokens.js
++└── ui/                  # Shared component library
++    ├── src/components/  # Atomic design hierarchy
++    ├── .storybook/      # Component documentation
++    └── dist/            # Built output
++```
++
++**Build Pipeline:**
++1. Design tokens compiled via Style Dictionary
++2. Tokens consumed as CSS variables in Tailwind config
++3. Components built with hybrid Tailwind + CSS Modules
++4. Storybook documents all variants and states
++5. Extension and Dashboard import from `@jobswyft/ui`
++
++### Customization Strategy
++
++**Token Categories:**
++
++| Category | CSS Variable Pattern | Example |
++|----------|---------------------|---------|
++| Colors | `--color-{name}-{shade}` | `--color-primary-500` |
++| Typography | `--font-{property}-{value}` | `--font-size-md` |
++| Spacing | `--space-{scale}` | `--space-4` (16px) |
++| Borders | `--radius-{size}` | `--radius-lg` |
++| Shadows | `--shadow-{size}` | `--shadow-md` |
++| Transitions | `--transition-{speed}` | `--transition-base` |
++
++**Theme Variables:**
++
++| Variable | Dark Theme | Light Theme |
++|----------|------------|-------------|
++| `--theme-text-primary` | White | Dark gray |
++| `--theme-glass-bg` | `rgba(255,255,255,0.05)` | `rgba(255,255,255,0.7)` |
++| `--theme-glass-border` | `rgba(255,255,255,0.1)` | `rgba(0,0,0,0.1)` |
++
++**Component Customization:**
++- All components accept `className` prop for style overrides
++- Platform variants via `platform` prop (extension vs dashboard sizing)
++- Theme switching via `data-theme` attribute on root element
++
++## Visual Design Foundation
++
++### Color System
++
++**Primary Palette:**
++
++| Token | Value | Usage |
++|-------|-------|-------|
++| `--color-primary-500` | `hsl(221.2, 83.2%, 53.3%)` | Primary actions, links, focus states |
++| `--color-primary-400` | `hsl(221.2, 83.2%, 63.3%)` | Hover states |
++| `--color-primary-600` | `hsl(221.2, 83.2%, 43.3%)` | Active/pressed states |
++| `--color-primary-50` | `hsl(221.2, 83.2%, 97%)` | Subtle backgrounds |
++
++**Semantic Colors:**
++
++| Semantic | Light Theme | Dark Theme | Usage |
++|----------|-------------|------------|-------|
++| `--color-success` | `hsl(142, 76%, 36%)` | `hsl(142, 76%, 46%)` | Match score high, copy success |
++| `--color-warning` | `hsl(38, 92%, 50%)` | `hsl(38, 92%, 55%)` | Low credits, skill gaps |
++| `--color-error` | `hsl(0, 84%, 60%)` | `hsl(0, 84%, 65%)` | Scan failures, validation errors |
++| `--color-info` | `hsl(199, 89%, 48%)` | `hsl(199, 89%, 58%)` | Tips, first-time hints |
++
++**Glassmorphism Foundation (Sidebar):**
++
++| Variable | Dark Theme | Light Theme |
++|----------|------------|-------------|
++| `--glass-bg` | `rgba(15, 23, 42, 0.85)` | `rgba(255, 255, 255, 0.85)` |
++| `--glass-border` | `rgba(255, 255, 255, 0.1)` | `rgba(0, 0, 0, 0.08)` |
++| `--glass-blur` | `16px` | `12px` |
++| `--glass-shadow` | `0 8px 32px rgba(0, 0, 0, 0.4)` | `0 8px 32px rgba(0, 0, 0, 0.1)` |
++
++**Neutral Palette:**
++
++| Token | Value | Usage |
++|-------|-------|-------|
++| `--color-gray-50` | `hsl(210, 40%, 98%)` | Lightest backgrounds |
++| `--color-gray-100` | `hsl(210, 40%, 96%)` | Card backgrounds (light) |
++| `--color-gray-200` | `hsl(214, 32%, 91%)` | Borders, dividers |
++| `--color-gray-500` | `hsl(215, 16%, 47%)` | Secondary text |
++| `--color-gray-700` | `hsl(215, 19%, 35%)` | Primary text (light theme) |
++| `--color-gray-900` | `hsl(222, 47%, 11%)` | Headings (light theme) |
++
++### Typography System
++
++**Font Stack:**
++
++| Role | Font | Fallback | Usage |
++|------|------|----------|-------|
++| **Primary** | Inter | system-ui, sans-serif | All UI text |
++| **Mono** | JetBrains Mono | ui-monospace, monospace | Code, technical content |
++
++**Type Scale (based on 16px root):**
++
++| Token | Size | Line Height | Weight | Usage |
++|-------|------|-------------|--------|-------|
++| `--text-xs` | 12px | 1.5 | 400 | Badges, metadata |
++| `--text-sm` | 14px | 1.5 | 400 | Secondary text, labels |
++| `--text-base` | 16px | 1.5 | 400 | Body text |
++| `--text-lg` | 18px | 1.5 | 500 | Subheadings |
++| `--text-xl` | 20px | 1.4 | 600 | Section titles |
++| `--text-2xl` | 24px | 1.3 | 600 | Page titles |
++| `--text-3xl` | 30px | 1.2 | 700 | Hero headlines |
++
++**Font Weights:**
++
++| Token | Weight | Usage |
++|-------|--------|-------|
++| `--font-normal` | 400 | Body text |
++| `--font-medium` | 500 | Emphasized text, buttons |
++| `--font-semibold` | 600 | Headings, labels |
++| `--font-bold` | 700 | Hero text, strong emphasis |
++
++### Spacing & Layout Foundation
++
++**Spacing Scale (4px base unit):**
++
++| Token | Value | Usage |
++|-------|-------|-------|
++| `--space-0` | 0 | Reset |
++| `--space-1` | 4px | Tight inline spacing |
++| `--space-2` | 8px | Icon gaps, compact padding |
++| `--space-3` | 12px | Button padding, small gaps |
++| `--space-4` | 16px | Card padding, section gaps |
++| `--space-5` | 20px | Medium section spacing |
++| `--space-6` | 24px | Large section spacing |
++| `--space-8` | 32px | Page section margins |
++| `--space-10` | 40px | Major section breaks |
++| `--space-12` | 48px | Page-level spacing |
++
++**Sidebar Layout (320-420px):**
++
++| Element | Spacing |
++|---------|---------|
++| Sidebar padding | `--space-4` (16px) |
++| Section gaps | `--space-6` (24px) |
++| Card padding | `--space-4` (16px) |
++| Form field gaps | `--space-3` (12px) |
++| Button internal | `--space-3` horizontal, `--space-2` vertical |
++
++**Border Radius:**
++
++| Token | Value | Usage |
++|-------|-------|-------|
++| `--radius-sm` | 4px | Badges, small elements |
++| `--radius-md` | 8px | Buttons, inputs |
++| `--radius-lg` | 12px | Cards, panels |
++| `--radius-xl` | 16px | Modal dialogs |
++| `--radius-full` | 9999px | Pills, avatars |
++
++### Accessibility Considerations
++
++**Color Contrast Requirements:**
++
++| Context | Minimum Ratio | Target |
++|---------|--------------|--------|
++| Body text on background | 4.5:1 | 7:1 (AAA) |
++| Large text (18px+) | 3:1 | 4.5:1 |
++| UI components | 3:1 | 4.5:1 |
++| Focus indicators | 3:1 | Visible outline |
++
++**Accessibility Features:**
++
++- **Focus States:** Visible 2px outline with `--color-primary-500` on all interactive elements
++- **Motion:** `prefers-reduced-motion` respected; animations disable automatically
++- **Color Independence:** Information never conveyed by color alone (icons + color for status)
++- **Touch Targets:** Minimum 44×44px for mobile dashboard; 32×32px acceptable for sidebar power-user context
++- **Text Sizing:** All text respects user's font size preferences; no fixed px that prevents scaling
++
++**Theme Detection:**
++
++- Sidebar: Dark theme default (matches browser UI context)
++- Dashboard: Follows system preference via `prefers-color-scheme`
++- Manual override available in settings
++
++## Design Direction Decision
++
++### Design Philosophy
++
++**Unified Direction: "Glassmorphic Clarity"**
++
++Jobswyft's visual language combines glassmorphism aesthetics with functional clarity. The design feels modern and premium without sacrificing usability or speed. Every visual decision serves the core loop: Scan → Generate → Apply.
++
++**Design Pillars:**
++
++| Pillar | Expression |
++|--------|------------|
++| **Professional Trust** | Blue primary, clean typography, structured layouts |
++| **Modern Sophistication** | Glassmorphism, subtle shadows, smooth transitions |
++| **Effortless Power** | One-click actions, clear hierarchy, progressive disclosure |
++| **Authentic Warmth** | Approachable tone, celebration moments, human-friendly copy |
++
++### Sidebar Design Direction
++
++**Visual Characteristics:**
++
++| Element | Specification |
++|---------|---------------|
++| **Background** | Dark glassmorphism (`rgba(15, 23, 42, 0.85)`) with 16px blur |
++| **Borders** | Subtle white stroke (`rgba(255, 255, 255, 0.1)`) |
++| **Cards** | Elevated surfaces with `--glass-bg`, `--radius-lg` corners |
++| **Typography** | High contrast white text on dark, Inter font stack |
++| **Icons** | Outlined style, 20px default size, primary blue for active states |
++| **Shadows** | Layered depth (`--glass-shadow`) for floating appearance |
++
++**Layout Structure:**
++
++```
++┌─────────────────────────────────┐
++│  Header (Logo + User + Menu)    │  48px
++├─────────────────────────────────┤
++│  State Banner (Job/Non-Job)     │  Variable
++├─────────────────────────────────┤
++│                                 │
++│  Primary Content Area           │  Flex grow
++│  (Cards, AI Studio, etc.)       │
++│                                 │
++├─────────────────────────────────┤
++│  Footer (Credits + Privacy)     │  40px
++└─────────────────────────────────┘
++```
++
++**Interaction States:**
++
++| State | Visual Treatment |
++|-------|------------------|
++| Default | Base glassmorphism |
++| Hover | Subtle brightness increase, border glow |
++| Active/Pressed | Primary color accent, slight scale (0.98) |
++| Focus | 2px primary outline, no other change |
++| Disabled | 50% opacity, no pointer events |
++| Loading | Skeleton pulse animation, content preserved |
++
++### Dashboard Design Direction
++
++**Visual Characteristics:**
++
++| Element | Specification |
++|---------|---------------|
++| **Background** | Light theme default: `--color-gray-50` |
++| **Cards** | White surfaces with subtle shadow, `--radius-lg` |
++| **Typography** | Dark gray text hierarchy, Inter font stack |
++| **Navigation** | Left sidebar (desktop), bottom nav (mobile) |
++| **Data Tables** | Clean rows, hover highlight, sortable headers |
++| **Charts** | Primary blue palette, accessible color combinations |
++
++**Layout Structure (Desktop):**
++
++```
++┌──────────┬────────────────────────────────────────┐
++│          │  Top Bar (Search + User)               │
++│   Nav    ├────────────────────────────────────────┤
++│   200px  │                                        │
++│          │  Main Content                          │
++│          │  (max-width: 1200px, centered)         │
++│          │                                        │
++└──────────┴────────────────────────────────────────┘
++```
++
++### Component Visual Language
++
++**Buttons:**
++
++| Variant | Usage | Style |
++|---------|-------|-------|
++| **Primary** | Main actions (Generate, Apply) | Solid primary blue, white text |
++| **Secondary** | Supporting actions (Cancel, Back) | Outlined, primary blue border |
++| **Ghost** | Tertiary actions (Close, Skip) | Transparent, hover reveals background |
++| **Destructive** | Dangerous actions (Delete) | Error red, used sparingly |
++
++**Cards:**
++
++| Type | Usage | Style |
++|------|-------|-------|
++| **Content Card** | Job details, resume blocks | Full glass treatment, padded |
++| **Action Card** | AI Studio, generation controls | Elevated, interactive borders |
++| **Status Card** | Match analysis, progress | Accent border-left, muted background |
++| **List Item Card** | Job tracker rows, resume list | Minimal, hover-to-elevate |
++
++**Form Elements:**
++
++| Element | Style |
++|---------|-------|
++| **Text Input** | Glass background, subtle border, focus ring |
++| **Textarea** | Expandable, monospace option for code/technical |
++| **Select** | Native feel with custom dropdown styling |
++| **Toggle** | Pill shape, primary blue when active |
++| **Checkbox** | Rounded square, checkmark animation |
++
++### Motion & Animation
++
++**Timing Functions:**
++
++| Token | Value | Usage |
++|-------|-------|-------|
++| `--ease-out` | `cubic-bezier(0, 0, 0.2, 1)` | Exits, dismissals |
++| `--ease-in-out` | `cubic-bezier(0.4, 0, 0.2, 1)` | State changes |
++| `--ease-bounce` | `cubic-bezier(0.34, 1.56, 0.64, 1)` | Celebrations, success |
++
++**Duration Scale:**
++
++| Token | Value | Usage |
++|-------|-------|-------|
++| `--duration-fast` | 150ms | Hovers, micro-interactions |
++| `--duration-base` | 200ms | State changes, reveals |
++| `--duration-slow` | 300ms | Page transitions, modals |
++
++**Key Animations:**
++
++| Animation | Description | Trigger |
++|-----------|-------------|---------|
++| **Scan Pulse** | Subtle radial pulse on job card | During auto-scan |
++| **Copy Checkmark** | Icon morphs to checkmark, fades | On copy success |
++| **Counter Increment** | Number rolls up with slight bounce | On job save |
++| **Skeleton Shimmer** | Left-to-right gradient sweep | During loading |
++| **Card Entrance** | Fade up + slight scale | On content load |
++
++### Design Rationale
++
++**Why Glassmorphism for Sidebar:**
++- Creates visual separation from underlying webpage without fully obscuring it
++- Feels modern and premium, differentiating from utilitarian competitor extensions
++- Dark theme reduces eye strain during extended job search sessions
++- Blur effect naturally draws focus to sidebar content
++
++**Why Clean/Light for Dashboard:**
++- Dashboard sessions are longer (job tracking, resume management)
++- Light theme better for data-heavy interfaces (tables, charts)
++- Follows established SaaS dashboard conventions for familiarity
++- Easier to scan large amounts of job data
++
++**Why Blue Primary:**
++- Trust and professionalism (financial services, LinkedIn)
++- Distinctive without being aggressive
++- Excellent accessibility across light/dark themes
++- Complements the professional job search context
++
++### Implementation Approach
++
++**Phase 1: Foundation Components**
++- Design tokens compiled and published
++- Core atoms: Button, Input, Card, Badge
++- Storybook setup with all variants
++
++**Phase 2: Composite Components**
++- Job Card, Resume Block, Match Score
++- AI Studio panel, Generation controls
++- Navigation components (sidebar, tabs)
++
++**Phase 3: Page Compositions**
++- Sidebar states (all 4 states)
++- Dashboard pages (Jobs, Resumes, Settings)
++- Responsive variants
++
++**Phase 4: Polish**
++- All animations implemented
++- Loading states and skeletons
++- Error states and empty states
++- Dark/light theme switching
++
++## User Journey Flows
++
++### First-Time User Onboarding (Aisha's Journey)
++
++**Goal:** Skeptical user achieves first successful application in under 5 minutes.
++
++**Entry Point:** Installs extension from Chrome Web Store
++
++```mermaid
++flowchart TD
++    A[Install Extension] --> B{Extension Icon Clicked}
++    B --> C[Sidebar Opens - Welcome State]
++    C --> D[Sign In with Google]
++    D --> E{OAuth Success?}
++    E -->|No| F[Show Error + Retry]
++    F --> D
++    E -->|Yes| G[Welcome Screen - Upload Resume CTA]
++    G --> H[Upload Resume PDF]
++    H --> I{Parse Success?}
++    I -->|No| J[Show Parse Error + Manual Entry Option]
++    J --> K[Manual Profile Entry]
++    I -->|Yes| L[Resume Preview + Confirm]
++    K --> L
++    L --> M[First-Time Tooltip: "Navigate to a job posting"]
++    M --> N[User Opens Job Page]
++    N --> O[Auto-Scan Triggers]
++    O --> P{Scan Success?}
++    P -->|No| Q[Manual Entry Fallback]
++    Q --> R[Job Card Populated]
++    P -->|Yes| R
++    R --> S[Match Analysis Shown]
++    S --> T[Generate Cover Letter CTA]
++    T --> U[One-Click Generation]
++    U --> V[Cover Letter Output]
++    V --> W[User Edits/Copies]
++    W --> X[First Application Complete!]
++    X --> Y[Celebration Moment + Save Job]
++```
++
++**Key Moments:**
++- OAuth must complete without friction
++- Resume parse should feel instant (< 3s)
++- First auto-scan is the "magic moment"
++- Cover letter output must sound authentic to build trust
++
++### Core Application Loop (Marcus's Power User Flow)
++
++**Goal:** High-volume applier completes 5+ applications efficiently.
++
++**Entry Point:** Opens job posting with extension already configured
++
++```mermaid
++flowchart TD
++    A[Open Job Posting Tab] --> B[Extension Auto-Detects Job Page]
++    B --> C[Click Extension Icon / Keyboard Shortcut]
++    C --> D[Sidebar Opens - Job State]
++    D --> E[Auto-Scan Running]
++    E --> F{Scan Complete?}
++    F -->|< 2s| G[Job Card + Match Score]
++    F -->|Timeout| H[Manual Entry Option]
++    H --> G
++    G --> I{Resume Correct?}
++    I -->|No| J[Quick Resume Switch - One Click]
++    J --> G
++    I -->|Yes| K[AI Studio Tabs Visible]
++    K --> L{Select Generation Type}
++    L -->|Cover Letter| M[Generate Cover Letter]
++    L -->|Q&A| N[Generate Application Answers]
++    L -->|Outreach| O[Generate LinkedIn Message]
++    M --> P[Output in Editable Textarea]
++    N --> P
++    O --> P
++    P --> Q{Satisfied?}
++    Q -->|No| R[Regenerate with Feedback]
++    R --> P
++    Q -->|Yes| S{Copy or Autofill?}
++    S -->|Copy| T[One-Click Copy + Checkmark]
++    S -->|Autofill| U[One-Click Autofill + Highlight]
++    T --> V[Save Job to Tracker]
++    U --> V
++    V --> W[Application Counter +1]
++    W --> X[Open Next Job Tab]
++    X --> A
++```
++
++**Optimizations for Speed:**
++- Remembered resume selection persists across tabs
++- Tone preference persists across sessions
++- Custom instructions apply automatically
++- Keyboard shortcuts: `Cmd+C` copy, `Cmd+Enter` regenerate
++
++### Return Visit Flow (David's Executive Journey)
++
++**Goal:** Returning user finds data intact, resumes workflow immediately.
++
++**Entry Point:** Opens extension after days/weeks away
++
++```mermaid
++flowchart TD
++    A[Click Extension Icon] --> B{Session Valid?}
++    B -->|Yes| C[Sidebar Opens - Previous State Restored]
++    B -->|No - Token Expired| D[Silent Token Refresh]
++    D --> E{Refresh Success?}
++    E -->|Yes| C
++    E -->|No| F[Sign In Again - One Click]
++    F --> C
++    C --> G[Dashboard Link Visible]
++    G --> H{User Navigates to Dashboard?}
++    H -->|Yes| I[Dashboard Opens]
++    I --> J[Job Tracker with History]
++    J --> K[Application Stats Visible]
++    K --> L[Resume Management]
++    H -->|No| M[Continue with Extension]
++    M --> N[Recent Jobs Accessible]
++    N --> O[Resume List Synced]
++    O --> P[Credits Balance Shown]
++    P --> Q[Resume Normal Workflow]
++```
++
++**Persistence Guarantees:**
++- Session survives browser restart (chrome.storage)
++- Job list synced from server
++- Resume selection remembered
++- No re-authentication for valid tokens
++
++### AI Content Generation Flow
++
++**Goal:** Generate authentic, tailored content that sounds like the user.
++
++**Entry Point:** User clicks generation tab in AI Studio
++
++```mermaid
++flowchart TD
++    A[Select Generation Type] --> B[AI Studio Panel Opens]
++    B --> C{First Time Using This Type?}
++    C -->|Yes| D[Show Quick Tutorial Tooltip]
++    D --> E[Generation Controls]
++    C -->|No| E
++    E --> F[Tone Selector: Professional/Conversational/Enthusiastic]
++    F --> G{Custom Instructions Set?}
++    G -->|Yes| H[Instructions Applied Indicator]
++    G -->|No| I[Optional: Add Custom Instructions]
++    I --> H
++    H --> J[Click Generate Button]
++    J --> K[Loading State with Progress]
++    K --> L{Generation Success?}
++    L -->|No - AI Error| M[Error Message + No Credit Deducted]
++    M --> N[Retry Button]
++    N --> J
++    L -->|Yes| O[Content Appears in Textarea]
++    O --> P[Credit Deducted - Counter Updates]
++    P --> Q{Content Quality OK?}
++    Q -->|No - Needs Tweaks| R[User Edits Directly in Textarea]
++    Q -->|No - Regenerate| S[Click Regenerate]
++    S --> T[Optional: Add Feedback]
++    T --> J
++    Q -->|Yes| U[Ready to Copy/Autofill]
++    R --> U
++```
++
++**Authenticity Features:**
++- Tone selector defaults to user's last choice
++- Custom instructions saved per-user
++- Regenerate with feedback refines without starting over
++- All output editable—never locked
++
++### Journey Patterns
++
++**Navigation Patterns:**
++
++| Pattern | Usage | Implementation |
++|---------|-------|----------------|
++| **Progressive Reveal** | Show complexity only when needed | Collapsed sections, "Show more" links |
++| **Contextual Entry** | Different start points based on state | 4 sidebar states, smart defaults |
++| **Persistent Position** | Remember where user left off | Last tab, last resume, last tone |
++
++**Decision Patterns:**
++
++| Pattern | Usage | Implementation |
++|---------|-------|----------------|
++| **Smart Defaults** | Reduce decisions for power users | Most common option pre-selected |
++| **One-Click Actions** | Primary actions require single interaction | Generate, Copy, Autofill all one-click |
++| **Escape Hatches** | Always offer alternative paths | Manual entry, regenerate, edit |
++
++**Feedback Patterns:**
++
++| Pattern | Usage | Implementation |
++|---------|-------|----------------|
++| **Instant Confirmation** | User knows action succeeded | Checkmark, animation, state change |
++| **Progress Visibility** | User knows system is working | Scan animation, generation progress |
++| **Error Recovery** | Clear path when things fail | Retry button, fallback option, no credit loss |
++
++### Flow Optimization Principles
++
++**Minimize Steps to Value:**
++- First-time user: 5 interactions to first generation (install → sign in → upload → scan → generate)
++- Return user: 2 interactions to generation (open sidebar → generate)
++- Power user: 1 keyboard shortcut to copy previous output
++
++**Reduce Cognitive Load:**
++- Maximum 3 options at any decision point
++- Smart defaults eliminate unnecessary decisions
++- Visual hierarchy guides attention
++
++**Create Delight Moments:**
++- Auto-scan "magic" on first job page
++- Checkmark animation on copy
++- Counter increment on job save
++- Celebration on milestone (5 applications, etc.)
++
++**Handle Errors Gracefully:**
++- No credit deduction on AI failures
++- Clear error messages with recovery actions
++- Fallback paths for every automated feature
++- Offline-friendly where possible (cached data)
++
++## Component Strategy
++
++### Design System Components (shadcn/ui)
++
++**Available Primitives:**
++
++| Category | Components | Jobswyft Usage |
++|----------|------------|----------------|
++| **Layout** | Card, Separator, ScrollArea | Job cards, sections, sidebar scroll |
++| **Forms** | Button, Input, Textarea, Select, Label, Checkbox | All form interactions |
++| **Feedback** | Alert, Badge, Progress, Skeleton, Toast | Status, loading, notifications |
++| **Overlay** | Dialog, Popover, Tooltip, Sheet | Modals, hints, settings |
++| **Navigation** | Tabs, NavigationMenu | AI Studio tabs, dashboard nav |
++| **Data Display** | Table, Avatar | Job tracker, user profile |
++
++**shadcn/ui Customization:**
++- All components restyled with Jobswyft design tokens
++- Platform variants added (extension vs dashboard sizing)
++- Dark/light theme support via CSS variables
++
++### Custom Components
++
++#### Job Card
++
++**Purpose:** Display scanned job details in a compact, scannable format.
++
++**Anatomy:**
++```
++┌─────────────────────────────────────┐
++│ [Company Logo]  Title @ Company     │
++│                 Location • Remote   │
++├─────────────────────────────────────┤
++│ Match: ████████░░ 78%               │
++├─────────────────────────────────────┤
++│ • Requirement 1                     │
++│ • Requirement 2                     │
++│ ▼ Show more (3)                     │
++├─────────────────────────────────────┤
++│ [Save Job]          [View Original] │
++└─────────────────────────────────────┘
++```
++
++**States:**
++| State | Visual |
++|-------|--------|
++| Scanning | Skeleton with pulse animation |
++| Loaded | Full content visible |
++| Saved | Checkmark badge, muted action |
++| Error | Error banner with retry |
++
++**Props:**
++```typescript
++interface JobCardProps {
++  job: ScannedJob | null;
++  isScanning: boolean;
++  isSaved: boolean;
++  onSave: () => void;
++  onViewOriginal: () => void;
++}
++```
++
++#### Match Score
++
++**Purpose:** Visualize job-resume match with confidence-building breakdown.
++
++**Anatomy:**
++```
++┌─────────────────────────────────────┐
++│ Match Score                         │
++│ ████████████░░░░░░ 78%              │
++├─────────────────────────────────────┤
++│ ✓ Strengths (5)                     │
++│   • React, TypeScript               │
++│   • 3+ years experience             │
++│ ▼ Areas to Address (2)              │
++└─────────────────────────────────────┘
++```
++
++**States:**
++| State | Visual |
++|-------|--------|
++| Calculating | Animated progress bar |
++| High (80%+) | Green accent, expanded strengths |
++| Medium (50-79%) | Blue accent, balanced view |
++| Low (<50%) | Yellow accent, focus on opportunities |
++
++**Props:**
++```typescript
++interface MatchScoreProps {
++  score: number;
++  strengths: string[];
++  gaps: string[];
++  isCalculating: boolean;
++}
++```
++
++#### AI Studio Panel
++
++**Purpose:** Container for AI generation workflow with tone controls and output.
++
++**Anatomy:**
++```
++┌─────────────────────────────────────┐
++│ [Cover Letter] [Q&A] [Outreach]     │
++├─────────────────────────────────────┤
++│ Tone: [Professional ▼]              │
++│ ┌─────────────────────────────────┐ │
++│ │ Custom instructions (optional)  │ │
++│ └─────────────────────────────────┘ │
++├─────────────────────────────────────┤
++│ [Generate]                          │
++├─────────────────────────────────────┤
++│ ┌─────────────────────────────────┐ │
++│ │                                 │ │
++│ │ Generated content appears here │ │
++│ │                                 │ │
++│ └─────────────────────────────────┘ │
++├─────────────────────────────────────┤
++│ [Regenerate] [Copy] [Autofill]      │
++└─────────────────────────────────────┘
++```
++
++**States:**
++| State | Visual |
++|-------|--------|
++| Ready | Empty output, Generate enabled |
++| Generating | Progress indicator, output skeleton |
++| Generated | Content visible, actions enabled |
++| Error | Error message, Retry button |
++
++**Props:**
++```typescript
++interface AIStudioPanelProps {
++  activeTab: 'cover_letter' | 'qa' | 'outreach';
++  tone: ToneOption;
++  customInstructions: string;
++  output: string | null;
++  isGenerating: boolean;
++  error: string | null;
++  onGenerate: () => void;
++  onRegenerate: (feedback?: string) => void;
++  onCopy: () => void;
++  onAutofill: () => void;
++}
++```
++
++#### Resume Block
++
++**Purpose:** Display resume section with expandable details and quick-copy.
++
++**Anatomy:**
++```
++┌─────────────────────────────────────┐
++│ ▶ Experience                   [📋] │
++├─────────────────────────────────────┤
++│   Senior Developer @ Acme Corp      │
++│   2020 - Present                    │
++│   • Led team of 5 engineers...      │
++│   ▼ Show more                       │
++└─────────────────────────────────────┘
++```
++
++**States:**
++| State | Visual |
++|-------|--------|
++| Collapsed | Header + preview only |
++| Expanded | Full content visible |
++| Copying | Brief highlight animation |
++| Copied | Checkmark on copy button |
++
++**Props:**
++```typescript
++interface ResumeBlockProps {
++  section: ResumeSection;
++  isExpanded: boolean;
++  onToggle: () => void;
++  onCopy: () => void;
++}
++```
++
++#### Copy Button
++
++**Purpose:** One-click copy with satisfying feedback animation.
++
++**Anatomy:**
++```
++Default:  [📋 Copy]
++Copying:  [⏳]  (brief)
++Copied:   [✓ Copied!]  (fades back)
++```
++
++**Animation Sequence:**
++1. Click triggers ripple effect
++2. Icon morphs to checkmark (150ms)
++3. Text changes to "Copied!"
++4. Success state holds (1.5s)
++5. Fades back to default (200ms)
++
++**Props:**
++```typescript
++interface CopyButtonProps {
++  content: string;
++  variant?: 'default' | 'outline' | 'ghost';
++  size?: 'sm' | 'md' | 'lg';
++  onCopied?: () => void;
++}
++```
++
++#### Credits Counter
++
++**Purpose:** Show remaining AI credits with upgrade prompt when low.
++
++**Anatomy:**
++```
++Normal:     ⚡ 47 credits
++Low:        ⚡ 3 credits remaining [Upgrade]
++Exhausted:  ⚡ 0 credits [Upgrade Now]
++```
++
++**States:**
++| State | Visual |
++|-------|--------|
++| Healthy (10+) | Default text, no badge |
++| Low (1-9) | Warning color, upgrade link |
++| Exhausted (0) | Error color, prominent CTA |
++| Updating | Subtle pulse on number |
++
++**Props:**
++```typescript
++interface CreditsCounterProps {
++  remaining: number;
++  total: number;
++  onUpgrade: () => void;
++}
++```
++
++#### Sidebar State Banner
++
++**Purpose:** Communicate current sidebar context and available actions.
++
++**States:**
++
++| State | Banner Content |
++|-------|----------------|
++| Logged Out | "Sign in to get started" + CTA |
++| Non-Job Page | "Navigate to a job posting to scan" |
++| Job Page | "Job detected!" + Job title preview |
++| Application Page | "Application form detected" + Autofill CTA |
++
++**Props:**
++```typescript
++interface StateBannerProps {
++  state: 'logged_out' | 'non_job' | 'job_page' | 'application';
++  jobTitle?: string;
++  onAction: () => void;
++}
++```
++
++### Component Implementation Strategy
++
++**Atomic Design Hierarchy:**
++
++| Level | Components | Example |
++|-------|------------|---------|
++| **Atoms** | Button, Input, Badge, Icon | Primary building blocks |
++| **Molecules** | Copy Button, Credits Counter, State Banner | Single-purpose combinations |
++| **Organisms** | Job Card, Match Score, Resume Block | Feature-complete units |
++| **Compositions** | AI Studio Panel, Sidebar Layout | Page-level assemblies |
++
++**Shared Component Library (`@jobswyft/ui`):**
++- All components published as single package
++- Platform-aware via `platform` prop
++- Theme-aware via CSS variables
++- Storybook documentation for all variants
++
++**Component Contracts:**
++- All props typed with TypeScript interfaces
++- Default values for optional props
++- Callback functions for all user actions
++- Loading/error states handled internally
++
++### Implementation Roadmap
++
++**Phase 1: Core Components (MVP Critical)**
++
++| Component | Priority | Needed For |
++|-----------|----------|------------|
++| Button (shadcn + custom) | P0 | All interactions |
++| Job Card | P0 | Core scan experience |
++| AI Studio Panel | P0 | Core generation flow |
++| Copy Button | P0 | Output workflow |
++| State Banner | P0 | Sidebar context |
++
++**Phase 2: Supporting Components**
++
++| Component | Priority | Needed For |
++|-----------|----------|------------|
++| Match Score | P1 | Confidence building |
++| Resume Block | P1 | Resume intelligence |
++| Credits Counter | P1 | Usage awareness |
++| Skeleton loaders | P1 | Loading states |
++
++**Phase 3: Enhancement Components**
++
++| Component | Priority | Needed For |
++|-----------|----------|------------|
++| Job Tracker Table | P2 | Dashboard job list |
++| Application Stats | P2 | Dashboard analytics |
++| Settings Forms | P2 | User preferences |
++| Onboarding Tooltips | P2 | First-time experience |
++
++**Build Approach:**
++1. Design tokens compiled first
++2. Atoms built and tested in Storybook
++3. Molecules composed from atoms
++4. Organisms built with full state handling
++5. Compositions assembled for pages
++6. Integration testing across platforms
++
++## UX Consistency Patterns
++
++### Button Patterns
++
++**Hierarchy:**
++
++| Level | Variant | Usage | Example |
++|-------|---------|-------|---------|
++| **Primary** | Solid blue | One per screen, main action | "Generate", "Save Job" |
++| **Secondary** | Outlined blue | Supporting actions | "Cancel", "View Original" |
++| **Ghost** | Transparent | Tertiary actions | "Skip", "Close" |
++| **Destructive** | Solid red | Dangerous actions | "Delete Resume" |
++| **Link** | Text only | Navigation, inline actions | "Learn more", "Upgrade" |
++
++**Placement Rules:**
++- Primary action always rightmost in button groups
++- Destructive actions require confirmation
++- Cancel/dismiss actions always accessible via Escape key
++- Mobile: Full-width stacked, primary on top
++
++**Loading States:**
++```
++[Generate] → [●●● Generating...] → [✓ Generated]
++```
++- Spinner replaces icon, text updates
++- Button disabled during loading
++- Success state shows briefly (1.5s) then resets
++
++### Feedback Patterns
++
++**Toast Notifications:**
++
++| Type | Color | Duration | Dismissible | Usage |
++|------|-------|----------|-------------|-------|
++| **Success** | Green | 3s | Yes | "Job saved", "Copied!" |
++| **Error** | Red | Persistent | Yes | "Generation failed", "Network error" |
++| **Warning** | Yellow | 5s | Yes | "Low credits", "Unsaved changes" |
++| **Info** | Blue | 4s | Yes | "New feature available" |
++
++**Positioning:**
++- Extension sidebar: Bottom of sidebar, above footer
++- Dashboard: Top-right corner, stacked
++
++**Inline Feedback:**
++
++| Context | Pattern |
++|---------|---------|
++| Form validation | Red border + message below field |
++| Successful action | Checkmark icon + brief highlight |
++| Progress | Progress bar or skeleton |
++| Empty result | Illustration + helpful message |
++
++**Feedback Copy Guidelines:**
++- Success: Short, celebratory ("Saved!", "Copied!")
++- Error: What went wrong + how to fix ("Generation failed. Try again or check your connection.")
++- Warning: What's at risk + what to do ("Only 3 credits left. Upgrade for unlimited.")
++
++### Form Patterns
++
++**Field States:**
++
++| State | Visual |
++|-------|--------|
++| Default | Gray border, placeholder text |
++| Focus | Primary blue border, no placeholder |
++| Filled | Dark border, content visible |
++| Error | Red border, error message below |
++| Disabled | 50% opacity, not interactive |
++
++**Validation Timing:**
++- Validate on blur (leaving field)
++- Re-validate on change after first error
++- Submit button disabled until form valid
++- Show all errors at once (not one at a time)
++
++**Form Layout:**
++- Labels above fields (not inline)
++- Required fields: asterisk in label
++- Optional fields: "(optional)" text
++- Help text below field in muted color
++- Error messages replace help text when present
++
++**Standard Field Widths:**
++| Field Type | Width |
++|------------|-------|
++| Short text (name) | 50% |
++| Email, URL | 100% |
++| Textarea | 100% |
++| Select | Content-width, min 150px |
++
++### Navigation Patterns
++
++**Sidebar Navigation (Extension):**
++- Header always visible (logo, user, menu)
++- Scrollable content area
++- Footer always visible (credits, links)
++- No horizontal scrolling ever
++
++**Tab Navigation (AI Studio):**
++- Tabs left-aligned
++- Active tab: Primary color underline
++- Tab content animates on switch (slide)
++- Tab state persisted across sessions
++
++**Dashboard Navigation:**
++- Desktop: Fixed left sidebar (200px)
++- Mobile: Bottom navigation bar (5 items max)
++- Active state: Primary background, icon filled
++- Hover state: Subtle background highlight
++
++**Back Navigation:**
++- Arrow icon + "Back" text
++- Returns to previous logical state
++- Never loses user data without warning
++
++### Modal & Overlay Patterns
++
++**Dialog Types:**
++
++| Type | Size | Usage |
++|------|------|-------|
++| **Alert** | Small (320px) | Confirmations, warnings |
++| **Form** | Medium (480px) | Settings, resume edit |
++| **Detail** | Large (640px) | Job details, expanded views |
++
++**Behavior:**
++- Click outside to dismiss (unless destructive action pending)
++- Escape key always closes
++- Focus trapped within modal
++- Scroll locked on body
++- Fade + scale animation (200ms)
++
++**Confirmation Dialogs:**
++```
++┌─────────────────────────────────────┐
++│ Delete Resume?                      │
++│                                     │
++│ This action cannot be undone.       │
++│ "Software Engineer Resume" will     │
++│ be permanently deleted.             │
++│                                     │
++│           [Cancel] [Delete]         │
++└─────────────────────────────────────┘
++```
++- Destructive action on right
++- Specific about what's being affected
++- Cancel always available
++
++### Empty & Loading States
++
++**Empty States:**
++
++| Context | Content |
++|---------|---------|
++| No resumes | Illustration + "Upload your first resume" CTA |
++| No saved jobs | Illustration + "Jobs you save will appear here" |
++| No scan results | "Navigate to a job posting to get started" |
++| No generation | "Click Generate to create content" |
++| Search no results | "No matches found. Try different keywords." |
++
++**Design Principles:**
++- Always show illustration (not just text)
++- Include clear CTA when action possible
++- Keep messaging positive and helpful
++- Never blame the user
++
++**Loading States:**
++
++| Duration | Pattern |
++|----------|---------|
++| < 300ms | No indicator (instant feel) |
++| 300ms - 2s | Skeleton + subtle pulse |
++| 2s - 10s | Progress indicator with status text |
++| > 10s | Progress + time estimate + cancel option |
++
++**Skeleton Patterns:**
++- Match final content layout exactly
++- Use consistent gray tones
++- Shimmer animation left-to-right
++- Replace progressively as content loads
++
++### Error Recovery Patterns
++
++**Error Hierarchy:**
++
++| Severity | Display | User Action |
++|----------|---------|-------------|
++| **Field error** | Inline below field | Fix and resubmit |
++| **Form error** | Banner above form | Review and resubmit |
++| **Action error** | Toast notification | Retry or dismiss |
++| **Page error** | Full error state | Retry or navigate away |
++| **System error** | Modal with details | Retry or contact support |
++
++**Error Message Structure:**
++1. What happened (brief, clear)
++2. Why it happened (if helpful)
++3. What to do next (always include)
++
++**Example Error Messages:**
++
++| Bad | Good |
++|-----|------|
++| "Error 500" | "Something went wrong. Please try again." |
++| "Invalid input" | "Please enter a valid email address." |
++| "Network error" | "Couldn't connect. Check your internet and try again." |
++
++**Retry Patterns:**
++- Automatic retry: 3 attempts with exponential backoff
++- Manual retry: Clear "Try Again" button
++- No credit deduction on failed AI generation
++- Preserve user input on error (never lose work)
++
++### Keyboard Navigation
++
++**Global Shortcuts (Extension):**
++
++| Shortcut | Action |
++|----------|--------|
++| `Escape` | Close modal/dropdown, clear focus |
++| `Tab` | Move focus forward |
++| `Shift+Tab` | Move focus backward |
++| `Enter` | Activate focused element |
++| `Space` | Toggle checkboxes, buttons |
++
++**Focus Indicators:**
++- 2px primary blue outline
++- Never remove focus indicators
++- Skip links for keyboard users
++- Focus order matches visual order
++
++### Platform-Specific Patterns
++
++**Extension vs Dashboard:**
++
++| Pattern | Extension | Dashboard |
++|---------|-----------|-----------|
++| **Width** | 320-420px fixed | Responsive |
++| **Theme** | Dark default | Light default |
++| **Navigation** | Scroll within sidebar | Page navigation |
++| **Density** | Compact | Comfortable |
++| **Animations** | Subtle, fast | Full, expressive |
++
++**Cross-Platform Consistency:**
++- Same component visual language
++- Same feedback patterns
++- Same error messages
++- Shared design tokens
++- Synced user preferences
++
++## Responsive Design & Accessibility
++
++### Responsive Strategy
++
++**Platform-Specific Approach:**
++
++| Surface | Strategy | Rationale |
++|---------|----------|-----------|
++| **Extension Sidebar** | Fixed-width (320-420px) | Constrained by browser sidebar limits; focus on vertical scrolling |
++| **Dashboard** | Fully responsive | Standard web app; mobile job tracking is key use case |
++
++**Extension Sidebar (Non-Responsive Fixed):**
++- Width: 320px minimum, 420px maximum
++- Height: Full viewport height
++- Overflow: Vertical scroll only
++- Layout: Single-column, card stacking
++- No media queries needed—single layout adapts via flexible components
++
++**Dashboard Responsive Behavior:**
++
++| Breakpoint | Layout | Navigation |
++|------------|--------|------------|
++| Mobile (< 768px) | Single column, stacked cards | Bottom nav bar |
++| Tablet (768-1023px) | 2-column grid, collapsible sidebar | Hamburger + slide-out |
++| Desktop (≥ 1024px) | 3-column grid, fixed sidebar | Persistent left sidebar |
++
++### Breakpoint Strategy
++
++**Dashboard Breakpoints:**
++
++```css
++/* Mobile-first approach */
++--breakpoint-sm: 640px;   /* Large phones */
++--breakpoint-md: 768px;   /* Tablets */
++--breakpoint-lg: 1024px;  /* Small desktops */
++--breakpoint-xl: 1280px;  /* Large desktops */
++--breakpoint-2xl: 1536px; /* Extra large screens */
++```
++
++**Layout Transformations:**
++
++| Element | Mobile | Tablet | Desktop |
++|---------|--------|--------|---------|
++| **Navigation** | Bottom bar (5 icons) | Collapsed sidebar | Fixed sidebar (200px) |
++| **Job Cards** | Full width, stacked | 2-column grid | 3-column grid |
++| **Job Detail** | Full-screen modal | Slide-over panel | Inline expansion |
++| **Data Tables** | Card view | Horizontal scroll | Full table |
++| **Forms** | Full width | 60% centered | 50% centered |
++
++**Content Priority (Mobile-First):**
++1. Current job / active task
++2. Quick actions (Generate, Copy)
++3. Navigation to key sections
++4. Secondary information (stats, history)
++
++### Accessibility Strategy
++
++**Compliance Target: WCAG 2.1 Level AA**
++
++Rationale: Industry standard for professional web applications. Covers legal requirements and ensures good UX for users with disabilities.
++
++**Core Accessibility Requirements:**
++
++| Requirement | Standard | Implementation |
++|-------------|----------|----------------|
++| **Color Contrast** | 4.5:1 (normal text), 3:1 (large text) | All text meets or exceeds |
++| **Focus Indicators** | Visible 2px outline | Primary blue, never removed |
++| **Touch Targets** | 44×44px minimum | All interactive elements |
++| **Keyboard Navigation** | Full functionality | Tab order, Enter/Space activation |
++| **Screen Readers** | Full compatibility | Semantic HTML, ARIA labels |
++| **Motion** | Reduced motion support | `prefers-reduced-motion` respected |
++
++**ARIA Implementation:**
++
++| Component | ARIA Requirements |
++|-----------|-------------------|
++| **Buttons** | `role="button"`, `aria-pressed` for toggles |
++| **Modals** | `role="dialog"`, `aria-modal="true"`, `aria-labelledby` |
++| **Tabs** | `role="tablist"`, `role="tab"`, `role="tabpanel"`, `aria-selected` |
++| **Forms** | `aria-required`, `aria-invalid`, `aria-describedby` for errors |
++| **Loading** | `aria-busy="true"`, `aria-live="polite"` for updates |
++| **Alerts** | `role="alert"` for errors, `role="status"` for success |
++
++**Screen Reader Announcements:**
++
++| Event | Announcement |
++|-------|--------------|
++| Job scanned | "Job scanned: [Title] at [Company]" |
++| Content generated | "Cover letter generated. Ready to copy." |
++| Copy success | "Copied to clipboard" |
++| Error occurred | "Error: [Message]. [Recovery action]" |
++| Page navigation | "[Page name]. [Item count] items." |
++
++### Testing Strategy
++
++**Automated Testing:**
++
++| Tool | Purpose | Integration |
++|------|---------|-------------|
++| **axe-core** | Accessibility violations | CI pipeline |
++| **Lighthouse** | Performance + a11y audit | Pre-deploy check |
++| **Pa11y** | WCAG compliance | Scheduled scans |
++| **jest-axe** | Component-level a11y | Unit tests |
++
++**Manual Testing Checklist:**
++
++**Keyboard Navigation:**
++- [ ] All interactive elements reachable via Tab
++- [ ] Focus order matches visual order
++- [ ] Escape closes modals/dropdowns
++- [ ] Enter/Space activates buttons
++- [ ] Arrow keys navigate within components
++
++**Screen Reader Testing:**
++- [ ] VoiceOver (macOS/iOS) - Primary
++- [ ] NVDA (Windows) - Secondary
++- [ ] All content announced correctly
++- [ ] Dynamic updates announced
++- [ ] Forms and errors navigable
++
++**Visual Testing:**
++- [ ] 200% zoom - no content loss
++- [ ] High contrast mode - all content visible
++- [ ] Color blindness simulation - no information lost
++- [ ] Dark/light theme - both accessible
++
++**Device Testing Matrix:**
++
++| Device | Browser | Priority |
++|--------|---------|----------|
++| iPhone 14 | Safari | P0 |
++| Pixel 7 | Chrome | P0 |
++| iPad | Safari | P1 |
++| MacBook | Chrome, Safari | P0 |
++| Windows | Chrome, Edge | P1 |
++
++### Implementation Guidelines
++
++**Responsive Development:**
++
++```css
++/* Mobile-first media queries */
++.component {
++  /* Mobile styles (default) */
++  padding: var(--space-3);
++}
++
++@media (min-width: 768px) {
++  .component {
++    /* Tablet+ styles */
++    padding: var(--space-4);
++  }
++}
++
++@media (min-width: 1024px) {
++  .component {
++    /* Desktop+ styles */
++    padding: var(--space-6);
++  }
++}
++```
++
++**Accessibility Development:**
++
++```tsx
++// Accessible button example
++<button
++  type="button"
++  aria-label="Copy cover letter to clipboard"
++  aria-pressed={isCopied}
++  onClick={handleCopy}
++  className={cn(
++    "focus:outline-none focus:ring-2 focus:ring-primary-500",
++    "focus:ring-offset-2"
++  )}
++>
++  {isCopied ? <CheckIcon /> : <CopyIcon />}
++  <span>{isCopied ? "Copied!" : "Copy"}</span>
++</button>
++```
++
++**Semantic HTML Requirements:**
++- Use `<main>`, `<nav>`, `<header>`, `<footer>` landmarks
++- Use `<h1>`-`<h6>` in proper hierarchy (no skipping levels)
++- Use `<button>` for actions, `<a>` for navigation
++- Use `<ul>`/`<ol>` for lists
++- Use `<table>` for tabular data only
++
++**Focus Management:**
++- Trap focus in modals
++- Return focus after modal closes
++- Skip links for keyboard users
++- No focus loss on dynamic updates
++
++**Reduced Motion:**
++
++```css
++@media (prefers-reduced-motion: reduce) {
++  *,
++  *::before,
++  *::after {
++    animation-duration: 0.01ms !important;
++    animation-iteration-count: 1 !important;
++    transition-duration: 0.01ms !important;
++  }
++}
++```
++
++**Color Independence:**
++- Never use color alone to convey information
++- Icons + color for status (✓ green, ✗ red)
++- Text labels for all icon-only buttons (via `aria-label`)
++- Pattern/texture alternatives where needed
++
++### Extension-Specific Accessibility
++
++**Shadow DOM Considerations:**
++- Ensure focus indicators work within Shadow DOM
++- Test screen reader compatibility with shadow boundaries
++- Keyboard navigation must pierce shadow root
++
++**Sidebar Constraints:**
++- Larger touch targets in compact space
++- Clear visual hierarchy in narrow width
++- Sufficient padding for accidental tap prevention
++

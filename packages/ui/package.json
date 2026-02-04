@@ -14,7 +14,9 @@
     },
     "./styles": "./dist/styles.css"
   },
-  "files": ["dist"],
+  "files": [
+    "dist"
+  ],
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
@@ -24,10 +26,13 @@
   },
   "dependencies": {
     "@jobswyft/design-tokens": "workspace:*",
-    "clsx": "^2.1.0",
-    "tailwind-merge": "^2.2.0",
+    "@radix-ui/react-slot": "^1.2.4",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "glasscn-ui": "^0.7.1",
     "react": "^18.2.0",
-    "react-dom": "^18.2.0"
+    "react-dom": "^18.2.0",
+    "tailwind-merge": "^2.6.1"
   },
   "devDependencies": {
     "@storybook/addon-a11y": "^8.0.0",
