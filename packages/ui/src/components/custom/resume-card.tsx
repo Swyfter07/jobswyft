@@ -19,6 +19,7 @@ import {
   Globe,
   ExternalLink,
   FileText,
+  Layers,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
@@ -692,6 +693,18 @@ function ResumeCard({
 
   const skillsCopyAll = resumeData?.skills.join(", ") ?? ""
 
+  // Count of populated sections for the parent "Resume Blocks" badge
+  const totalSections = resumeData
+    ? [
+        true, // Personal Info always present
+        resumeData.skills.length > 0,
+        resumeData.experience.length > 0,
+        resumeData.education.length > 0,
+        (resumeData.certifications?.length ?? 0) > 0,
+        (resumeData.projects?.length ?? 0) > 0,
+      ].filter(Boolean).length
+    : 0
+
   return (
     <Card className={cn("w-full", className)}>
       {/* Header: Resume selector + actions */}
@@ -748,85 +761,96 @@ function ResumeCard({
           <ResumeEmptyState onUpload={onUpload} />
         ) : (
           <ScrollArea style={{ maxHeight }}>
-            <div className="p-3 space-y-1">
-              {/* Personal Info */}
+            <div className="p-3">
+              {/* Resume Blocks - Parent expandable section */}
               <ResumeSection
-                icon={<User />}
-                title="Personal Info"
-                count={
-                  Object.values(resumeData.personalInfo).filter(Boolean).length
-                }
-                copyAllValue={personalInfoCopyAll}
+                icon={<Layers />}
+                title="Resume Blocks"
+                count={totalSections}
                 defaultOpen
               >
-                <PersonalInfoContent data={resumeData.personalInfo} />
-              </ResumeSection>
-
-              <Separator className="my-1" />
-
-              {/* Skills */}
-              <ResumeSection
-                icon={<Wrench />}
-                title="Skills"
-                count={resumeData.skills.length}
-                copyAllValue={skillsCopyAll}
-                defaultOpen
-              >
-                <SkillsContent skills={resumeData.skills} />
-              </ResumeSection>
-
-              <Separator className="my-1" />
-
-              {/* Experience */}
-              <ResumeSection
-                icon={<Briefcase />}
-                title="Experience"
-                count={resumeData.experience.length}
-              >
-                <ExperienceContent entries={resumeData.experience} />
-              </ResumeSection>
-
-              <Separator className="my-1" />
-
-              {/* Education */}
-              <ResumeSection
-                icon={<GraduationCap />}
-                title="Education"
-                count={resumeData.education.length}
-              >
-                <EducationContent entries={resumeData.education} />
-              </ResumeSection>
-
-              {/* Certifications (optional) */}
-              {resumeData.certifications &&
-                resumeData.certifications.length > 0 && (
-                  <>
-                    <Separator className="my-1" />
-                    <ResumeSection
-                      icon={<Award />}
-                      title="Certifications"
-                      count={resumeData.certifications.length}
-                    >
-                      <CertificationsContent
-                        entries={resumeData.certifications}
-                      />
-                    </ResumeSection>
-                  </>
-                )}
-
-              {/* Projects (optional) */}
-              {resumeData.projects && resumeData.projects.length > 0 && (
-                <>
-                  <Separator className="my-1" />
+                <div className="space-y-1">
+                  {/* Personal Info */}
                   <ResumeSection
-                    icon={<FolderOpen />}
-                    title="Projects"
-                    count={resumeData.projects.length}
+                    icon={<User />}
+                    title="Personal Info"
+                    count={
+                      Object.values(resumeData.personalInfo).filter(Boolean)
+                        .length
+                    }
+                    copyAllValue={personalInfoCopyAll}
+                    defaultOpen
                   >
-                    <ProjectsContent entries={resumeData.projects} />
+                    <PersonalInfoContent data={resumeData.personalInfo} />
                   </ResumeSection>
-                </>
-              )}
+
+                  <Separator className="my-1" />
+
+                  {/* Skills */}
+                  <ResumeSection
+                    icon={<Wrench />}
+                    title="Skills"
+                    count={resumeData.skills.length}
+                    copyAllValue={skillsCopyAll}
+                    defaultOpen
+                  >
+                    <SkillsContent skills={resumeData.skills} />
+                  </ResumeSection>
+
+                  <Separator className="my-1" />
+
+                  {/* Experience */}
+                  <ResumeSection
+                    icon={<Briefcase />}
+                    title="Experience"
+                    count={resumeData.experience.length}
+                  >
+                    <ExperienceContent entries={resumeData.experience} />
+                  </ResumeSection>
+
+                  <Separator className="my-1" />
+
+                  {/* Education */}
+                  <ResumeSection
+                    icon={<GraduationCap />}
+                    title="Education"
+                    count={resumeData.education.length}
+                  >
+                    <EducationContent entries={resumeData.education} />
+                  </ResumeSection>
+
+                  {/* Certifications (optional) */}
+                  {resumeData.certifications &&
+                    resumeData.certifications.length > 0 && (
+                      <>
+                        <Separator className="my-1" />
+                        <ResumeSection
+                          icon={<Award />}
+                          title="Certifications"
+                          count={resumeData.certifications.length}
+                        >
+                          <CertificationsContent
+                            entries={resumeData.certifications}
+                          />
+                        </ResumeSection>
+                      </>
+                    )}
+
+                  {/* Projects (optional) */}
+                  {resumeData.projects && resumeData.projects.length > 0 && (
+                    <>
+                      <Separator className="my-1" />
+                      <ResumeSection
+                        icon={<FolderOpen />}
+                        title="Projects"
+                        count={resumeData.projects.length}
+                      >
+                        <ProjectsContent entries={resumeData.projects} />
+                      </ResumeSection>
+                    </>
+                  )}
+                </div>
+              </ResumeSection>
             </div>
           </ScrollArea>
         )}
