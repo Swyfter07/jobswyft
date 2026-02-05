@@ -131,6 +131,7 @@ const ExtensionSidebarWithState = (args: any) => {
                     resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
                     activeResumeId="1"
                     resumeData={MOCK_RESUME_DATA}
+                    isCompact={true}
                 />
             )}
             scanContent={
@@ -197,6 +198,7 @@ export const MaxedOutResume: Story = {
                 resumes={[{ id: "1", fileName: "Senior_Product_Designer_Long.pdf" }]}
                 activeResumeId="1"
                 resumeData={MOCK_MAXED_RESUME_DATA}
+                isCompact={true}
             />
         ),
     },
