@@ -8,6 +8,7 @@ import {
     RotateCcw,
     Sparkles,
     Split,
+    Loader2,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -27,6 +28,8 @@ import { Textarea } from "@/components/ui/textarea"
 
 export interface AIStudioProps {
     isLocked?: boolean
+    isGenerating?: boolean
+    generatingLabel?: string
     className?: string
     creditBalance?: number
     defaultTab?: string
@@ -37,6 +40,8 @@ export interface AIStudioProps {
 
 export function AIStudio({
     isLocked = true,
+    isGenerating = false,
+    generatingLabel = "Generating...",
     className,
     creditBalance = 5,
     defaultTab = "match",
@@ -252,10 +257,23 @@ export function AIStudio({
                                         />
                                     </div>
 
-                                    <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
-                                        <Wand2 className="mr-2 size-3.5" />
-                                        Generate Draft (1 Credit)
-                                    </Button>
+                                    {isGenerating ? (
+                                        <div className="flex flex-col items-center justify-center py-8 space-y-3">
+                                            <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                                                <Loader2 className="size-5 animate-spin" />
+                                                <span className="text-sm font-medium">{generatingLabel}</span>
+                                            </div>
+                                            <div className="w-48 h-1.5 bg-muted rounded-full overflow-hidden">
+                                                <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse" style={{ width: '60%' }} />
+                                            </div>
+                                            <p className="text-xs text-muted-foreground">This may take a few seconds...</p>
+                                        </div>
+                                    ) : (
+                                        <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
+                                            <Wand2 className="mr-2 size-3.5" />
+                                            Generate Draft (1 Credit)
+                                        </Button>
+                                    )}
                                 </TabsContent>
 
                                 <TabsContent value="answer" className="mt-0 space-y-4">

@@ -59,7 +59,7 @@
   --secondary: oklch(0.28 0.015 55);
   --secondary-foreground: oklch(0.92 0.005 55);
   --muted: oklch(0.22 0.012 55);
-  --muted-foreground: oklch(0.72 0.02 55);
+  --muted-foreground: oklch(0.75 0.02 55);
   --accent: oklch(0.72 0.17 60);
   --accent-foreground: oklch(0.12 0.03 55);
   --destructive: oklch(0.60 0.22 25);
@@ -158,4 +158,35 @@
   html {
     @apply font-sans;
   }
+}
+
+/* Tab content transition animations (UX Improvement 5.1) */
+@keyframes slideInFromRight {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.animate-tab-content {
+  animation: slideInFromRight 200ms ease-out;
+}
+
+.animate-fade-in {
+  animation: fadeIn 150ms ease-out;
 }

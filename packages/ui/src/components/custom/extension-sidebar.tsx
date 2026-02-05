@@ -112,17 +112,17 @@ export function ExtensionSidebar({
                         </TabsList>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto bg-muted/20 dark:bg-muted/40">
-                        <TabsContent value="scan" className="h-full mt-0 p-3 space-y-3">
+                    <div className="flex-1 overflow-y-auto bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false">
+                        <TabsContent value="scan" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
                             {scanContent}
                         </TabsContent>
-                        <TabsContent value="ai-studio" className="h-full mt-0 p-3 space-y-3">
+                        <TabsContent value="ai-studio" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
                             {studioContent}
                         </TabsContent>
-                        <TabsContent value="autofill" className="h-full mt-0 p-3 space-y-3">
+                        <TabsContent value="autofill" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
                             {autofillContent}
                         </TabsContent>
-                        <TabsContent value="coach" className="h-full mt-0 p-3 space-y-3">
+                        <TabsContent value="coach" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
                             {coachContent}
                         </TabsContent>
                     </div>

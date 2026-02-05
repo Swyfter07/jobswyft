@@ -98,3 +98,18 @@ export const UnlockedOutreach: Story = {
         </div>
     )
 }
+
+export const Generating: Story = {
+    args: {
+        isLocked: false,
+        isGenerating: true,
+        generatingLabel: "Generating cover letter...",
+        creditBalance: 5,
+        defaultTab: "cover-letter",
+    },
+    render: (args) => (
+        <div className="w-[400px] p-4">
+            <AIStudio {...args} />
+        </div>
+    )
+}

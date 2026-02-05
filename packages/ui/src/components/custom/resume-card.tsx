@@ -254,9 +254,9 @@ function CopyChip({
           className={cn(
             "inline-flex items-center gap-1.5 rounded-md border border-input", // Outline style (border-input)
             "bg-transparent px-2 py-0.5 text-xs font-medium text-foreground", // Transparent bg, tighter padding
-            "transition-colors hover:bg-accent hover:text-accent-foreground", // Standard shadcn hover
+            "transition-all hover:bg-accent hover:text-accent-foreground", // Standard shadcn hover with all transitions
             "active:scale-[0.97] cursor-pointer select-none",
-            copied && "border-primary/50 bg-primary/10 text-primary",
+            copied && "border-primary/50 bg-primary/10 text-primary scale-105 animate-pulse", // Enhanced feedback
             className
           )}
         >
@@ -398,7 +398,7 @@ function PersonalInfoContent({ data }: { data: ResumePersonalInfo }) {
   ]
 
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       {items.map((item) => (
         <CopyChip
           key={item.label}
@@ -421,7 +421,7 @@ function PersonalInfoContent({ data }: { data: ResumePersonalInfo }) {
 
 function SkillsContent({ skills }: { skills: string[] }) {
   return (
-    <div className="flex flex-wrap gap-1.5">
+    <div className="flex flex-wrap gap-2">
       {skills.map((skill) => (
         <CopyChip key={skill} value={skill} />
       ))}
