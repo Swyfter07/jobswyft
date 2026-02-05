@@ -185,6 +185,8 @@ interface ResumeCardProps {
   onDelete?: (id: string) => void
   /** Max height for the scrollable content area */
   maxHeight?: string
+  /** Compact mode - collapses sections when job is detected */
+  isCompact?: boolean
   className?: string
 }
 
@@ -459,10 +461,15 @@ function ExperienceContent({
   entries: ResumeExperienceEntry[]
 }) {
   const [expandedIndex, setExpandedIndex] = React.useState<number | null>(0)
+  const [showAll, setShowAll] = React.useState(false)
+  const VISIBLE_LIMIT = 2
+  const hasMore = entries.length > VISIBLE_LIMIT
+  const visibleEntries = showAll ? entries : entries.slice(0, VISIBLE_LIMIT)
+  const hiddenCount = entries.length - VISIBLE_LIMIT
 
   return (
     <div className="space-y-2">
-      {entries.map((entry, idx) => (
+      {visibleEntries.map((entry, idx) => (
         <ExperienceEntryCard
           key={`${entry.company}-${idx}`}
           entry={entry}
@@ -470,6 +477,20 @@ function ExperienceContent({
           onOpenChange={(isOpen) => setExpandedIndex(isOpen ? idx : null)}
         />
       ))}
+      {hasMore && (
+        <button
+          onClick={() => setShowAll(!showAll)}
+          className="w-full text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 py-2 border border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50"
+        >
+          {showAll ? (
+            <>Show less</>
+          ) : (
+            <>
+              View all <span className="text-primary font-medium">{entries.length}</span> positions
+            </>
+          )}
+        </button>
+      )}
     </div>
   )
 }
@@ -815,10 +836,12 @@ function ResumeCard({
   onUpload,
   onDelete,
   maxHeight = "600px",
+  isCompact = false,
   className,
 }: ResumeCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
-  const [expandedSection, setExpandedSection] = React.useState<string | null>("personal-info") // Default to personal info
+  // In compact mode, collapse all sections by default; otherwise expand personal-info
+  const [expandedSection, setExpandedSection] = React.useState<string | null>(isCompact ? null : "personal-info")
   const styles = getVariantStyles(variant)
 
   const handleAccordionChange = (sectionId: string) => (isOpen: boolean) => {
@@ -938,7 +961,7 @@ function ResumeCard({
                   icon={<Layers />}
                   title="Resume Blocks"
                   count={totalSections}
-                  defaultOpen
+                  defaultOpen={!isCompact}
                 >
                   <div className="space-y-1"> {/* Slightly increased spacing */}
                     {/* Personal Info */}

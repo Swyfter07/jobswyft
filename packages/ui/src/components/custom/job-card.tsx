@@ -44,17 +44,36 @@ interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
 // ─── Sub-Components ─────────────────────────────────────────────────────────
 
 function MatchIndicator({ score }: { score: number }) {
-    let colorClass = "text-red-600 bg-red-100 ring-red-200 dark:text-red-400 dark:bg-red-950 dark:ring-red-800"
-    if (score >= 80) colorClass = "text-green-600 bg-green-100 ring-green-200 dark:text-green-400 dark:bg-green-950 dark:ring-green-800"
-    else if (score >= 50) colorClass = "text-yellow-600 bg-yellow-100 ring-yellow-200 dark:text-yellow-400 dark:bg-yellow-950 dark:ring-yellow-800"
+    let colorClass = "text-red-600 dark:text-red-400"
+    let ringGradient = "from-red-200 via-red-100 to-red-200 dark:from-red-800 dark:via-red-900 dark:to-red-800"
+    let bgGradient = "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900"
+
+    if (score >= 80) {
+        colorClass = "text-green-600 dark:text-green-400"
+        ringGradient = "from-green-200 via-green-100 to-green-200 dark:from-green-800 dark:via-green-900 dark:to-green-800"
+        bgGradient = "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900"
+    } else if (score >= 50) {
+        colorClass = "text-yellow-600 dark:text-yellow-400"
+        ringGradient = "from-yellow-200 via-yellow-100 to-yellow-200 dark:from-yellow-800 dark:via-yellow-900 dark:to-yellow-800"
+        bgGradient = "from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900"
+    }
 
     return (
-        <div className="flex items-center gap-3">
-            <div className={cn("flex size-12 shrink-0 aspect-square items-center justify-center rounded-full font-bold text-sm ring-4 ring-offset-2 shadow-lg transition-all", colorClass)}>
-                {score}%
+        <div className="flex items-center gap-3 animate-tab-content">
+            {/* Outer gradient ring */}
+            <div className={cn("p-1 rounded-full bg-gradient-to-br shadow-lg", ringGradient)}>
+                {/* Inner score circle */}
+                <div className={cn(
+                    "flex size-14 shrink-0 items-center justify-center rounded-full font-bold text-lg bg-gradient-to-br shadow-inner",
+                    colorClass,
+                    bgGradient
+                )}>
+                    {score}%
+                </div>
             </div>
             <div className="flex flex-col">
                 <span className="text-sm font-bold text-foreground">Match Score</span>
+                <span className="text-xs text-muted-foreground">{score >= 80 ? "Strong fit!" : score >= 50 ? "Good potential" : "May need upskilling"}</span>
             </div>
         </div>
     )
