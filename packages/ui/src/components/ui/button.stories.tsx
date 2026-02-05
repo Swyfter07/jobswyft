@@ -9,7 +9,7 @@ const meta = {
   argTypes: {
     variant: {
       control: "select",
-      options: ["default", "destructive", "outline", "secondary", "ghost", "link"],
+      options: ["default", "destructive", "outline", "secondary", "ghost", "accent", "link"],
     },
     size: {
       control: "select",
@@ -53,6 +53,13 @@ export const Ghost: Story = {
   args: {
     variant: "ghost",
     children: "Ghost",
+  },
+}
+
+export const Accent: Story = {
+  args: {
+    variant: "accent",
+    children: "Upload Resume",
   },
 }
 
@@ -104,6 +111,7 @@ export const AllVariants: Story = {
       <Button variant="outline">Outline</Button>
       <Button variant="secondary">Secondary</Button>
       <Button variant="ghost">Ghost</Button>
+      <Button variant="accent">Accent</Button>
       <Button variant="link">Link</Button>
     </div>
   ),

@@ -43,11 +43,6 @@ export {
   tabsListVariants,
 } from "@/components/ui/tabs"
 export {
-  Collapsible,
-  CollapsibleTrigger,
-  CollapsibleContent,
-} from "@/components/ui/collapsible"
-export {
   Tooltip,
   TooltipContent,
   TooltipProvider,
@@ -55,17 +50,21 @@ export {
 } from "@/components/ui/tooltip"
 export { Separator } from "@/components/ui/separator"
 export { ScrollArea, ScrollBar } from "@/components/ui/scroll-area"
+export { Skeleton } from "@/components/ui/skeleton"
+export { Progress } from "@/components/ui/progress"
+export {
+  Accordion,
+  AccordionItem,
+  AccordionTrigger,
+  AccordionContent,
+} from "@/components/ui/accordion"
+
+// Components — reusable UI
+export { CopyButton } from "@/components/ui/copy-button"
+export { CopyChip } from "@/components/ui/copy-chip"
 
 // Components — custom compositions
-export {
-  ResumeCard,
-  CopyChip,
-  CopyButton,
-  ResumeSection,
-  ResumeEmptyState,
-} from "@/components/custom/resume-card"
-
-// Types — custom compositions
+export { ResumeCard } from "@/components/custom/resume-card"
 export type {
   ResumePersonalInfo,
   ResumeExperienceEntry,

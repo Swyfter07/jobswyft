@@ -47,6 +47,7 @@ development_status:
   0-1-foundation-design-tokens-ui-scaffold: superseded  # Replaced by shadcn UI approach
   0-2-core-atoms-icons-typography-badge-button: superseded  # Replaced by shadcn UI approach
   0-1-NEW-shadcn-ui-setup: done
+  0-2-resume-card: done
   0-3-form-atoms-input-textarea-select-progressbar-logo: backlog  # Requires rewrite for shadcn
   0-4-molecules-card-modal: backlog  # Requires rewrite for shadcn
   0-5-organisms-navbar-jobcard-tabs-emptystate: backlog  # Requires rewrite for shadcn
