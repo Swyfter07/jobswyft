@@ -1,0 +1,38 @@
+{
+  "name": "JobSwyft",
+  "description": "A Chrome extension for job hunting assistance.",
+  "version": "1.0",
+  "manifest_version": 3,
+  "permissions": [
+    "sidePanel",
+    "storage",
+    "activeTab",
+    "scripting",
+    "tabs",
+    "webNavigation"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": [
+        "lib/pdf.worker.min.js"
+      ],
+      "matches": [
+        "<all_urls>"
+      ]
+    }
+  ],
+  "content_scripts": [],
+  "side_panel": {
+    "default_path": "sidepanel.html"
+  },
+  "action": {
+    "default_title": "Open JobSwyft",
+    "default_icon": "icon3.png"
+  },
+  "background": {
+    "service_worker": "service-worker.js"
+  }
+}
