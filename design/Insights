@@ -1,0 +1,52 @@
+Based on your PRD and current setup, you are already sitting on the "Golden Stack" for high-velocity, flexible UI development. You don't need new tools; you just need to leverage your current ones correctly.
+
+Here is the "Production-In-Minutes" strategy tailored to your Monorepo:
+
+1. The Strategy: "Token-Driven" Development
+You asked how to change an accent color and have it "trickle down." Your project is already set up for this using CSS Variables.
+
+How it works:
+Define Tokens: You define generic variables (like --primary) in 
+packages/ui/src/styles/globals.css
+.
+Map to Tailwind: Tailwind sees bg-primary and points it to that variable.
+Build Components: Your Button, Input, and Card components use bg-primary.
+The Trickle Down: You change one line in 
+globals.css
+, and every component updates instantly.
+Action: Go to 
+packages/ui/src/styles/globals.css
+. You'll see variables like --primary: oklch(0.67 0.16 58);.
+
+To change your brand color globally: Just update the oklch numbers there.
+Pro Tip: Use a tool like OKLCH Color Picker to pick consistent colors easily.
+2. The Workflow: "Don't Reinvent, Recompose"
+The fastest way to production is Composition, not creation.
+
+Step A: Command Line First Don't write components from scratch. Use the Shadcn CLI to pull them into your shared library.
+
+bash
+# Run this from the root to add to your UI package
+pnpm --filter @jobswyft/ui dlx shadcn@latest add dialog dropdown-menu
+This puts the code in packages/ui, making it fully editable but pre-wired with accessibility and styles.
+
+Step B: The "Block" Approach Instead of building a "Page", build "Blocks" in Storybook (like we did with ResumeCard).
+
+Atom: Button, Badge (standard shadcn).
+Molecule: CopyChip (composed of Badge + Icon).
+Organism: ResumeCard (composed of many molecules).
+Page: Just drops the Organism in.
+3. Recommended Tools (That you aren't using yet)
+To maximize speed and flexibility, add these to your workflow:
+
+CVA (Class Variance Authority): You are already using this (I saw it in the code). Keep using it! It’s the standard for making components "configurable" (e.g., <Button variant="ghost" size="sm" />).
+Lucide React: Stick to this icon set. It's consistent and lightweight. Don’t mix icon sets.
+v0.dev: Since you use Vercel/Shadcn, you can use v0 to generate the initial Tailwind markup for complex blocks (like "Pricing Table" or "Dashboard Sidebar") and then copy that code into a component file. This is 10x faster than writing div classes by hand.
+Knip: For a Monorepo, this finds unused files/exports. Keeps your "shared library" lean so you don't ship bloat.
+4. Summary Checklist for "Flexible & Fast"
+Global Theme: Edit packages/ui/src/styles/globals.css first. Define your "Brand" colors there.
+Shared UI: scalable components go in packages/ui.
+Local UI: One-off hacks go in the specific app (apps/web or apps/extension).
+Storybook: Build it here first. If it works in Storybook, it works in the App and the Extension.
+Next Step: Do you want me to create a "Theme Configuration" artifact for you? I can set up a "Brand Colors" section in your globals.css with a few preset palettes (e.g., "Professional Blue," "Energetic Orange") so you can swap them instantly.
+

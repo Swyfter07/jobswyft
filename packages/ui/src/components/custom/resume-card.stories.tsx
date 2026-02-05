@@ -399,3 +399,43 @@ export const EmptyStateDemo: Story = {
     </div>
   ),
 }
+
+/** Color Variants Comparison: Default vs Subtle vs Bold */
+export const ColorVariants: Story = {
+  render: () => (
+    <div className="flex flex-col gap-8 w-[400px]">
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium text-muted-foreground">Default</h3>
+        <ResumeCard
+          resumes={mockResumes}
+          activeResumeId="resume-1"
+          resumeData={fullResumeData}
+          variant="default"
+          maxHeight="auto"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium text-muted-foreground">Subtle</h3>
+        <ResumeCard
+          resumes={mockResumes}
+          activeResumeId="resume-1"
+          resumeData={fullResumeData}
+          variant="subtle"
+          maxHeight="auto"
+        />
+      </div>
+
+      <div className="space-y-2">
+        <h3 className="text-sm font-medium text-muted-foreground">Bold</h3>
+        <ResumeCard
+          resumes={mockResumes}
+          activeResumeId="resume-1"
+          resumeData={fullResumeData}
+          variant="bold"
+          maxHeight="auto"
+        />
+      </div>
+    </div>
+  ),
+}
