@@ -25,8 +25,10 @@ export interface AutofillField {
 export interface AutofillProps {
     fields?: AutofillField[]
     isFilling?: boolean
+    showUndoPrompt?: boolean
     onFill?: () => void
     onUndo?: () => void
+    onUndoDismiss?: () => void
     className?: string
 }
 
@@ -56,8 +58,10 @@ function StatusIcon({ status }: { status: AutofillField["status"] }) {
 export function Autofill({
     fields = DEFAULT_FIELDS,
     isFilling = false,
+    showUndoPrompt = false,
     onFill,
     onUndo,
+    onUndoDismiss,
     className
 }: AutofillProps) {
     const personalFields = fields.filter(f => f.category === "personal")
@@ -130,6 +134,35 @@ export function Autofill({
                         <FieldGroup title="Questions" items={questionFields} />
                     </div>
                 </ScrollArea>
+
+                {/* Undo Success Banner - shows after fill completes */}
+                {showUndoPrompt && (
+                    <div className="absolute top-0 left-0 right-0 p-3 bg-green-50 border-b border-green-200 dark:bg-green-950 dark:border-green-800 animate-tab-content">
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                                <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
+                                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                                    Application filled!
+                                </span>
+                            </div>
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 text-xs text-green-700 hover:text-green-800 hover:bg-green-100 dark:text-green-300 dark:hover:text-green-200 dark:hover:bg-green-900"
+                                onClick={() => {
+                                    onUndo?.()
+                                    onUndoDismiss?.()
+                                }}
+                            >
+                                <RotateCcw className="mr-1.5 size-3" />
+                                Undo
+                            </Button>
+                        </div>
+                        <p className="text-[10px] text-green-600/70 dark:text-green-400/70 mt-1">
+                            Auto-dismissing in 10 seconds...
+                        </p>
+                    </div>
+                )}
 
                 {/* Floating Action Bar */}
                 <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pt-8">

@@ -49,3 +49,12 @@ export const Incomplete: Story = {
         ]
     },
 }
+
+export const FillComplete: Story = {
+    args: {
+        className: "w-[350px] h-[600px]",
+        fields: MOCK_FIELDS.map(f => ({ ...f, status: "filled" as const })),
+        showUndoPrompt: true,
+    },
+}
+

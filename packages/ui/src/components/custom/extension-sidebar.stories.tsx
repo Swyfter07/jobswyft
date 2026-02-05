@@ -124,6 +124,7 @@ const ExtensionSidebarWithState = (args: any) => {
             {...args}
             activeTab={activeTab}
             onTabChange={setActiveTab}
+            creditBar={{ credits: 38, maxCredits: 50, onBuyMore: () => alert("Buy more credits") }}
             // Ensure content is passed if not already in args, or override to inject handlers
             contextContent={args.contextContent || (
                 <ResumeCard
@@ -133,15 +134,12 @@ const ExtensionSidebarWithState = (args: any) => {
                 />
             )}
             scanContent={
-                <>
-                    <JobCard
-                        job={MOCK_JOB}
-                        match={MOCK_MATCH}
-                        onDiveDeeper={handleDiveDeeper}
-                        onCoach={handleCoach}
-                    />
-                    <CreditBalance total={50} used={12} className="mt-auto" />
-                </>
+                <JobCard
+                    job={MOCK_JOB}
+                    match={MOCK_MATCH}
+                    onDiveDeeper={handleDiveDeeper}
+                    onCoach={handleCoach}
+                />
             }
             studioContent={
                 <AIStudio

@@ -2,6 +2,7 @@ import React from "react"
 import { Search, Sparkles, FormInput, Bot } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { CreditBar, CreditBarProps } from "./credit-bar"
 
 export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     header: React.ReactNode
@@ -14,6 +15,12 @@ export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivEleme
     defaultTab?: string
     activeTab?: string
     onTabChange?: (tab: string) => void
+    /** Credit bar configuration - shows at bottom when provided */
+    creditBar?: {
+        credits: number
+        maxCredits?: number
+        onBuyMore?: () => void
+    }
 }
 
 function TabIcon({ locked, children }: { locked?: boolean; children: React.ReactNode }) {
@@ -33,6 +40,7 @@ export function ExtensionSidebar({
     coachContent,
     isLocked = false,
     defaultTab = "scan",
+    creditBar,
     className,
     ...props
 }: ExtensionSidebarProps) {
@@ -127,6 +135,15 @@ export function ExtensionSidebar({
                         </TabsContent>
                     </div>
                 </Tabs>
+            )}
+
+            {/* Credit Bar - Fixed at bottom */}
+            {creditBar && (
+                <CreditBar
+                    credits={creditBar.credits}
+                    maxCredits={creditBar.maxCredits}
+                    onBuyMore={creditBar.onBuyMore}
+                />
             )}
         </aside>
     )
