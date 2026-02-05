@@ -36,6 +36,7 @@ interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
     job: JobData
     match?: MatchData
     onCoach?: () => void
+    onDiveDeeper?: () => void
     isEditing?: boolean
     onAnalyze?: (data: Partial<JobData>) => void
 }
@@ -43,9 +44,9 @@ interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
 // ─── Sub-Components ─────────────────────────────────────────────────────────
 
 function MatchIndicator({ score }: { score: number }) {
-    let colorClass = "text-red-600 bg-red-100 ring-red-200"
-    if (score >= 80) colorClass = "text-green-600 bg-green-100 ring-green-200"
-    else if (score >= 50) colorClass = "text-yellow-600 bg-yellow-100 ring-yellow-200"
+    let colorClass = "text-red-600 bg-red-100 ring-red-200 dark:text-red-400 dark:bg-red-950 dark:ring-red-800"
+    if (score >= 80) colorClass = "text-green-600 bg-green-100 ring-green-200 dark:text-green-400 dark:bg-green-950 dark:ring-green-800"
+    else if (score >= 50) colorClass = "text-yellow-600 bg-yellow-100 ring-yellow-200 dark:text-yellow-400 dark:bg-yellow-950 dark:ring-yellow-800"
 
     return (
         <div className="flex items-center gap-3">
@@ -61,9 +62,9 @@ function MatchIndicator({ score }: { score: number }) {
 
 function SkillPill({ name, variant = "default" }: { name: string, variant?: "default" | "missing" }) {
     if (variant === "missing") {
-        return <Badge variant="outline" className="text-muted-foreground border-dashed">{name}</Badge>
+        return <Badge variant="outline" className="text-muted-foreground border-dashed dark:border-muted">{name}</Badge>
     }
-    return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200 border border-green-200 shadow-none">{name}</Badge>
+    return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200 border border-green-200 shadow-none dark:bg-green-950 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900">{name}</Badge>
 }
 
 // ─── Main Component ─────────────────────────────────────────────────────────
@@ -84,8 +85,8 @@ export function JobCard({
     const [description, setDescription] = React.useState(job.description)
 
     return (
-        <Card className={cn("w-full overflow-hidden border-2 border-orange-200", className)} {...props}>
-            <CardHeader className="space-y-3 bg-muted/20">
+        <Card className={cn("w-full overflow-hidden border-2 border-orange-200 dark:border-orange-900 dark:bg-card", className)} {...props}>
+            <CardHeader className="space-y-3 bg-muted/20 dark:bg-muted/40">
                 {/* Top Row: Header & Match */}
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -225,8 +226,15 @@ export function JobCard({
                         )}
 
                         {/* Actions */}
-                        <div className="pt-2">
-                            <Button onClick={onCoach} className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md">
+                        <div className="flex items-center gap-3 pt-2">
+                            <Button
+                                onClick={props.onDiveDeeper}
+                                className="flex-1 bg-purple-600 text-white hover:bg-purple-700 font-semibold shadow-md dark:bg-purple-700 dark:hover:bg-purple-600"
+                            >
+                                <Sparkles className="mr-2 size-4" />
+                                Dive Deeper
+                            </Button>
+                            <Button onClick={onCoach} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md">
                                 <Brain className="mr-2 size-4" />
                                 Talk to Coach
                             </Button>

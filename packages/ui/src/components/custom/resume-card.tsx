@@ -80,8 +80,8 @@ function getVariantStyles(variant: ResumeCardVariant) {
   switch (variant) {
     case "subtle":
       return {
-        headerHover: "hover:bg-muted/50",
-        headerBg: "bg-muted/30",
+        headerHover: "hover:bg-muted/50 dark:hover:bg-muted/30",
+        headerBg: "bg-muted/30 dark:bg-muted/20",
         icon: "text-primary/70",
         border: "border-border",
         badge: "secondary" as const,
@@ -89,22 +89,22 @@ function getVariantStyles(variant: ResumeCardVariant) {
       }
     case "bold":
       return {
-        headerHover: "text-primary hover:bg-primary/10",
-        headerBg: "bg-primary/5",
+        headerHover: "text-primary hover:bg-primary/10 dark:hover:bg-primary/20",
+        headerBg: "bg-primary/5 dark:bg-primary/10",
         icon: "text-primary",
-        border: "border-primary/20",
+        border: "border-primary/20 dark:border-primary/40",
         badge: "outline" as const,
-        badgeClass: "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20",
+        badgeClass: "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30",
       }
     default: // Now "Orange Polish" based on user request
       return {
-        headerHover: "hover:bg-slate-50/80 active:bg-slate-100 transition-colors",
-        headerBg: "bg-gradient-to-r from-slate-50 to-white",
-        icon: "text-orange-600",
-        border: "border-orange-200 shadow-sm transition-all",
+        headerHover: "hover:bg-slate-50/80 active:bg-slate-100 transition-colors dark:hover:bg-muted/50 dark:active:bg-muted/70",
+        headerBg: "bg-gradient-to-r from-slate-50 to-white dark:from-muted/30 dark:to-card",
+        icon: "text-orange-600 dark:text-orange-400",
+        border: "border-orange-200 shadow-sm transition-all dark:border-orange-900",
         badge: "secondary" as const,
-        badgeClass: "bg-slate-100 text-slate-700 hover:bg-slate-200",
-        containerBg: "bg-gradient-to-br from-slate-50 to-slate-100",
+        badgeClass: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-muted dark:text-slate-300 dark:hover:bg-muted/80",
+        containerBg: "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-card dark:to-muted/50",
         cardShadow: "shadow-lg",
       }
   }
@@ -335,7 +335,7 @@ function ResumeSection({
           <span className="flex-1 text-left font-semibold">{title}</span> {/* font-medium -> font-semibold */}
           {count !== undefined && (
             title === "Resume Blocks" ? (
-              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200">
+              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900 dark:border-orange-800">
                 {count}
               </Badge>
             ) : (
@@ -470,7 +470,7 @@ function ExperienceEntryCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent p-2.5">
+      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5">
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -571,7 +571,7 @@ function EducationEntryCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent p-2.5">
+      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5">
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -631,7 +631,7 @@ function CertificationsContent({
       {entries.map((entry, idx) => (
         <div
           key={`${entry.name}-${idx}`}
-          className="flex items-center gap-2 rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent p-2.5"
+          className="flex items-center gap-2 rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5"
         >
           <Award className="size-3.5 shrink-0 text-primary/70" />
           <div className="flex-1 min-w-0">
@@ -695,7 +695,7 @@ function ProjectEntryCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent p-2.5">
+      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5">
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -837,7 +837,7 @@ function ResumeCard({
   return (
     <ResumeCardContext.Provider value={{ variant }}>
       <Card className={cn(
-        "w-full transition-all duration-300 border-2 border-orange-200 py-0",
+        "w-full transition-all duration-300 border-2 border-orange-200 dark:border-orange-800 py-0",
         styles.cardShadow || "shadow-sm",
         styles.containerBg || "bg-card", // Apply gradient here
         className

@@ -1,5 +1,9 @@
+import React from "react"
 import type { Meta, StoryObj } from "@storybook/react"
 import { ExtensionSidebar } from "./extension-sidebar"
+import { AIStudio } from "./ai-studio"
+import { Coach } from "./coach"
+import { Autofill } from "./autofill"
 import { AppHeader } from "./app-header"
 import { ResumeCard } from "./resume-card"
 import { CreditBalance } from "./credit-balance"
@@ -53,21 +57,13 @@ const CenteredLayout = (Story: any) => (
 
 export const JobDetected: Story = {
     decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
     args: {
         header: <AppHeader appName="JobSwyft" />,
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
-            <>
-                <ResumeCard
-                    resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
-                    activeResumeId="1"
-                    resumeData={MOCK_RESUME_DATA}
-                />
-                <JobCard job={MOCK_JOB} match={MOCK_MATCH} />
-                <CreditBalance total={50} used={12} className="mt-auto" />
-            </>
-        ),
+        // scanContent is handled by the wrapper to inject handlers
+        isLocked: false,
     },
 }
 
@@ -77,13 +73,15 @@ export const NoJobDetected: Story = {
         header: <AppHeader appName="JobSwyft" />,
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
+        contextContent: (
+            <ResumeCard
+                resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
+                activeResumeId="1"
+                resumeData={MOCK_RESUME_DATA}
+            />
+        ),
+        scanContent: (
             <>
-                <ResumeCard
-                    resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
-                    activeResumeId="1"
-                    resumeData={MOCK_RESUME_DATA}
-                />
                 <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/25">
                     <div className="rounded-full bg-muted p-3">
                         <span className="text-2xl">🔍</span>
@@ -101,35 +99,118 @@ export const NoJobDetected: Story = {
                 <CreditBalance total={50} used={12} className="mt-auto" />
             </>
         ),
+        isLocked: true,
+    },
+}
+
+import { LoggedOutView } from "./logged-out-view"
+
+// Wrapper for interactive state
+const ExtensionSidebarWithState = (args: any) => {
+    const [activeTab, setActiveTab] = React.useState("scan")
+    const [studioTab, setStudioTab] = React.useState("match")
+
+    const handleDiveDeeper = () => {
+        setActiveTab("ai-studio")
+        setTimeout(() => setStudioTab("match"), 0) // Ensure tab switch happens
+    }
+
+    const handleCoach = () => {
+        setActiveTab("coach")
+    }
+
+    return (
+        <ExtensionSidebar
+            {...args}
+            activeTab={activeTab}
+            onTabChange={setActiveTab}
+            // Ensure content is passed if not already in args, or override to inject handlers
+            contextContent={args.contextContent || (
+                <ResumeCard
+                    resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
+                    activeResumeId="1"
+                    resumeData={MOCK_RESUME_DATA}
+                />
+            )}
+            scanContent={
+                <>
+                    <JobCard
+                        job={MOCK_JOB}
+                        match={MOCK_MATCH}
+                        onDiveDeeper={handleDiveDeeper}
+                        onCoach={handleCoach}
+                    />
+                    <CreditBalance total={50} used={12} className="mt-auto" />
+                </>
+            }
+            studioContent={
+                <AIStudio
+                    isLocked={false}
+                    className="h-full"
+                    activeTab={studioTab}
+                    onTabChange={setStudioTab}
+                />
+            }
+            autofillContent={<Autofill className="h-full" />}
+            coachContent={<Coach className="h-full" />}
+        />
+    )
+}
+
+export const DiveDeeperDemo: Story = {
+    decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
+    args: {
+        // Inherit base args but ensure interactivity
+        header: <AppHeader appName="JobSwyft" />,
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        isLocked: false,
+    }
+}
+
+// Maxed out data for stress testing
+const MOCK_MAXED_RESUME_DATA = {
+    ...MOCK_RESUME_DATA,
+    experience: Array(8).fill(null).map((_, i) => ({
+        title: `Senior Product Designer ${i + 1}`,
+        company: `Tech Giant ${i + 1}`,
+        startDate: "2018",
+        endDate: "2020",
+        description: "Led the design system team, reducing drift by 40%. Implemented a new token architecture that scaled to 5 products. Mentored 3 junior designers and facilitated weekly design critiques. Collaborated closely with engineering to ensure pixel-perfect implementation and established a new handoff process using Figma and Storybook.",
+        highlights: ["Increased efficiency by 200%", "Launched 3 major features", "Won design award"]
+    })),
+    education: Array(3).fill(null).map((_, i) => ({
+        degree: `Master of Design ${i + 1}`,
+        school: "Design Institute",
+        startDate: "2014",
+        endDate: "2016",
+        gpa: "3.9"
+    })),
+    skills: ["Figma", "Sketch", "Principle", "Protopie", "React", "HTML/CSS", "JavaScript", "TypeScript", "Storybook", "JIRA", "Notion", "Linear", "User Research", "Usability Testing", "Wireframing", "Prototyping", "Interaction Design", "Visual Design"]
+}
+
+export const MaxedOutResume: Story = {
+    decorators: [CenteredLayout],
+    args: {
+        ...JobDetected.args,
+        contextContent: (
+            <ResumeCard
+                resumes={[{ id: "1", fileName: "Senior_Product_Designer_Long.pdf" }]}
+                activeResumeId="1"
+                resumeData={MOCK_MAXED_RESUME_DATA}
+            />
+        ),
     },
 }
 
 export const LoggedOut: Story = {
     decorators: [CenteredLayout],
     args: {
-        header: <div className="p-4 font-bold text-xl text-center">JobSwyft</div>,
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
         children: (
-            <div className="flex flex-col items-center justify-center h-full space-y-6 p-6 text-center">
-                <div className="space-y-2">
-                    <h2 className="text-2xl font-bold tracking-tight">Welcome to JobSwyft</h2>
-                    <p className="text-muted-foreground">
-                        Sign in to start applying faster with AI-powered tools.
-                    </p>
-                </div>
-
-                <button className="inline-flex items-center justify-center gap-2 rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0 bg-primary text-primary-foreground hover:bg-primary/90 h-10 px-4 py-2 w-full">
-                    <svg role="img" viewBox="0 0 24 24" fill="currentColor" className="mr-2 size-4">
-                        <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .533 5.333.533 12S5.867 24 12.48 24c3.44 0 6.013-1.133 8.053-3.24 2.08-2.08 2.76-4.96 2.76-7.307 0-.72-.053-1.427-.16-2.12H12.48z" />
-                    </svg>
-                    Sign in with Google
-                </button>
-
-                <p className="text-xs text-muted-foreground">
-                    By pulling the trigger, you agree to our <span className="underline cursor-pointer">Terms</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
-                </p>
-            </div>
+            <LoggedOutView />
         ),
     },
 }
