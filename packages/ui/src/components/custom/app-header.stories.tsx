@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AppHeader } from "./app-header"
 import { Sparkles } from "lucide-react"
 
@@ -10,7 +10,8 @@ const meta = {
     },
     tags: ["autodocs"],
     argTypes: {
-        onSettingsClick: { action: "settings clicked" },
+        onProfileClick: { action: "profile clicked" },
+        onSignOut: { action: "sign out" },
         onThemeToggle: { action: "theme toggled" },
     },
 } satisfies Meta<typeof AppHeader>
@@ -24,19 +25,10 @@ export const Default: Story = {
     },
 }
 
-export const DarkMode: Story = {
-    args: {
-        isDarkMode: true,
-    },
-    parameters: {
-        backgrounds: { default: 'dark' }
-    }
-}
-
 export const CustomBranding: Story = {
     args: {
         appName: "CareerCoach AI",
-        logo: <Sparkles className="size-6 text-purple-500" />,
+        logo: <Sparkles className="size-5 text-ai-accent" />,
         isDarkMode: false,
     },
 }

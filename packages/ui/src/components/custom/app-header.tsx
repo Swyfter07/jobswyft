@@ -1,12 +1,20 @@
 import React from "react"
-import { Briefcase, Sun, Moon, Settings } from "lucide-react"
+import { Briefcase, Sun, Moon, Settings, User, LogOut } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu"
 
 export interface AppHeaderProps extends React.HTMLAttributes<HTMLElement> {
     appName?: string
     logo?: React.ReactNode
-    onSettingsClick?: () => void
+    onProfileClick?: () => void
+    onSignOut?: () => void
     onThemeToggle?: () => void
     isDarkMode?: boolean
 }
@@ -14,7 +22,8 @@ export interface AppHeaderProps extends React.HTMLAttributes<HTMLElement> {
 export function AppHeader({
     appName = "JobSwyft",
     logo,
-    onSettingsClick,
+    onProfileClick,
+    onSignOut,
     onThemeToggle,
     isDarkMode = false,
     className,
@@ -28,11 +37,11 @@ export function AppHeader({
             )}
             {...props}
         >
-            <div className="container flex h-12 items-center justify-between px-4">
+            <div className="flex h-12 items-center justify-between px-4">
                 {/* Left: Branding */}
                 <div className="flex items-center gap-2">
-                    {logo || <Briefcase className="size-6 text-primary" />}
-                    <span className="font-bold text-lg tracking-tight">{appName}</span>
+                    {logo || <Briefcase className="size-5 text-primary" />}
+                    <span className="font-bold text-base tracking-tight">{appName}</span>
                 </div>
 
                 {/* Right: Actions */}
@@ -41,20 +50,35 @@ export function AppHeader({
                         variant="ghost"
                         size="icon"
                         onClick={onThemeToggle}
-                        title="Toggle Theme"
-                        className="text-muted-foreground hover:text-foreground"
+                        title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
+                        className="size-8 text-muted-foreground hover:text-foreground"
                     >
-                        {isDarkMode ? <Moon className="size-5" /> : <Sun className="size-5" />}
+                        {isDarkMode ? <Moon className="size-4" /> : <Sun className="size-4" />}
                     </Button>
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={onSettingsClick}
-                        title="Settings"
-                        className="text-muted-foreground hover:text-foreground"
-                    >
-                        <Settings className="size-5" />
-                    </Button>
+
+                    <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                            <Button
+                                variant="ghost"
+                                size="icon"
+                                title="Settings"
+                                className="size-8 text-muted-foreground hover:text-foreground"
+                            >
+                                <Settings className="size-4" />
+                            </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-40">
+                            <DropdownMenuItem onClick={onProfileClick}>
+                                <User className="mr-2 size-4" />
+                                Profile
+                            </DropdownMenuItem>
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem onClick={onSignOut}>
+                                <LogOut className="mr-2 size-4" />
+                                Sign out
+                            </DropdownMenuItem>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
                 </div>
             </div>
         </header>

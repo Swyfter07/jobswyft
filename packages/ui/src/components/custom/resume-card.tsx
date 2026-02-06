@@ -96,15 +96,15 @@ function getVariantStyles(variant: ResumeCardVariant) {
         badge: "outline" as const,
         badgeClass: "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30",
       }
-    default: // Now "Orange Polish" based on user request
+    default:
       return {
-        headerHover: "hover:bg-slate-50/80 active:bg-slate-100 transition-colors dark:hover:bg-muted/50 dark:active:bg-muted/70",
-        headerBg: "bg-gradient-to-r from-slate-50 to-white dark:from-muted/30 dark:to-card",
-        icon: "text-orange-600 dark:text-orange-400",
-        border: "border-orange-200 shadow-sm transition-all dark:border-orange-900",
+        headerHover: "hover:bg-muted/50 active:bg-muted/70 transition-colors",
+        headerBg: "bg-gradient-to-r from-muted/30 to-transparent",
+        icon: "text-primary",
+        border: "border-2 border-card-accent-border shadow-sm transition-all",
         badge: "secondary" as const,
-        badgeClass: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-muted dark:text-slate-300 dark:hover:bg-muted/80",
-        containerBg: "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-card dark:to-muted/50",
+        badgeClass: "bg-muted text-muted-foreground hover:bg-muted/80",
+        containerBg: "bg-gradient-to-br from-card-accent-bg to-muted/30",
         cardShadow: "shadow-lg",
       }
   }
@@ -292,6 +292,7 @@ function ResumeSection({
   defaultOpen = false,
   open,
   onOpenChange,
+  isParent = false,
   children,
   className,
 }: {
@@ -302,6 +303,7 @@ function ResumeSection({
   defaultOpen?: boolean
   open?: boolean
   onOpenChange?: (open: boolean) => void
+  isParent?: boolean
   children: React.ReactNode
   className?: string
 }) {
@@ -326,24 +328,24 @@ function ResumeSection({
             "flex w-full items-center gap-2 rounded-md px-2 py-1",
             "text-sm font-medium text-foreground",
             "transition-colors cursor-pointer select-none",
-            title === "Resume Blocks"
-              ? "bg-transparent hover:bg-muted/50" // No gradient, standard hover
+            isParent
+              ? "bg-transparent hover:bg-muted/50"
               : (isOpen && styles.headerBg ? styles.headerBg : styles.headerHover),
           )}
         >
           <span className={cn("[&>svg]:size-4 shrink-0 transition-colors", styles.icon)}>
             {icon}
           </span>
-          <span className="flex-1 text-left font-semibold">{title}</span> {/* font-medium -> font-semibold */}
+          <span className="flex-1 text-left font-semibold">{title}</span>
           {count !== undefined && (
-            title === "Resume Blocks" ? (
-              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900 dark:border-orange-800">
+            isParent ? (
+              <Badge className="bg-primary/15 text-primary hover:bg-primary/20 border-primary/20">
                 {count}
               </Badge>
             ) : (
               <Badge
                 variant={styles.badge}
-                className={cn("h-4 px-1.5 text-[10px] font-normal", styles.badgeClass)}
+                className={cn("h-4 px-1.5 text-micro font-normal", styles.badgeClass)}
               >
                 {count}
               </Badge>
@@ -359,8 +361,8 @@ function ResumeSection({
             className={cn(
               "size-4 shrink-0 transition-transform duration-200",
               styles.icon,
+              isOpen && "rotate-180",
             )}
-            style={{ transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)' }} // Inline style as requested
           />
         </button>
       </CollapsibleTrigger>
@@ -513,7 +515,7 @@ function ExperienceEntryCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5">
+      <div className="relative rounded-lg border border-border bg-gradient-to-r from-muted/30 to-transparent p-2.5">
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -530,12 +532,12 @@ function ExperienceEntryCard({
                 <span className="text-xs font-semibold text-foreground">
                   {entry.title}
                 </span>
-                <span className="text-[10px] text-muted-foreground">at</span>
+                <span className="text-micro text-muted-foreground">at</span>
                 <span className="text-xs font-medium text-foreground">
                   {entry.company}
                 </span>
               </div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-micro text-muted-foreground mt-0.5">
                 {entry.startDate} — {entry.endDate}
               </div>
             </div>
@@ -556,7 +558,7 @@ function ExperienceEntryCard({
                     key={i}
                     className="flex items-start gap-1.5 text-xs text-foreground"
                   >
-                    <span className="text-primary mt-0.5 shrink-0 text-[10px]">
+                    <span className="text-primary mt-0.5 shrink-0 text-micro">
                       &bull;
                     </span>
                     <span className="leading-relaxed">{highlight}</span>
@@ -614,7 +616,7 @@ function EducationEntryCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5">
+      <div className="relative rounded-lg border border-border bg-gradient-to-r from-muted/30 to-transparent p-2.5">
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -630,7 +632,7 @@ function EducationEntryCard({
               <div className="text-xs font-semibold text-foreground">
                 {entry.degree}
               </div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">
+              <div className="text-micro text-muted-foreground mt-0.5">
                 {entry.school} &middot; {entry.startDate} — {entry.endDate}
                 {entry.gpa && ` · GPA: ${entry.gpa}`}
               </div>
@@ -648,7 +650,7 @@ function EducationEntryCard({
                   key={i}
                   className="flex items-start gap-1.5 text-xs text-foreground"
                 >
-                  <span className="text-primary mt-0.5 shrink-0 text-[10px]">
+                  <span className="text-primary mt-0.5 shrink-0 text-micro">
                     &bull;
                   </span>
                   <span className="leading-relaxed">{highlight}</span>
@@ -674,14 +676,14 @@ function CertificationsContent({
       {entries.map((entry, idx) => (
         <div
           key={`${entry.name}-${idx}`}
-          className="flex items-center gap-2 rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5"
+          className="flex items-center gap-2 rounded-lg border border-border bg-gradient-to-r from-muted/30 to-transparent p-2.5"
         >
           <Award className="size-3.5 shrink-0 text-primary/70" />
           <div className="flex-1 min-w-0">
             <div className="text-xs font-medium text-foreground truncate">
               {entry.name}
             </div>
-            <div className="text-[10px] text-muted-foreground">
+            <div className="text-micro text-muted-foreground">
               {entry.issuer} &middot; {entry.date}
             </div>
           </div>
@@ -738,7 +740,7 @@ function ProjectEntryCard({
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
-      <div className="relative rounded-lg border border-border bg-gradient-to-r from-gray-50/60 to-transparent dark:from-muted/30 dark:to-transparent p-2.5">
+      <div className="relative rounded-lg border border-border bg-gradient-to-r from-muted/30 to-transparent p-2.5">
         <CollapsibleTrigger asChild>
           <button
             type="button"
@@ -764,7 +766,7 @@ function ProjectEntryCard({
                   <Badge
                     key={tech}
                     variant="secondary"
-                    className="h-4 px-1.5 text-[10px] font-normal"
+                    className="h-4 px-1.5 text-micro font-normal"
                   >
                     {tech}
                   </Badge>
@@ -772,7 +774,7 @@ function ProjectEntryCard({
                 {entry.techStack.length > 3 && (
                   <Badge
                     variant="outline"
-                    className="h-4 px-1.5 text-[10px] font-normal"
+                    className="h-4 px-1.5 text-micro font-normal"
                   >
                     +{entry.techStack.length - 3}
                   </Badge>
@@ -831,7 +833,7 @@ function ResumeCard({
   resumes,
   activeResumeId,
   resumeData,
-  variant = "subtle", // Updated default to user preference
+  variant = "subtle",
   onResumeSelect,
   onUpload,
   onDelete,
@@ -882,7 +884,7 @@ function ResumeCard({
   return (
     <ResumeCardContext.Provider value={{ variant }}>
       <Card className={cn(
-        "w-full transition-all duration-300 border-2 border-orange-200 dark:border-orange-800 py-0",
+        "w-full transition-all duration-300 border-2 border-card-accent-border py-0",
         styles.cardShadow || "shadow-sm",
         styles.containerBg || "bg-card", // Apply gradient here
         className
@@ -920,7 +922,7 @@ function ResumeCard({
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground"
+                  className="size-8 text-muted-foreground"
                   onClick={onUpload}
                 >
                   <Upload className="size-4" />
@@ -936,7 +938,7 @@ function ResumeCard({
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
+                    className="size-8 text-destructive hover:text-destructive"
                     onClick={() => setDeleteDialogOpen(true)}
                   >
                     <Trash2 className="size-4" />
@@ -955,15 +957,15 @@ function ResumeCard({
             <ResumeEmptyState onUpload={onUpload} />
           ) : (
             <ScrollArea style={{ maxHeight }}>
-              <div className="px-2 pb-2"> {/* Removed top padding */}
-                {/* Resume Blocks - Parent expandable section */}
+              <div className="px-2 pb-2">
                 <ResumeSection
                   icon={<Layers />}
                   title="Resume Blocks"
                   count={totalSections}
                   defaultOpen={!isCompact}
+                  isParent
                 >
-                  <div className="space-y-1"> {/* Slightly increased spacing */}
+                  <div className="space-y-1">
                     {/* Personal Info */}
                     <ResumeSection
                       icon={<User />}
@@ -979,7 +981,7 @@ function ResumeCard({
                       <PersonalInfoContent data={resumeData.personalInfo} />
                     </ResumeSection>
 
-                    <Separator className="my-0.5" /> {/* Reduced margin my-1 -> my-0.5 */}
+                    <Separator className="my-0.5" />
 
                     {/* Skills */}
                     <ResumeSection
@@ -1095,7 +1097,7 @@ function ResumeCard({
           </DialogContent>
         </Dialog>
       </Card>
-    </ResumeCardContext.Provider >
+    </ResumeCardContext.Provider>
   )
 }
 

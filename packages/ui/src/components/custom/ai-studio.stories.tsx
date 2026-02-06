@@ -1,4 +1,4 @@
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AIStudio } from "./ai-studio"
 
 const meta = {
@@ -9,15 +9,21 @@ const meta = {
     },
     tags: ["autodocs"],
     argTypes: {
-        isLocked: {
-            control: "boolean",
-            description: "Whether the AI Studio is locked (pre-scan state)",
-        },
-        creditBalance: {
-            control: "number",
-            description: "Number of remaining AI credits",
-        }
+        isLocked: { control: "boolean" },
+        isGenerating: { control: "boolean" },
+        creditBalance: { control: "number" },
+        onUnlock: { action: "unlock" },
+        onGenerate: { action: "generate" },
+        onReset: { action: "reset" },
+        onTabChange: { action: "tab changed" },
     },
+    decorators: [
+        (Story) => (
+            <div className="w-[400px] p-4">
+                <Story />
+            </div>
+        ),
+    ],
 } satisfies Meta<typeof AIStudio>
 
 export default meta
@@ -28,11 +34,6 @@ export const Locked: Story = {
         isLocked: true,
         creditBalance: 5,
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
 }
 
 export const Unlocked: Story = {
@@ -40,63 +41,43 @@ export const Unlocked: Story = {
         isLocked: false,
         creditBalance: 5,
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
 }
 
-export const UnlockedMatch: Story = {
+export const MatchTab: Story = {
     args: {
         isLocked: false,
         creditBalance: 5,
         defaultTab: "match",
+        matchData: {
+            score: 85,
+            matchedSkills: ["React", "TypeScript", "Tailwind", "Node.js"],
+            missingSkills: ["GraphQL", "AWS"],
+        },
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
 }
 
-export const UnlockedCoverLetter: Story = {
+export const CoverLetterTab: Story = {
     args: {
         isLocked: false,
         creditBalance: 5,
         defaultTab: "cover-letter",
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
 }
 
-export const UnlockedAnswer: Story = {
+export const AnswerTab: Story = {
     args: {
         isLocked: false,
         creditBalance: 5,
         defaultTab: "answer",
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
 }
 
-export const UnlockedOutreach: Story = {
+export const OutreachTab: Story = {
     args: {
         isLocked: false,
         creditBalance: 5,
         defaultTab: "outreach",
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
 }
 
 export const Generating: Story = {
@@ -107,9 +88,17 @@ export const Generating: Story = {
         creditBalance: 5,
         defaultTab: "cover-letter",
     },
-    render: (args) => (
-        <div className="w-[400px] p-4">
-            <AIStudio {...args} />
-        </div>
-    )
+}
+
+export const LowMatch: Story = {
+    args: {
+        isLocked: false,
+        creditBalance: 2,
+        defaultTab: "match",
+        matchData: {
+            score: 35,
+            matchedSkills: ["JavaScript"],
+            missingSkills: ["React", "TypeScript", "GraphQL", "AWS", "Docker"],
+        },
+    },
 }

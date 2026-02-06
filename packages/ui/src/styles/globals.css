@@ -6,12 +6,20 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  /* 
+  /*
      * THEME CONFIGURATION
-     * To change the active theme (accent colors, radius), 
+     * To change the active theme (accent colors, radius),
      * see: design/theme_config.md
-     * 
+     *
      * CURRENT THEME: Energetic Orange
+     *
+     * SEMANTIC COLORS:
+     *   primary/accent  = Orange (brand identity)
+     *   ai-accent       = Purple (AI analysis & generation actions)
+     *   success          = Green (match scores >= 80, positive states)
+     *   warning          = Yellow/Amber (match scores 50-79, caution states)
+     *   destructive      = Red (match scores < 50, delete, errors)
+     *   card-accent-*    = Subtle orange tints for card borders & headers
      */
   --background: oklch(1 0 0);
   --foreground: oklch(0.147 0.004 49.25);
@@ -31,6 +39,21 @@
   --border: oklch(0.923 0.003 48.717);
   --input: oklch(0.923 0.003 48.717);
   --ring: oklch(0.709 0.01 56.259);
+
+  /* AI/Analysis accent - Purple */
+  --ai-accent: oklch(0.541 0.281 293);
+  --ai-accent-foreground: oklch(1 0 0);
+
+  /* Semantic score & state colors */
+  --success: oklch(0.627 0.194 149);
+  --success-foreground: oklch(1 0 0);
+  --warning: oklch(0.681 0.162 76);
+  --warning-foreground: oklch(0.21 0.006 285.885);
+
+  /* Card accent - subtle orange for borders & header backgrounds */
+  --card-accent-border: oklch(0.89 0.068 70);
+  --card-accent-bg: oklch(0.97 0.014 70);
+
   --chart-1: oklch(0.88 0.15 92);
   --chart-2: oklch(0.77 0.16 70);
   --chart-3: oklch(0.67 0.16 58);
@@ -66,11 +89,26 @@
   --border: oklch(0.35 0.018 55);
   --input: oklch(0.28 0.018 55);
   --ring: oklch(0.72 0.17 60);
-  --chart-1: oklch(0.88 0.15 92);
-  --chart-2: oklch(0.77 0.16 70);
-  --chart-3: oklch(0.67 0.16 58);
-  --chart-4: oklch(0.56 0.15 49);
-  --chart-5: oklch(0.47 0.12 46);
+
+  /* AI/Analysis accent - Lighter purple for dark mode */
+  --ai-accent: oklch(0.627 0.265 293);
+  --ai-accent-foreground: oklch(1 0 0);
+
+  /* Semantic score & state colors - brighter for dark backgrounds */
+  --success: oklch(0.723 0.191 149);
+  --success-foreground: oklch(0.12 0.03 55);
+  --warning: oklch(0.762 0.165 76);
+  --warning-foreground: oklch(0.12 0.03 55);
+
+  /* Card accent - deeper orange for dark mode borders & backgrounds */
+  --card-accent-border: oklch(0.37 0.08 55);
+  --card-accent-bg: oklch(0.20 0.025 55);
+
+  --chart-1: oklch(0.78 0.12 92);
+  --chart-2: oklch(0.68 0.13 70);
+  --chart-3: oklch(0.72 0.17 60);
+  --chart-4: oklch(0.62 0.12 49);
+  --chart-5: oklch(0.55 0.10 46);
   --sidebar: oklch(0.14 0.01 55);
   --sidebar-foreground: oklch(0.96 0.005 55);
   --sidebar-primary: oklch(0.72 0.17 60);
@@ -102,6 +140,14 @@
   --color-destructive: var(--destructive);
   --color-accent-foreground: var(--accent-foreground);
   --color-accent: var(--accent);
+  --color-ai-accent: var(--ai-accent);
+  --color-ai-accent-foreground: var(--ai-accent-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-card-accent-border: var(--card-accent-border);
+  --color-card-accent-bg: var(--card-accent-bg);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -173,20 +219,52 @@
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-
-  to {
-    opacity: 1;
-  }
-}
-
 .animate-tab-content {
   animation: slideInFromRight 200ms ease-out;
 }
 
-.animate-fade-in {
-  animation: fadeIn 150ms ease-out;
+/* ─── Micro text utility ───────────────────────────────────────────── */
+/* 10px text used across badges, timestamps, subtitles. Single source of truth. */
+.text-micro {
+  font-size: 10px;
+  line-height: 1.4;
+}
+
+/* ─── Scrollbar hiding ──────────────────────────────────────────────── */
+/* Hide scrollbar but keep area scrollable. Applied globally to ScrollArea. */
+.scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none;
+}
+
+/* ─── Scroll edge shadows ───────────────────────────────────────────── */
+/* CSS-only scroll indicators that fade in at top/bottom when content overflows.
+   Uses background-attachment: local trick — no JS needed. */
+.scroll-fade-y {
+  overflow-y: auto;
+  background:
+    /* top cover */
+    linear-gradient(var(--background) 30%, transparent) center top,
+    /* bottom cover */
+    linear-gradient(transparent, var(--background) 70%) center bottom,
+    /* top shadow */
+    radial-gradient(farthest-side at 50% 0, oklch(0 0 0 / 0.08), transparent) center top,
+    /* bottom shadow */
+    radial-gradient(farthest-side at 50% 100%, oklch(0 0 0 / 0.08), transparent) center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 20px, 100% 20px, 100% 6px, 100% 6px;
+  background-attachment: local, local, scroll, scroll;
+}
+.dark .scroll-fade-y {
+  background:
+    linear-gradient(var(--background) 30%, transparent) center top,
+    linear-gradient(transparent, var(--background) 70%) center bottom,
+    radial-gradient(farthest-side at 50% 0, oklch(1 0 0 / 0.06), transparent) center top,
+    radial-gradient(farthest-side at 50% 100%, oklch(1 0 0 / 0.06), transparent) center bottom;
+  background-repeat: no-repeat;
+  background-size: 100% 20px, 100% 20px, 100% 6px, 100% 6px;
+  background-attachment: local, local, scroll, scroll;
 }

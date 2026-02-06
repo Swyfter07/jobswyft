@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
+import { IconBadge } from "@/components/custom/icon-badge"
 
 export interface AutofillField {
     id: string
@@ -45,9 +45,9 @@ const DEFAULT_FIELDS: AutofillField[] = [
 function StatusIcon({ status }: { status: AutofillField["status"] }) {
     switch (status) {
         case "ready":
-            return <CheckCircle2 className="size-4 text-green-500" />
+            return <CheckCircle2 className="size-4 text-success" />
         case "missing":
-            return <AlertCircle className="size-4 text-amber-500" />
+            return <AlertCircle className="size-4 text-warning" />
         case "filled":
             return <CheckCircle2 className="size-4 text-muted-foreground opacity-50" />
         default:
@@ -68,10 +68,8 @@ export function Autofill({
     const resumeFields = fields.filter(f => f.category === "resume")
     const questionFields = fields.filter(f => f.category === "questions")
 
-    // Calculate progress
     const readyCount = fields.filter(f => f.status === "ready" || f.status === "filled").length
     const totalCount = fields.length
-    const progress = Math.round((readyCount / totalCount) * 100)
 
     const FieldGroup = ({ title, items }: { title: string, items: AutofillField[] }) => {
         if (items.length === 0) return null
@@ -85,7 +83,7 @@ export function Autofill({
                             className={cn(
                                 "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-default",
                                 field.status === "missing"
-                                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300"
+                                    ? "bg-warning/10 border-warning/20 text-warning"
                                     : "bg-card border-border text-foreground hover:border-muted-foreground/50",
                                 field.status === "filled" && "bg-muted text-muted-foreground border-transparent"
                             )}
@@ -101,24 +99,21 @@ export function Autofill({
     }
 
     return (
-        <Card className={cn("flex flex-col h-full border-2 border-orange-200 shadow-sm overflow-hidden dark:border-orange-900 dark:bg-card", className)}>
-            <CardHeader className="border-b px-4 py-3 bg-gradient-to-r from-orange-50/50 to-transparent flex-shrink-0 dark:from-orange-950/30 dark:to-transparent">
+        <Card className={cn("flex flex-col h-full border-2 border-card-accent-border shadow-sm overflow-hidden", className)}>
+            <CardHeader className="border-b px-4 py-3 bg-gradient-to-r from-card-accent-bg to-transparent flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center size-8 rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
-                            <FormInput className="size-4" />
-                        </div>
+                        <IconBadge icon={<FormInput />} variant="primary" size="md" />
                         <div>
                             <CardTitle className="text-sm font-bold text-foreground">
                                 Autofill
                             </CardTitle>
-                            <p className="text-[10px] text-muted-foreground">
+                            <p className="text-micro text-muted-foreground">
                                 {readyCount}/{totalCount} fields ready
                             </p>
                         </div>
                     </div>
-                    {/* Undo Action if needed */}
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onUndo} title="Undo last fill">
+                    <Button variant="ghost" size="icon" className="size-7" onClick={onUndo} title="Undo last fill">
                         <RotateCcw className="size-3.5 text-muted-foreground" />
                     </Button>
                 </div>
@@ -135,20 +130,19 @@ export function Autofill({
                     </div>
                 </ScrollArea>
 
-                {/* Undo Success Banner - shows after fill completes */}
                 {showUndoPrompt && (
-                    <div className="absolute top-0 left-0 right-0 p-3 bg-green-50 border-b border-green-200 dark:bg-green-950 dark:border-green-800 animate-tab-content">
+                    <div className="absolute top-0 left-0 right-0 p-3 bg-success/10 border-b border-success/20 animate-tab-content">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
-                                <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
-                                <span className="text-sm font-medium text-green-700 dark:text-green-300">
+                                <CheckCircle2 className="size-4 text-success" />
+                                <span className="text-sm font-medium text-success">
                                     Application filled!
                                 </span>
                             </div>
                             <Button
                                 variant="ghost"
                                 size="sm"
-                                className="h-7 text-xs text-green-700 hover:text-green-800 hover:bg-green-100 dark:text-green-300 dark:hover:text-green-200 dark:hover:bg-green-900"
+                                className="h-7 text-xs text-success hover:text-success hover:bg-success/10"
                                 onClick={() => {
                                     onUndo?.()
                                     onUndoDismiss?.()
@@ -158,7 +152,7 @@ export function Autofill({
                                 Undo
                             </Button>
                         </div>
-                        <p className="text-[10px] text-green-600/70 dark:text-green-400/70 mt-1">
+                        <p className="text-micro text-success/70 mt-1">
                             Auto-dismissing in 10 seconds...
                         </p>
                     </div>
@@ -170,7 +164,7 @@ export function Autofill({
                         size="lg"
                         className={cn(
                             "w-full shadow-lg transition-all",
-                            isFilling ? "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900" : "bg-orange-600 hover:bg-orange-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
+                            isFilling && "bg-primary/15 text-primary hover:bg-primary/20"
                         )}
                         onClick={onFill}
                         disabled={isFilling || readyCount === 0}

@@ -16,15 +16,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { SelectionChips } from "@/components/custom/selection-chips"
+import { MatchIndicator } from "@/components/custom/match-indicator"
+import { SkillPill, SkillSectionLabel } from "@/components/custom/skill-pill"
+import { IconBadge } from "@/components/custom/icon-badge"
+
+// ─── Types ──────────────────────────────────────────────────────────────
+
+export interface AIStudioMatchData {
+    score: number
+    matchedSkills: string[]
+    missingSkills: string[]
+}
 
 export interface AIStudioProps {
     isLocked?: boolean
@@ -33,10 +38,243 @@ export interface AIStudioProps {
     className?: string
     creditBalance?: number
     defaultTab?: string
-    onUnlock?: () => void
-    activeTab?: string,
+    activeTab?: string
     onTabChange?: (tab: string) => void
+    onUnlock?: () => void
+    onGenerate?: (params: {
+        tab: string
+        tone: string
+        length: string
+        customInstructions?: string
+        question?: string
+        recipientRole?: string
+        platform?: string
+    }) => void
+    onReset?: () => void
+    matchData?: AIStudioMatchData
 }
+
+// ─── Shared options ─────────────────────────────────────────────────────
+
+const TONE_OPTIONS = [
+    { value: "professional", label: "Professional" },
+    { value: "casual", label: "Casual" },
+    { value: "confident", label: "Confident" },
+    { value: "friendly", label: "Friendly" },
+]
+
+const LENGTH_OPTIONS = [
+    { value: "short", label: "Short" },
+    { value: "medium", label: "Medium" },
+    { value: "long", label: "Long" },
+]
+
+const PLATFORM_OPTIONS = [
+    { value: "linkedin", label: "LinkedIn" },
+    { value: "email", label: "Email" },
+]
+
+const DEFAULT_MATCH: AIStudioMatchData = {
+    score: 85,
+    matchedSkills: ["React", "TypeScript", "Tailwind"],
+    missingSkills: ["GraphQL", "AWS"],
+}
+
+// ─── Tab Content Components ─────────────────────────────────────────────
+
+function MatchTab({ matchData }: { matchData: AIStudioMatchData }) {
+    return (
+        <div className="space-y-4">
+            <MatchIndicator score={matchData.score} />
+
+            <div className="space-y-2">
+                <SkillSectionLabel label="Strengths" variant="success" />
+                <div className="flex flex-wrap gap-2">
+                    {matchData.matchedSkills.map(skill => (
+                        <SkillPill key={skill} name={skill} variant="matched" />
+                    ))}
+                </div>
+            </div>
+
+            <div className="space-y-2">
+                <SkillSectionLabel label="Gaps" variant="warning" />
+                <div className="flex flex-wrap gap-2">
+                    {matchData.missingSkills.map(skill => (
+                        <SkillPill key={skill} name={skill} variant="missing" />
+                    ))}
+                </div>
+            </div>
+        </div>
+    )
+}
+
+function GeneratingState({ label }: { label: string }) {
+    return (
+        <div className="flex flex-col items-center justify-center py-8 space-y-3">
+            <div className="flex items-center gap-2 text-primary">
+                <Loader2 className="size-5 animate-spin" />
+                <span className="text-sm font-medium">{label}</span>
+            </div>
+            <div className="w-48 h-1.5 bg-muted rounded-full overflow-hidden">
+                <div className="h-full w-3/5 bg-primary animate-pulse" />
+            </div>
+            <p className="text-xs text-muted-foreground">This may take a few seconds...</p>
+        </div>
+    )
+}
+
+function GenerateButton({
+    icon,
+    label,
+    onClick,
+}: {
+    icon: React.ReactNode
+    label: string
+    onClick?: () => void
+}) {
+    return (
+        <Button className="w-full font-semibold shadow-sm" onClick={onClick}>
+            {icon}
+            {label}
+        </Button>
+    )
+}
+
+function CoverLetterTab({
+    tone,
+    length,
+    onToneChange,
+    onLengthChange,
+    isGenerating,
+    generatingLabel,
+    onGenerate,
+}: {
+    tone: string
+    length: string
+    onToneChange: (v: string) => void
+    onLengthChange: (v: string) => void
+    isGenerating: boolean
+    generatingLabel: string
+    onGenerate?: () => void
+}) {
+    return (
+        <div className="space-y-4">
+            <SelectionChips label="Tone" options={TONE_OPTIONS} value={tone} onChange={onToneChange} />
+            <SelectionChips label="Length" options={LENGTH_OPTIONS} value={length} onChange={onLengthChange} />
+
+            <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Custom Instructions</label>
+                <Textarea
+                    className="min-h-[60px]"
+                    placeholder="e.g. Highlight my leadership experience..."
+                />
+            </div>
+
+            {isGenerating ? (
+                <GeneratingState label={generatingLabel} />
+            ) : (
+                <GenerateButton
+                    icon={<Wand2 className="mr-2 size-3.5" />}
+                    label="Generate Draft (1 Credit)"
+                    onClick={onGenerate}
+                />
+            )}
+        </div>
+    )
+}
+
+function AnswerTab({
+    tone,
+    length,
+    onToneChange,
+    onLengthChange,
+    isGenerating,
+    generatingLabel,
+    onGenerate,
+}: {
+    tone: string
+    length: string
+    onToneChange: (v: string) => void
+    onLengthChange: (v: string) => void
+    isGenerating: boolean
+    generatingLabel: string
+    onGenerate?: () => void
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Application Question</label>
+                <div className="relative">
+                    <MessageSquare className="absolute left-3 top-3 size-4 text-muted-foreground" />
+                    <Textarea
+                        className="min-h-[80px] pl-9"
+                        placeholder="Paste the question here..."
+                    />
+                </div>
+            </div>
+
+            <SelectionChips label="Tone" options={TONE_OPTIONS} value={tone} onChange={onToneChange} />
+            <SelectionChips label="Length" options={LENGTH_OPTIONS} value={length} onChange={onLengthChange} />
+
+            {isGenerating ? (
+                <GeneratingState label={generatingLabel} />
+            ) : (
+                <GenerateButton
+                    icon={<Split className="mr-2 size-3.5" />}
+                    label="Generate Answer (1 Credit)"
+                    onClick={onGenerate}
+                />
+            )}
+        </div>
+    )
+}
+
+function OutreachTab({
+    tone,
+    length,
+    platform,
+    onToneChange,
+    onLengthChange,
+    onPlatformChange,
+    isGenerating,
+    generatingLabel,
+    onGenerate,
+}: {
+    tone: string
+    length: string
+    platform: string
+    onToneChange: (v: string) => void
+    onLengthChange: (v: string) => void
+    onPlatformChange: (v: string) => void
+    isGenerating: boolean
+    generatingLabel: string
+    onGenerate?: () => void
+}) {
+    return (
+        <div className="space-y-4">
+            <div className="space-y-1.5">
+                <label className="text-xs font-medium text-muted-foreground">Recipient Role</label>
+                <Input className="h-9" placeholder="e.g. Hiring Manager" />
+            </div>
+
+            <SelectionChips label="Platform" options={PLATFORM_OPTIONS} value={platform} onChange={onPlatformChange} />
+            <SelectionChips label="Tone" options={TONE_OPTIONS} value={tone} onChange={onToneChange} />
+            <SelectionChips label="Length" options={LENGTH_OPTIONS} value={length} onChange={onLengthChange} />
+
+            {isGenerating ? (
+                <GeneratingState label={generatingLabel} />
+            ) : (
+                <GenerateButton
+                    icon={<Send className="mr-2 size-3.5" />}
+                    label="Draft Message (1 Credit)"
+                    onClick={onGenerate}
+                />
+            )}
+        </div>
+    )
+}
+
+// ─── Main Component ─────────────────────────────────────────────────────
 
 export function AIStudio({
     isLocked = true,
@@ -45,85 +283,38 @@ export function AIStudio({
     className,
     creditBalance = 5,
     defaultTab = "match",
+    activeTab,
+    onTabChange,
     onUnlock,
-    ...props
+    onGenerate,
+    onReset,
+    matchData = DEFAULT_MATCH,
 }: AIStudioProps) {
     const [tone, setTone] = React.useState("professional")
     const [length, setLength] = React.useState("medium")
-
-    const tones = [
-        { value: "professional", label: "Professional" },
-        { value: "casual", label: "Casual" },
-        { value: "confident", label: "Confident" },
-        { value: "friendly", label: "Friendly" },
-    ]
-
-    const lengths = [
-        { value: "short", label: "Short" },
-        { value: "medium", label: "Medium" },
-        { value: "long", label: "Long" },
-    ]
-
-    const SelectionChips = ({
-        label,
-        items,
-        currentValue,
-        onChange
-    }: {
-        label: string,
-        items: { value: string, label: string }[],
-        currentValue: string,
-        onChange: (val: string) => void
-    }) => (
-        <div className="space-y-1.5">
-            <label className="text-xs font-medium text-muted-foreground">{label}</label>
-            <div className="flex flex-wrap gap-1.5">
-                {items.map((item) => (
-                    <Button
-                        key={item.value}
-                        variant="outline"
-                        size="sm"
-                        onClick={() => onChange(item.value)}
-                        className={cn(
-                            "h-7 px-2.5 text-xs rounded-full transition-all",
-                            currentValue === item.value
-                                ? "border-orange-500 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-600 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900 dark:hover:text-orange-200"
-                                : "text-muted-foreground hover:text-foreground hover:border-orange-200 dark:hover:border-orange-700"
-                        )}
-                    >
-                        {item.label}
-                    </Button>
-                ))}
-            </div>
-        </div>
-    )
+    const [platform, setPlatform] = React.useState("linkedin")
 
     const [internalTab, setInternalTab] = React.useState(defaultTab)
-
-    // Controlled or uncontrolled
-    const currentTab = props.activeTab ?? internalTab
+    const currentTab = activeTab ?? internalTab
     const handleTabChange = (val: string) => {
         setInternalTab(val)
-        props.onTabChange?.(val)
+        onTabChange?.(val)
     }
 
+    const triggerClass = "flex-1 flex gap-1.5 items-center justify-center text-xs data-[state=active]:border-2 data-[state=active]:border-card-accent-border"
+
     return (
-        <Card
-            className={cn(
-                "w-full overflow-hidden border-2 border-orange-200 transition-all duration-300 dark:border-orange-900 dark:bg-card",
-                className
-            )}
-        >
-            <CardHeader className="border-b px-4 py-3 space-y-0 flex flex-row items-center justify-between bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/30 dark:to-transparent">
+        <Card className={cn("w-full overflow-hidden border-2 border-card-accent-border transition-all duration-300", className)}>
+            <CardHeader className="border-b px-4 py-3 space-y-0 flex flex-row items-center justify-between bg-gradient-to-r from-card-accent-bg to-transparent">
                 <div className="flex items-center gap-2">
-                    <Wand2 className="size-4 text-orange-500" />
+                    <IconBadge icon={<Wand2 />} variant="ai" size="sm" />
                     <CardTitle className="text-base font-bold text-foreground">
                         AI Studio
                     </CardTitle>
                     {!isLocked && (
                         <Badge
                             variant="secondary"
-                            className="ml-2 h-5 px-1.5 text-[10px] font-normal text-muted-foreground bg-white/50 border-orange-100 dark:bg-muted/50 dark:border-orange-900"
+                            className="ml-2 h-5 px-1.5 text-micro font-normal text-muted-foreground"
                         >
                             Powered by Gemini
                         </Badge>
@@ -133,8 +324,9 @@ export function AIStudio({
                     <Button
                         variant="ghost"
                         size="icon"
-                        className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                        className="size-6 text-muted-foreground hover:text-foreground"
                         title="Reset All"
+                        onClick={onReset}
                     >
                         <RotateCcw className="size-3.5" />
                     </Button>
@@ -145,39 +337,26 @@ export function AIStudio({
                 <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
                     <div className="px-4 py-3">
                         <TabsList className="flex w-full items-center gap-1 rounded-lg bg-secondary/50 p-1 text-muted-foreground h-auto">
-                            <TabsTrigger
-                                value="match"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
-                            >
+                            <TabsTrigger value="match" className={triggerClass}>
                                 <Sparkles className="size-3.5" />
-                                <span className="text-xs font-medium">Match</span>
+                                <span>Match</span>
                             </TabsTrigger>
-                            <TabsTrigger
-                                value="cover-letter"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
-                            >
+                            <TabsTrigger value="cover-letter" className={triggerClass}>
                                 <FileText className="size-3.5" />
-                                <span className="text-xs font-medium">Cover</span>
+                                <span>Cover</span>
                             </TabsTrigger>
-                            <TabsTrigger
-                                value="answer"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
-                            >
+                            <TabsTrigger value="answer" className={triggerClass}>
                                 <MessageSquare className="size-3.5" />
-                                <span className="text-xs font-medium">Answer</span>
+                                <span>Answer</span>
                             </TabsTrigger>
-                            <TabsTrigger
-                                value="outreach"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
-                            >
+                            <TabsTrigger value="outreach" className={triggerClass}>
                                 <Send className="size-3.5" />
-                                <span className="text-xs font-medium">Outreach</span>
+                                <span>Outreach</span>
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
-                    <div className="relative h-[300px]">
-                        {/* Locked Overlay inside content area */}
+                    <div className="relative h-[360px]">
                         {isLocked && (
                             <div className="absolute inset-0 z-20 flex flex-col items-center justify-center bg-background p-6 text-center">
                                 <div className="rounded-full bg-muted p-3 mb-3">
@@ -189,164 +368,55 @@ export function AIStudio({
                                 <p className="text-xs text-muted-foreground mb-4 max-w-[200px]">
                                     Scan a job post to unlock tailored AI tools.
                                 </p>
-                                <Button
-                                    size="sm"
-                                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-sm"
-                                    onClick={onUnlock}
-                                >
+                                <Button size="sm" className="shadow-sm" onClick={onUnlock}>
                                     <Sparkles className="mr-2 size-3.5" />
                                     Scan Job to Unlock
                                 </Button>
                             </div>
                         )}
 
-                        <ScrollArea className={cn("h-[400px]", isLocked && "opacity-20 pointer-events-none")}>
+                        <ScrollArea className={cn("h-[360px]", isLocked && "opacity-20 pointer-events-none")}>
                             <div className="p-4 space-y-4">
-                                <TabsContent value="match" className="mt-0 space-y-4">
-                                    <div className="flex items-center justify-between rounded-lg border border-orange-100 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/30">
-                                        <div className="space-y-1">
-                                            <p className="text-sm font-medium text-foreground">Match Score</p>
-                                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">85%</p>
-                                        </div>
-                                        <div className="relative flex size-16 items-center justify-center rounded-full border-4 border-orange-200 bg-background text-xs font-bold text-orange-600 dark:border-orange-800 dark:text-orange-400">
-                                            High
-                                        </div>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <h4 className="text-xs font-semibold uppercase text-muted-foreground">Strengths</h4>
-                                        <ul className="space-y-1">
-                                            <li className="flex items-center gap-2 text-sm">
-                                                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 hover:bg-green-50 dark:border-green-800 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900">✓ React</Badge>
-                                                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 hover:bg-green-50 dark:border-green-800 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900">✓ TypeScript</Badge>
-                                                <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 hover:bg-green-50 dark:border-green-800 dark:bg-green-950 dark:text-green-400 dark:hover:bg-green-900">✓ Tailwind</Badge>
-                                            </li>
-                                        </ul>
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <h4 className="text-xs font-semibold uppercase text-muted-foreground">Gaps</h4>
-                                        <ul className="space-y-1">
-                                            <li className="flex items-center gap-2 text-sm">
-                                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900">! GraphQL</Badge>
-                                                <Badge variant="outline" className="border-red-200 bg-red-50 text-red-700 hover:bg-red-50 dark:border-red-800 dark:bg-red-950 dark:text-red-400 dark:hover:bg-red-900">! AWS</Badge>
-                                            </li>
-                                        </ul>
-                                    </div>
+                                <TabsContent value="match" className="mt-0">
+                                    <MatchTab matchData={matchData} />
                                 </TabsContent>
 
-                                <TabsContent value="cover-letter" className="mt-0 space-y-4">
-                                    <SelectionChips
-                                        label="Tone"
-                                        items={tones}
-                                        currentValue={tone}
-                                        onChange={setTone}
+                                <TabsContent value="cover-letter" className="mt-0">
+                                    <CoverLetterTab
+                                        tone={tone}
+                                        length={length}
+                                        onToneChange={setTone}
+                                        onLengthChange={setLength}
+                                        isGenerating={isGenerating}
+                                        generatingLabel={generatingLabel}
+                                        onGenerate={() => onGenerate?.({ tab: "cover-letter", tone, length })}
                                     />
-                                    <SelectionChips
-                                        label="Length"
-                                        items={lengths}
-                                        currentValue={length}
-                                        onChange={setLength}
-                                    />
-
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">Custom Instructions</label>
-                                        <Textarea
-                                            className="min-h-[60px]"
-                                            placeholder="e.g. Highlight my leadership experience..."
-                                        />
-                                    </div>
-
-                                    {isGenerating ? (
-                                        <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                                            <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
-                                                <Loader2 className="size-5 animate-spin" />
-                                                <span className="text-sm font-medium">{generatingLabel}</span>
-                                            </div>
-                                            <div className="w-48 h-1.5 bg-muted rounded-full overflow-hidden">
-                                                <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse" style={{ width: '60%' }} />
-                                            </div>
-                                            <p className="text-xs text-muted-foreground">This may take a few seconds...</p>
-                                        </div>
-                                    ) : (
-                                        <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
-                                            <Wand2 className="mr-2 size-3.5" />
-                                            Generate Draft (1 Credit)
-                                        </Button>
-                                    )}
                                 </TabsContent>
 
-                                <TabsContent value="answer" className="mt-0 space-y-4">
-                                    <div className="space-y-1.5">
-                                        <label className="text-xs font-medium text-muted-foreground">Application Question</label>
-                                        <div className="relative">
-                                            <MessageSquare className="absolute left-3 top-3 size-4 text-muted-foreground" />
-                                            <Textarea
-                                                className="min-h-[80px] pl-9"
-                                                placeholder="Paste the question here..."
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <SelectionChips
-                                        label="Tone"
-                                        items={tones}
-                                        currentValue={tone}
-                                        onChange={setTone}
+                                <TabsContent value="answer" className="mt-0">
+                                    <AnswerTab
+                                        tone={tone}
+                                        length={length}
+                                        onToneChange={setTone}
+                                        onLengthChange={setLength}
+                                        isGenerating={isGenerating}
+                                        generatingLabel={generatingLabel}
+                                        onGenerate={() => onGenerate?.({ tab: "answer", tone, length })}
                                     />
-                                    <SelectionChips
-                                        label="Length"
-                                        items={lengths}
-                                        currentValue={length}
-                                        onChange={setLength}
-                                    />
-
-                                    <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
-                                        <Split className="mr-2 size-3.5" />
-                                        Generate Answer (1 Credit)
-                                    </Button>
                                 </TabsContent>
 
-                                <TabsContent value="outreach" className="mt-0 space-y-4">
-                                    <div className="space-y-3">
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-muted-foreground">Recipient Role</label>
-                                            <Input
-                                                className="h-9"
-                                                placeholder="e.g. Hiring Manager"
-                                            />
-                                        </div>
-
-                                        <div className="space-y-1.5">
-                                            <label className="text-xs font-medium text-muted-foreground">Platform</label>
-                                            <div className="flex gap-2">
-                                                <Button variant="outline" size="sm" className="flex-1 active:border-orange-500 active:bg-orange-50 active:text-orange-700 border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-700 dark:active:bg-orange-900">
-                                                    LinkedIn
-                                                </Button>
-                                                <Button variant="outline" size="sm" className="flex-1">
-                                                    Email
-                                                </Button>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <SelectionChips
-                                        label="Tone"
-                                        items={tones}
-                                        currentValue={tone}
-                                        onChange={setTone}
+                                <TabsContent value="outreach" className="mt-0">
+                                    <OutreachTab
+                                        tone={tone}
+                                        length={length}
+                                        platform={platform}
+                                        onToneChange={setTone}
+                                        onLengthChange={setLength}
+                                        onPlatformChange={setPlatform}
+                                        isGenerating={isGenerating}
+                                        generatingLabel={generatingLabel}
+                                        onGenerate={() => onGenerate?.({ tab: "outreach", tone, length, platform })}
                                     />
-                                    <SelectionChips
-                                        label="Length"
-                                        items={lengths}
-                                        currentValue={length}
-                                        onChange={setLength}
-                                    />
-
-                                    <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
-                                        <Send className="mr-2 size-3.5" />
-                                        Draft Message (1 Credit)
-                                    </Button>
                                 </TabsContent>
                             </div>
                         </ScrollArea>

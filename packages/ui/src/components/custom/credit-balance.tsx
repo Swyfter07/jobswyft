@@ -1,5 +1,5 @@
 import React from "react"
-import { Battery, Zap, Plus } from "lucide-react"
+import { Zap, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Card,
@@ -10,7 +10,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Progress } from "@/components/ui/progress"
 
-interface CreditBalanceProps extends React.HTMLAttributes<HTMLDivElement> {
+export interface CreditBalanceProps extends React.HTMLAttributes<HTMLDivElement> {
     total: number
     used: number
     onBuyMore?: () => void
@@ -26,13 +26,22 @@ export function CreditBalance({
     const remaining = total - used
     const percentage = Math.min(100, Math.max(0, (remaining / total) * 100))
 
-    // Determine color based on usage
-    let progressColorClass = "bg-primary"
-    if (percentage <= 20) progressColorClass = "bg-red-500"
-    else if (percentage <= 50) progressColorClass = "bg-yellow-500"
+    const indicatorColor =
+        percentage <= 20
+            ? "bg-destructive"
+            : percentage <= 50
+              ? "bg-warning"
+              : undefined
+
+    const trackColor =
+        percentage <= 20
+            ? "bg-destructive/20"
+            : percentage <= 50
+              ? "bg-warning/20"
+              : undefined
 
     return (
-        <Card className={cn("w-full overflow-hidden border-2 border-orange-200 dark:border-orange-900 dark:bg-card", className)} {...props}>
+        <Card className={cn("w-full overflow-hidden border-2 border-card-accent-border", className)} {...props}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-2">
                     <Zap className="size-4 text-primary" />
@@ -55,7 +64,11 @@ export function CreditBalance({
                 </div>
 
                 <div className="mt-2">
-                    <Progress value={percentage} className="h-2" />
+                    <Progress
+                        value={percentage}
+                        className={cn("h-2", trackColor)}
+                        indicatorClassName={indicatorColor}
+                    />
                     <p className="mt-1 text-xs text-muted-foreground text-right">
                         {Math.round(percentage)}% remaining
                     </p>

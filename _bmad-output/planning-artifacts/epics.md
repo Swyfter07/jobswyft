@@ -235,11 +235,10 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 **From Architecture - Monorepo Structure:**
 - pnpm workspaces for TypeScript packages
 - uv for Python (API)
-- Package initialization order: design-tokens → ui → apps (extension, web)
+- Package initialization order: ui → apps (extension, web)
 
 **From Architecture - Shared Packages:**
-- `packages/design-tokens`: Style Dictionary → CSS vars, JS, JSON (central design system)
-- `packages/ui`: Shared component library with Storybook, Tailwind + CSS Modules hybrid
+- `packages/ui`: Shared component library with Storybook, Tailwind v4, design tokens in globals.css
 - `packages/types`: Shared TypeScript types, generated from OpenAPI
 
 **From Architecture - Database Schema:**

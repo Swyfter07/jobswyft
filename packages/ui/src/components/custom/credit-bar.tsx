@@ -4,6 +4,7 @@ import React from "react"
 import { Zap, Plus } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { IconBadge } from "@/components/custom/icon-badge"
 
 export interface CreditBarProps extends React.HTMLAttributes<HTMLDivElement> {
     credits: number
@@ -34,18 +35,15 @@ export function CreditBar({
             {...props}
         >
             <div className="flex items-center gap-2">
-                <div className={cn(
-                    "flex items-center justify-center size-6 rounded-full",
-                    isLow
-                        ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
-                        : "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
-                )}>
-                    <Zap className="size-3.5" />
-                </div>
+                <IconBadge
+                    icon={<Zap />}
+                    variant={isLow ? "destructive" : "primary"}
+                    size="sm"
+                />
                 <div className="flex items-baseline gap-1">
                     <span className={cn(
                         "text-sm font-bold",
-                        isLow && "text-red-600 dark:text-red-400"
+                        isLow && "text-destructive"
                     )}>
                         {credits}
                     </span>

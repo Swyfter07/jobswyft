@@ -40,8 +40,7 @@ jobswyft/
 │   ├── web/           # Next.js 14+ - TypeScript
 │   └── extension/     # WXT - TypeScript
 ├── packages/
-│   ├── design-tokens/ # CSS variables, themes (dark/light)
-│   └── ui/            # React component library + Storybook
+│   └── ui/            # React component library + Storybook (tokens in globals.css)
 ├── specs/openapi.yaml # API contract (source of truth)
 ├── supabase/migrations/
 ├── docs/project-context.md  # MCP usage guide
@@ -103,14 +102,11 @@ pnpm storybook             # Start Storybook → http://localhost:6006
 pnpm build                 # Build component library
 pnpm test                  # Run Vitest tests
 
-# From packages/design-tokens/:
-pnpm build                 # Rebuild tokens → dist/tokens.css, themes.css
 ```
 
 | Package | Purpose | Key Exports |
 |---------|---------|-------------|
-| `@jobswyft/design-tokens` | CSS variables, dark/light themes | `tokens.css`, `themes.css` |
-| `@jobswyft/ui` | React components, utilities | `cn()`, `ThemeProvider`, `useTheme` |
+| `@jobswyft/ui` | React components, utilities, design tokens | `cn()`, `ThemeProvider`, `useTheme`, `globals.css` |
 
 **Storybook Features:**
 - Theme toggle: Dark/Light (toolbar dropdown)
@@ -119,14 +115,12 @@ pnpm build                 # Rebuild tokens → dist/tokens.css, themes.css
 
 **Component Pattern:**
 ```
-src/atoms/Button/
-├── Button.tsx         # forwardRef + native HTML props
-├── Button.module.css  # CSS Modules with design tokens
-├── Button.stories.tsx # Storybook stories
-└── index.ts           # Re-exports
+src/components/custom/
+├── job-card.tsx           # Component with Tailwind + semantic tokens
+├── job-card.stories.tsx   # Storybook stories
 ```
 
-**Styling Priority:** Design tokens (`var(--color-*)`) → Tailwind utilities → CSS Modules
+**Styling Priority:** Semantic CSS tokens (`globals.css`) → Tailwind utilities (no CSS Modules)
 
 ## Supabase CLI - Remote Database Management
 

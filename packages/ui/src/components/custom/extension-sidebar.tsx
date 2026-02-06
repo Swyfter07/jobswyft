@@ -2,11 +2,11 @@ import React from "react"
 import { Search, Sparkles, FormInput, Bot } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CreditBar, CreditBarProps } from "./credit-bar"
+import { CreditBar } from "./credit-bar"
 
 export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     header: React.ReactNode
-    contextContent?: React.ReactNode // Persistent top section (e.g. Resume)
+    contextContent?: React.ReactNode
     scanContent?: React.ReactNode
     studioContent?: React.ReactNode
     autofillContent?: React.ReactNode
@@ -15,7 +15,6 @@ export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivEleme
     defaultTab?: string
     activeTab?: string
     onTabChange?: (tab: string) => void
-    /** Credit bar configuration - shows at bottom when provided */
     creditBar?: {
         credits: number
         maxCredits?: number
@@ -40,15 +39,18 @@ export function ExtensionSidebar({
     coachContent,
     isLocked = false,
     defaultTab = "scan",
+    activeTab,
+    onTabChange,
     creditBar,
     className,
-    ...props
+    children,
+    ...domProps
 }: ExtensionSidebarProps) {
     const [internalTab, setInternalTab] = React.useState(defaultTab)
-    const currentTab = props.activeTab ?? internalTab
+    const currentTab = activeTab ?? internalTab
     const handleTabChange = (val: string) => {
         setInternalTab(val)
-        props.onTabChange?.(val)
+        onTabChange?.(val)
     }
 
     return (
@@ -57,43 +59,43 @@ export function ExtensionSidebar({
                 "fixed right-0 top-0 h-screen w-[400px] bg-background flex flex-col z-50 border-l shadow-2xl",
                 className
             )}
-            {...props}
+            {...domProps}
         >
             {/* Header Section */}
-            {!props.children && (
+            {!children && (
                 <div className="p-2 border-b bg-background z-10">
                     {header}
                 </div>
             )}
 
             {/* Context Section (e.g. Resume) */}
-            {!props.children && contextContent && (
-                <div className="border-b bg-muted/30 dark:bg-muted/50 max-h-[40vh] overflow-y-auto custom-scrollbar">
+            {!children && contextContent && (
+                <div className="border-b bg-muted/30 dark:bg-muted/50 max-h-[40vh] overflow-y-auto scroll-fade-y scrollbar-hidden">
                     <div className="p-3">
                         {contextContent}
                     </div>
                 </div>
             )}
 
-            {props.children ? (
+            {children ? (
                 <div className="flex-1 overflow-hidden">
-                    {props.children}
+                    {children}
                 </div>
             ) : (
                 <Tabs value={currentTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden">
                     <div className="px-3 pt-3 pb-2 bg-background border-b z-10">
                         <TabsList className="w-full grid grid-cols-4 h-9">
                             <TabsTrigger value="scan" className="text-xs gap-1.5 px-1">
-                                <Search className="w-3.5 h-3.5" />
+                                <Search className="size-3.5" />
                                 <span className="hidden sm:inline">Scan</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="ai-studio"
-                                className={cn("text-xs gap-1.5 border-primary border-0 px-1", isLocked && "text-muted-foreground")}
+                                className={cn("text-xs gap-1.5 px-1", isLocked && "text-muted-foreground")}
                                 disabled={isLocked}
                             >
                                 <TabIcon locked={isLocked}>
-                                    <Sparkles className="w-3.5 h-3.5" />
+                                    <Sparkles className="size-3.5" />
                                 </TabIcon>
                                 <span className="hidden sm:inline">Studio</span>
                             </TabsTrigger>
@@ -103,7 +105,7 @@ export function ExtensionSidebar({
                                 disabled={isLocked}
                             >
                                 <TabIcon locked={isLocked}>
-                                    <FormInput className="w-3.5 h-3.5" />
+                                    <FormInput className="size-3.5" />
                                 </TabIcon>
                                 <span className="hidden sm:inline">Autofill</span>
                             </TabsTrigger>
@@ -113,14 +115,14 @@ export function ExtensionSidebar({
                                 disabled={isLocked}
                             >
                                 <TabIcon locked={isLocked}>
-                                    <Bot className="w-3.5 h-3.5" />
+                                    <Bot className="size-3.5" />
                                 </TabIcon>
                                 <span className="hidden sm:inline">Coach</span>
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
-                    <div className="flex-1 overflow-y-auto bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false">
+                    <div className="flex-1 overflow-y-auto scroll-fade-y scrollbar-hidden bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false">
                         <TabsContent value="scan" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
                             {scanContent}
                         </TabsContent>

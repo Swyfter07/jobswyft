@@ -12,6 +12,9 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import { MatchIndicator } from "@/components/custom/match-indicator"
+import { SkillPill, SkillSectionLabel } from "@/components/custom/skill-pill"
+import { IconBadge } from "@/components/custom/icon-badge"
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
@@ -41,70 +44,25 @@ interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
     onAnalyze?: (data: Partial<JobData>) => void
 }
 
-// ─── Sub-Components ─────────────────────────────────────────────────────────
-
-function MatchIndicator({ score }: { score: number }) {
-    let colorClass = "text-red-600 dark:text-red-400"
-    let ringGradient = "from-red-200 via-red-100 to-red-200 dark:from-red-800 dark:via-red-900 dark:to-red-800"
-    let bgGradient = "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900"
-
-    if (score >= 80) {
-        colorClass = "text-green-600 dark:text-green-400"
-        ringGradient = "from-green-200 via-green-100 to-green-200 dark:from-green-800 dark:via-green-900 dark:to-green-800"
-        bgGradient = "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900"
-    } else if (score >= 50) {
-        colorClass = "text-yellow-600 dark:text-yellow-400"
-        ringGradient = "from-yellow-200 via-yellow-100 to-yellow-200 dark:from-yellow-800 dark:via-yellow-900 dark:to-yellow-800"
-        bgGradient = "from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900"
-    }
-
-    return (
-        <div className="flex items-center gap-3 animate-tab-content">
-            {/* Outer gradient ring */}
-            <div className={cn("p-1 rounded-full bg-gradient-to-br shadow-lg", ringGradient)}>
-                {/* Inner score circle */}
-                <div className={cn(
-                    "flex size-14 shrink-0 items-center justify-center rounded-full font-bold text-lg bg-gradient-to-br shadow-inner",
-                    colorClass,
-                    bgGradient
-                )}>
-                    {score}%
-                </div>
-            </div>
-            <div className="flex flex-col">
-                <span className="text-sm font-bold text-foreground">Match Score</span>
-                <span className="text-xs text-muted-foreground">{score >= 80 ? "Strong fit!" : score >= 50 ? "Good potential" : "May need upskilling"}</span>
-            </div>
-        </div>
-    )
-}
-
-function SkillPill({ name, variant = "default" }: { name: string, variant?: "default" | "missing" }) {
-    if (variant === "missing") {
-        return <Badge variant="outline" className="text-muted-foreground border-dashed dark:border-muted">{name}</Badge>
-    }
-    return <Badge variant="secondary" className="bg-green-100 text-green-800 hover:bg-green-200 border border-green-200 shadow-none dark:bg-green-950 dark:text-green-400 dark:border-green-800 dark:hover:bg-green-900">{name}</Badge>
-}
-
 // ─── Main Component ─────────────────────────────────────────────────────────
 
 export function JobCard({
     job,
     match,
     onCoach,
+    onDiveDeeper,
     className,
     isEditing: initialIsEditing = false,
     onAnalyze,
     ...props
 }: JobCardProps) {
-    // Local state for edit mode
     const [isEditing, setIsEditing] = React.useState(initialIsEditing)
     const [title, setTitle] = React.useState(job.title)
     const [company, setCompany] = React.useState(job.company)
     const [description, setDescription] = React.useState(job.description)
 
     return (
-        <Card className={cn("w-full overflow-hidden border-2 border-orange-200 dark:border-orange-900 dark:bg-card", className)} {...props}>
+        <Card className={cn("w-full overflow-hidden border-2 border-card-accent-border", className)} {...props}>
             <CardHeader className="space-y-3 bg-muted/20 dark:bg-muted/40">
                 {/* Top Row: Header & Match */}
                 <div className="flex items-start justify-between gap-4">
@@ -187,7 +145,7 @@ export function JobCard({
                         />
                         <Button
                             onClick={() => onAnalyze?.({ title, company, description })}
-                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md mt-4"
+                            className="w-full font-semibold shadow-md mt-4"
                         >
                             <Sparkles className="mr-2 size-4" />
                             Analyze Job
@@ -199,7 +157,7 @@ export function JobCard({
                         {match && (
                             <div className="space-y-3">
                                 <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <Brain className="size-4 text-purple-500" />
+                                    <IconBadge icon={<Brain />} variant="ai" size="sm" />
                                     <span>Analysis</span>
                                 </div>
 
@@ -209,29 +167,20 @@ export function JobCard({
                                     </p>
                                 )}
 
-                                {/* Skills - Stacked Layout */}
                                 <div className="space-y-4 pt-2">
-                                    {/* Matches */}
                                     <div className="space-y-2">
-                                        <span className="text-xs font-medium text-green-700 uppercase tracking-wide flex items-center gap-1">
-                                            <span className="size-1.5 rounded-full bg-green-500" />
-                                            Your Matches
-                                        </span>
+                                        <SkillSectionLabel label="Your Matches" variant="success" />
                                         <div className="flex flex-wrap gap-2">
                                             {match.matchedSkills.length > 0 ? (
-                                                match.matchedSkills.map(skill => <SkillPill key={skill} name={skill} />)
+                                                match.matchedSkills.map(skill => <SkillPill key={skill} name={skill} variant="matched" />)
                                             ) : (
                                                 <span className="text-xs text-muted-foreground italic">No direct matches found</span>
                                             )}
                                         </div>
                                     </div>
 
-                                    {/* Gaps */}
                                     <div className="space-y-2">
-                                        <span className="text-xs font-medium text-amber-700 uppercase tracking-wide flex items-center gap-1">
-                                            <span className="size-1.5 rounded-full bg-amber-500" />
-                                            Missing Skills
-                                        </span>
+                                        <SkillSectionLabel label="Missing Skills" variant="warning" />
                                         <div className="flex flex-wrap gap-2">
                                             {match.missingSkills.length > 0 ? (
                                                 match.missingSkills.map(skill => <SkillPill key={skill} name={skill} variant="missing" />)
@@ -247,13 +196,13 @@ export function JobCard({
                         {/* Actions */}
                         <div className="flex items-center gap-3 pt-2">
                             <Button
-                                onClick={props.onDiveDeeper}
-                                className="flex-1 bg-purple-600 text-white hover:bg-purple-700 font-semibold shadow-md dark:bg-purple-700 dark:hover:bg-purple-600"
+                                onClick={onDiveDeeper}
+                                className="flex-1 bg-ai-accent text-ai-accent-foreground hover:bg-ai-accent/90 font-semibold shadow-md"
                             >
                                 <Sparkles className="mr-2 size-4" />
                                 Dive Deeper
                             </Button>
-                            <Button onClick={onCoach} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md">
+                            <Button onClick={onCoach} className="flex-1 font-semibold shadow-md">
                                 <Brain className="mr-2 size-4" />
                                 Talk to Coach
                             </Button>

@@ -1,5 +1,5 @@
 import React from "react"
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { ExtensionSidebar } from "./extension-sidebar"
 import { AIStudio } from "./ai-studio"
 import { Coach } from "./coach"
@@ -48,7 +48,7 @@ export default meta
 type Story = StoryObj<typeof meta>
 
 const CenteredLayout = (Story: any) => (
-    <div className="flex items-center justify-center min-h-screen bg-gray-100 p-8">
+    <div className="flex items-center justify-center min-h-screen bg-muted p-8">
         <div className="relative w-[400px]" style={{ height: '85vh' }}>
             <Story />
         </div>

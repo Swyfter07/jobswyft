@@ -1,11 +1,11 @@
 import React, { useState, useRef, useEffect } from "react"
-import { Bot, Send, User } from "lucide-react"
+import { Bot, Send } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { IconBadge } from "@/components/custom/icon-badge"
 
 export interface Message {
     id: string
@@ -31,7 +31,6 @@ export function Coach({
     const [inputValue, setInputValue] = useState("")
     const scrollRef = useRef<HTMLDivElement>(null)
 
-    // Auto-scroll to bottom of chat
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollIntoView({ behavior: "smooth" })
@@ -52,7 +51,6 @@ export function Coach({
         setInputValue("")
         onSendMessage?.(inputValue)
 
-        // Mock AI response for demo purposes if not provided
         if (!onSendMessage) {
             setTimeout(() => {
                 const aiResponse: Message = {
@@ -66,25 +64,16 @@ export function Coach({
         }
     }
 
-    const handleKeyDown = (e: React.KeyboardEvent) => {
-        if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault()
-            handleSend()
-        }
-    }
-
     return (
-        <Card className={cn("flex flex-col h-full border-2 border-orange-200 shadow-sm overflow-hidden dark:border-orange-900 dark:bg-card", className)}>
-            <CardHeader className="border-b px-4 py-3 bg-gradient-to-r from-orange-50/50 to-transparent flex-shrink-0 dark:from-orange-950/30 dark:to-transparent">
+        <Card className={cn("flex flex-col h-full border-2 border-card-accent-border shadow-sm overflow-hidden", className)}>
+            <CardHeader className="border-b px-4 py-3 bg-gradient-to-r from-card-accent-bg to-transparent flex-shrink-0">
                 <div className="flex items-center gap-2">
-                    <div className="flex items-center justify-center size-8 rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
-                        <Bot className="size-4" />
-                    </div>
+                    <IconBadge icon={<Bot />} variant="primary" size="md" />
                     <div>
                         <CardTitle className="text-sm font-bold text-foreground">
                             Career Coach
                         </CardTitle>
-                        <p className="text-[10px] text-muted-foreground">
+                        <p className="text-micro text-muted-foreground">
                             Ask me anything about this job
                         </p>
                     </div>
@@ -92,7 +81,6 @@ export function Coach({
             </CardHeader>
 
             <CardContent className="flex-1 flex flex-col p-0 overflow-hidden relative">
-                {/* Locked State Overlay */}
                 {isLocked && (
                     <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] flex items-center justify-center">
                         <div className="text-center p-6">
@@ -151,14 +139,14 @@ export function Coach({
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             disabled={isLocked}
-                            className="flex-1 min-h-[40px] border-orange-200 focus-visible:ring-orange-500/20 dark:border-orange-800 dark:focus-visible:ring-orange-600/30"
+                            className="flex-1 min-h-[40px] border-card-accent-border focus-visible:ring-primary/20"
                             autoComplete="off"
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={!inputValue.trim() || isLocked}
-                            className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm shrink-0 dark:bg-orange-600 dark:hover:bg-orange-500"
+                            className="shadow-sm shrink-0"
                         >
                             <Send className="size-4" />
                             <span className="sr-only">Send</span>
