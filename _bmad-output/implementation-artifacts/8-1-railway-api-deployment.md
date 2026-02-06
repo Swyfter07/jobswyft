@@ -1,6 +1,6 @@
 # Story 8.1: Railway API Deployment
 
-Status: review
+Status: done
 
 ## Story
 
@@ -176,11 +176,20 @@ Claude Opus 4.6
 - **Task 3**: All 8 env vars configured via Railway MCP `set-variables`. `ALLOWED_ORIGINS` uses comma-separated format (robust for cloud env vars).
 - **Task 4**: `config.py` updated — `debug` defaults to `False`, `allowed_origins` changed from `List[str]` to `str` with `get_allowed_origins()` method. `main.py` updated to use `settings.get_allowed_origins()`. 139/140 existing tests pass (1 pre-existing failure in test_feedback.py unrelated to this story).
 - **Task 5**: Deployment succeeded (build: 32s). All ACs verified: health check OK, auth 401, CORS headers correct, logs visible on Railway dashboard.
-- **Task 6**: Production URL `https://jobswyft-production.up.railway.app` documented in `.env.example`.
+- **Task 6**: Production URL documented. Custom domain `api.jobswyft.com` configured via CNAME to `jobswyft-production.up.railway.app`.
+- **Post-deploy**: Custom domain `api.jobswyft.com` set up (GoDaddy CNAME → Railway). ALLOWED_ORIGINS updated to include `jobswyft.com`, `www.jobswyft.com`, Vercel, and chrome extension origins.
+
+### Production URLs
+
+| URL | Purpose |
+|-----|---------|
+| `https://api.jobswyft.com` | Custom domain (primary) |
+| `https://jobswyft-production.up.railway.app` | Railway default (fallback) |
 
 ### Change Log
 
 - 2026-02-06: Deployed FastAPI API to Railway. Created Dockerfile, .dockerignore. Updated config.py (debug default, CORS parsing). Updated main.py (CORS origins). Updated .env.example with production notes.
+- 2026-02-06: Custom domain `api.jobswyft.com` configured via GoDaddy CNAME. ALLOWED_ORIGINS expanded to include jobswyft.com origins.
 
 ### File List
 
@@ -192,4 +201,4 @@ Claude Opus 4.6
 - `apps/api/app/core/config.py` — `debug` defaults to `False`; `allowed_origins` changed from `List[str]` to `str` with `get_allowed_origins()` method
 - `apps/api/app/main.py` — Uses `settings.get_allowed_origins()` for CORS middleware and logging
 - `apps/api/.env.example` — CORS format updated to comma-separated; production deployment notes added
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Story 8-1 status: ready-for-dev → in-progress → review
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Story 8-1 status: ready-for-dev → done

@@ -101,7 +101,7 @@ development_status:
 
   # Epic 8: Deployment & Infrastructure
   epic-8: in-progress
-  8-1-railway-api-deployment: review
+  8-1-railway-api-deployment: done
 
   # Epic EXT: Extension UI Build (End-to-End)
   # NOTE: Iterative epic - stories created one at a time, Storybook → Extension → Backend Tech Debt
