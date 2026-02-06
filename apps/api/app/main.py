@@ -29,7 +29,7 @@ async def lifespan(app: FastAPI):
     # Startup
     logger.info("Starting Jobswyft API v1.0.0")
     logger.info(f"Environment: {settings.environment}")
-    logger.info(f"CORS origins: {settings.allowed_origins}")
+    logger.info(f"CORS origins: {settings.get_allowed_origins()}")
     yield
     # Shutdown (if needed in future)
     logger.info("Shutting down Jobswyft API")
@@ -46,7 +46,7 @@ app = FastAPI(
 # Add CORS middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins,
+    allow_origins=settings.get_allowed_origins(),
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

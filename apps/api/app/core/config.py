@@ -1,5 +1,6 @@
 """Application configuration using pydantic-settings."""
 
+import json
 from functools import lru_cache
 from typing import List
 
@@ -18,13 +19,20 @@ class Settings(BaseSettings):
     # Application
     environment: str = "development"
     port: int = 3001
-    debug: bool = True
+    debug: bool = False
 
-    # CORS
-    allowed_origins: List[str] = [
-        "http://localhost:3000",  # Dashboard dev
-        "chrome-extension://*",  # Extension (any extension ID)
-    ]
+    # CORS — stored as string, parsed via get_allowed_origins()
+    allowed_origins: str = "http://localhost:3000,chrome-extension://*"
+
+    def get_allowed_origins(self) -> List[str]:
+        """Parse allowed_origins from JSON array or comma-separated string."""
+        try:
+            parsed = json.loads(self.allowed_origins)
+            if isinstance(parsed, list):
+                return parsed
+        except (json.JSONDecodeError, TypeError):
+            pass
+        return [s.strip() for s in self.allowed_origins.split(",") if s.strip()]
 
     # Supabase
     supabase_url: str = ""

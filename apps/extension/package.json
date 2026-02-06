@@ -1,0 +1,33 @@
+{
+  "name": "@jobswyft/extension",
+  "description": "Jobswyft Chrome Extension — AI-powered job application assistant",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@jobswyft/ui": "workspace:*",
+    "@supabase/supabase-js": "^2.49.4",
+    "lucide-react": "^0.562.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.1.18",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "@wxt-dev/module-react": "^1.1.5",
+    "tailwindcss": "^4.1.18",
+    "typescript": "^5.7.0",
+    "wxt": "^0.20.13"
+  }
+}

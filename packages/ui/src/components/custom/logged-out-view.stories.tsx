@@ -24,3 +24,15 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
     args: {},
 }
+
+export const Loading: Story = {
+    args: {
+        isLoading: true,
+    },
+}
+
+export const Error: Story = {
+    args: {
+        error: "Sign-in failed. Please check your connection and try again.",
+    },
+}

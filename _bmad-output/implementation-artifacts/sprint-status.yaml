@@ -99,3 +99,12 @@ development_status:
   7-2-feedback-api: done
   epic-7-retrospective: optional
 
+  # Epic 8: Deployment & Infrastructure
+  epic-8: in-progress
+  8-1-railway-api-deployment: review
+
+  # Epic EXT: Extension UI Build (End-to-End)
+  # NOTE: Iterative epic - stories created one at a time, Storybook → Extension → Backend Tech Debt
+  epic-EXT: in-progress
+  EXT-1-wxt-extension-setup-ui-integration-login: review
+

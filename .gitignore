@@ -28,6 +28,7 @@ build/
 .next/
 .vercel/
 .output/
+_output/
 .wxt/
 
 # Testing
