@@ -18,7 +18,7 @@ export default defineConfig({
       default_path: "sidepanel.html",
     },
     oauth2: {
-      client_id: "642843219207-bmfn4ba9dmpqcc42uv6vecsvlrm0tu4s.apps.googleusercontent.com",
+      client_id: "642843219207-02rh11gudej7to96j84nj1vape3i0cbv.apps.googleusercontent.com",
       scopes: ["openid", "email", "profile"],
     },
   },
