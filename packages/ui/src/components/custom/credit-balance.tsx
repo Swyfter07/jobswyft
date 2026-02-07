@@ -32,7 +32,7 @@ export function CreditBalance({
     else if (percentage <= 50) progressColorClass = "bg-yellow-500"
 
     return (
-        <Card className={cn("w-full overflow-hidden border-2 border-orange-200 dark:border-orange-900 dark:bg-card", className)} {...props}>
+        <Card className={cn("w-full overflow-hidden dark:bg-card", className)} {...props}>
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                 <div className="flex items-center gap-2">
                     <Zap className="size-4 text-primary" />

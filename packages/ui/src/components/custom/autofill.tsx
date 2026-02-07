@@ -45,9 +45,9 @@ const DEFAULT_FIELDS: AutofillField[] = [
 function StatusIcon({ status }: { status: AutofillField["status"] }) {
     switch (status) {
         case "ready":
-            return <CheckCircle2 className="size-4 text-green-500" />
+            return <CheckCircle2 className="size-4 text-emerald-600 dark:text-emerald-400" />
         case "missing":
-            return <AlertCircle className="size-4 text-amber-500" />
+            return <AlertCircle className="size-4 text-destructive" />
         case "filled":
             return <CheckCircle2 className="size-4 text-muted-foreground opacity-50" />
         default:
@@ -85,7 +85,7 @@ export function Autofill({
                             className={cn(
                                 "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-default",
                                 field.status === "missing"
-                                    ? "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-950 dark:border-amber-800 dark:text-amber-300"
+                                    ? "bg-destructive/10 border-destructive/20 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive-foreground"
                                     : "bg-card border-border text-foreground hover:border-muted-foreground/50",
                                 field.status === "filled" && "bg-muted text-muted-foreground border-transparent"
                             )}
@@ -101,11 +101,11 @@ export function Autofill({
     }
 
     return (
-        <Card className={cn("flex flex-col h-full border-2 border-orange-200 shadow-sm overflow-hidden dark:border-orange-900 dark:bg-card", className)}>
-            <CardHeader className="border-b px-4 py-3 bg-gradient-to-r from-orange-50/50 to-transparent flex-shrink-0 dark:from-orange-950/30 dark:to-transparent">
+        <Card className={cn("flex flex-col h-full overflow-hidden dark:bg-card p-0 gap-0 shadow-xl", className)}>
+            <CardHeader className="border-b px-4 py-3 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center size-8 rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
+                        <div className="flex items-center justify-center size-8 rounded-full bg-emerald-100 text-emerald-600 dark:bg-emerald-950 dark:text-emerald-400">
                             <FormInput className="size-4" />
                         </div>
                         <div>
@@ -170,7 +170,9 @@ export function Autofill({
                         size="lg"
                         className={cn(
                             "w-full shadow-lg transition-all",
-                            isFilling ? "bg-orange-100 text-orange-700 hover:bg-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900" : "bg-orange-600 hover:bg-orange-700 text-white dark:bg-orange-600 dark:hover:bg-orange-500"
+                            isFilling
+                                ? "bg-emerald-100 text-emerald-700 hover:bg-emerald-200 dark:bg-emerald-950 dark:text-emerald-300 dark:hover:bg-emerald-900"
+                                : "bg-gradient-to-br from-emerald-600 via-emerald-500 to-emerald-400 hover:from-emerald-700 hover:via-emerald-600 hover:to-emerald-500 text-white font-semibold py-6 text-base border-t border-white/20 shadow-lg hover:shadow-lg hover:shadow-emerald-500/40 transition-all duration-300"
                         )}
                         onClick={onFill}
                         disabled={isFilling || readyCount === 0}

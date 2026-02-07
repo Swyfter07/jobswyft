@@ -1,5 +1,4 @@
 import React from "react"
-import { Building, MapPin, Clock, Brain, Sparkles, Pencil, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
     Card,
@@ -12,6 +11,12 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
+import {
+    Collapsible,
+    CollapsibleContent,
+    CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import { Building, MapPin, Clock, Brain, Sparkles, Pencil, X, ChevronDown, Bookmark } from "lucide-react"
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
@@ -39,6 +44,8 @@ interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
     onDiveDeeper?: () => void
     isEditing?: boolean
     onAnalyze?: (data: Partial<JobData>) => void
+    onSave?: () => void
+    isSaved?: boolean
 }
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────
@@ -59,22 +66,21 @@ function MatchIndicator({ score }: { score: number }) {
     }
 
     return (
-        <div className="flex items-center gap-3 animate-tab-content">
+        <div className="flex flex-col items-center justify-center gap-1.5 animate-tab-content min-w-[60px]">
             {/* Outer gradient ring */}
             <div className={cn("p-1 rounded-full bg-gradient-to-br shadow-lg", ringGradient)}>
                 {/* Inner score circle */}
                 <div className={cn(
-                    "flex size-14 shrink-0 items-center justify-center rounded-full font-bold text-lg bg-gradient-to-br shadow-inner",
+                    "flex size-12 shrink-0 items-center justify-center rounded-full font-bold text-lg bg-gradient-to-br shadow-inner",
                     colorClass,
                     bgGradient
                 )}>
                     {score}%
                 </div>
             </div>
-            <div className="flex flex-col">
-                <span className="text-sm font-bold text-foreground">Match Score</span>
-                <span className="text-xs text-muted-foreground">{score >= 80 ? "Strong fit!" : score >= 50 ? "Good potential" : "May need upskilling"}</span>
-            </div>
+            <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight leading-none text-center whitespace-nowrap">
+                {score >= 80 ? "Strong fit" : score >= 50 ? "Good fit" : "Weak fit"}
+            </span>
         </div>
     )
 }
@@ -95,6 +101,8 @@ export function JobCard({
     className,
     isEditing: initialIsEditing = false,
     onAnalyze,
+    onSave,
+    isSaved = false,
     ...props
 }: JobCardProps) {
     // Local state for edit mode
@@ -102,81 +110,106 @@ export function JobCard({
     const [title, setTitle] = React.useState(job.title)
     const [company, setCompany] = React.useState(job.company)
     const [description, setDescription] = React.useState(job.description)
+    const [showDescription, setShowDescription] = React.useState(false)
 
     return (
-        <Card className={cn("w-full overflow-hidden border-2 border-orange-200 dark:border-orange-900 dark:bg-card", className)} {...props}>
-            <CardHeader className="space-y-3 bg-muted/20 dark:bg-muted/40">
+        <Card className={cn("w-full overflow-hidden dark:bg-card p-0 gap-0 shadow-xl", className)} {...props}>
+            <CardHeader className="border-b px-4 py-3 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900 flex-shrink-0">
+                {/* Top Row: Header & Match */}
                 {/* Top Row: Header & Match */}
                 <div className="flex items-start justify-between gap-4">
-                    <div className="flex items-start gap-4">
-                        {/* Company Logo Placeholder */}
-                        <div className="flex size-12 shrink-0 items-center justify-center rounded-lg border bg-muted/50 text-muted-foreground">
-                            {job.logo ? <img src={job.logo} alt={job.company} className="size-full rounded-lg object-cover" /> : <Building className="size-6" />}
-                        </div>
-                        <div className="space-y-1.5 w-full">
-                            {isEditing ? (
-                                <div className="space-y-2">
+                    <div className="space-y-1.5 w-full">
+                        {isEditing ? (
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-2">
                                     <Input
                                         value={title}
                                         onChange={(e) => setTitle(e.target.value)}
                                         placeholder="Job Title"
-                                        className="text-lg font-bold h-9"
+                                        className="text-lg font-bold h-9 flex-1"
                                     />
-                                    <Input
-                                        value={company}
-                                        onChange={(e) => setCompany(e.target.value)}
-                                        placeholder="Company Name"
-                                        className="h-8 text-sm"
-                                    />
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
+                                        onClick={() => setIsEditing(false)}
+                                    >
+                                        <X className="size-4" />
+                                    </Button>
                                 </div>
-                            ) : (
-                                <>
-                                    <CardTitle className="text-xl font-bold tracking-tight text-primary">{job.title}</CardTitle>
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <span className="font-medium">{job.company}</span>
+                                <Input
+                                    value={company}
+                                    onChange={(e) => setCompany(e.target.value)}
+                                    placeholder="Company Name"
+                                    className="h-8 text-sm"
+                                />
+                            </div>
+                        ) : (
+                            <>
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="space-y-1">
+                                        <div className="flex items-center gap-2">
+                                            <CardTitle className="text-xl font-bold tracking-tight text-blue-700 dark:text-blue-400">
+                                                {job.title}
+                                            </CardTitle>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                className="size-6 shrink-0 text-muted-foreground/50 hover:text-foreground"
+                                                onClick={() => setIsEditing(true)}
+                                                title="Edit Job Details"
+                                            >
+                                                <Pencil className="size-3" />
+                                            </Button>
+                                        </div>
+                                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                            <span className="font-medium">{job.company}</span>
+                                        </div>
                                     </div>
-                                </>
-                            )}
-                        </div>
+                                    {match && <MatchIndicator score={match.score} />}
+                                </div>
+                            </>
+                        )}
                     </div>
-                    {match && !isEditing && <MatchIndicator score={match.score} />}
-
-                    {/* Edit Toggle */}
-                    <Button
-                        variant="ghost"
-                        size="icon"
-                        className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
-                        onClick={() => setIsEditing(!isEditing)}
-                    >
-                        {isEditing ? <X className="size-4" /> : <Pencil className="size-4" />}
-                    </Button>
                 </div>
 
                 {/* Metadata Badges */}
-                <div className="flex flex-wrap gap-2">
-                    <Badge variant="outline" className="gap-1 font-normal">
+                <div className="flex flex-wrap gap-2 pt-2">
+                    <Badge variant="outline" className="gap-1 font-normal text-xs px-2 py-0.5 h-6">
                         <MapPin className="size-3" /> {job.location}
                     </Badge>
                     {job.salary && (
-                        <Badge variant="outline" className="gap-1 font-normal">
-                            <span className="font-semibold text-primary">$</span> {job.salary}
+                        <Badge variant="outline" className="gap-1 font-normal text-xs px-2 py-0.5 h-6">
+                            <span className="font-semibold text-blue-600 dark:text-blue-400">$</span> {job.salary}
                         </Badge>
                     )}
                     {job.postedAt && (
-                        <Badge variant="secondary" className="gap-1 font-normal text-muted-foreground">
+                        <Badge variant="secondary" className="gap-1 font-normal text-muted-foreground text-xs px-2 py-0.5 h-6">
                             <Clock className="size-3" /> {job.postedAt}
                         </Badge>
                     )}
                 </div>
+
+                {/* Description Toggle */}
+                {!isEditing && job.description && (
+                    <div
+                        role="button"
+                        onClick={() => setShowDescription(!showDescription)}
+                        className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer mt-4 select-none w-fit group/toggle"
+                    >
+                        <ChevronDown className={cn("size-3.5 transition-transform duration-300 group-hover/toggle:text-foreground", showDescription && "rotate-180")} />
+                        <span className="group-hover/toggle:underline decoration-border/50 underline-offset-4">{showDescription ? "Hide Job Description" : "Show Full Description"}</span>
+                    </div>
+                )}
             </CardHeader>
 
             <Separator />
 
-            <CardContent className="space-y-4 pt-3">
+            <CardContent className="p-4">
                 {isEditing ? (
                     <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                            <Sparkles className="size-4 text-primary" />
+                            <Sparkles className="size-4 text-blue-600 dark:text-blue-400" />
                             <span>Paste Job Description</span>
                         </div>
                         <Textarea
@@ -187,7 +220,7 @@ export function JobCard({
                         />
                         <Button
                             onClick={() => onAnalyze?.({ title, company, description })}
-                            className="w-full bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md mt-4"
+                            className="w-full bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-500 font-semibold shadow-md mt-4 border-t border-white/20 hover:shadow-lg hover:shadow-blue-500/40 transition-all duration-300"
                         >
                             <Sparkles className="mr-2 size-4" />
                             Analyze Job
@@ -195,69 +228,115 @@ export function JobCard({
                     </div>
                 ) : (
                     <>
-                        {/* Match Details */}
-                        {match && (
-                            <div className="space-y-3">
-                                <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                                    <Brain className="size-4 text-purple-500" />
-                                    <span>Analysis</span>
+                        <Collapsible open={showDescription}>
+                            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
+                                <div className="space-y-3 pt-2">
+                                    <Textarea
+                                        value={description || ""}
+                                        onChange={(e) => setDescription(e.target.value)}
+                                        className="min-h-[300px] text-xs resize-y bg-background"
+                                        placeholder="Paste or edit the job description..."
+                                    />
+                                    <Button
+                                        onClick={() => onAnalyze?.({ title, company, description })}
+                                        className="w-full bg-gradient-to-br from-blue-600 via-blue-500 to-blue-400 text-white hover:from-blue-700 hover:via-blue-600 hover:to-blue-500 font-semibold shadow-md border-t border-white/20 hover:shadow-lg hover:shadow-blue-500/40 transition-all duration-300"
+                                        size="sm"
+                                    >
+                                        <Sparkles className="mr-2 size-3.5" />
+                                        Update Analysis
+                                    </Button>
                                 </div>
+                            </CollapsibleContent>
+                        </Collapsible>
 
-                                {match.summary && (
-                                    <p className="text-sm text-muted-foreground leading-relaxed">
-                                        {match.summary}
-                                    </p>
-                                )}
-
-                                {/* Skills - Stacked Layout */}
+                        <Collapsible open={!showDescription}>
+                            <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
                                 <div className="space-y-4 pt-2">
-                                    {/* Matches */}
-                                    <div className="space-y-2">
-                                        <span className="text-xs font-medium text-green-700 uppercase tracking-wide flex items-center gap-1">
-                                            <span className="size-1.5 rounded-full bg-green-500" />
-                                            Your Matches
-                                        </span>
-                                        <div className="flex flex-wrap gap-2">
-                                            {match.matchedSkills.length > 0 ? (
-                                                match.matchedSkills.map(skill => <SkillPill key={skill} name={skill} />)
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground italic">No direct matches found</span>
-                                            )}
-                                        </div>
-                                    </div>
+                                    {/* Match Details */}
+                                    {match && (
+                                        <div className="space-y-3">
+                                            <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                                                <Brain className="size-4 text-blue-600 dark:text-blue-400" />
+                                                <span>Analysis</span>
+                                            </div>
 
-                                    {/* Gaps */}
-                                    <div className="space-y-2">
-                                        <span className="text-xs font-medium text-amber-700 uppercase tracking-wide flex items-center gap-1">
-                                            <span className="size-1.5 rounded-full bg-amber-500" />
-                                            Missing Skills
-                                        </span>
-                                        <div className="flex flex-wrap gap-2">
-                                            {match.missingSkills.length > 0 ? (
-                                                match.missingSkills.map(skill => <SkillPill key={skill} name={skill} variant="missing" />)
-                                            ) : (
-                                                <span className="text-xs text-muted-foreground italic">No major gaps detected</span>
+                                            {match.summary && (
+                                                <p className="text-sm text-muted-foreground leading-relaxed">
+                                                    {match.summary}
+                                                </p>
                                             )}
+
+                                            {/* Skills - Stacked Layout */}
+                                            <div className="space-y-4 pt-2">
+                                                {/* Matches */}
+                                                <div className="space-y-2">
+                                                    <span className="text-xs font-medium text-green-700 uppercase tracking-wide flex items-center gap-1">
+                                                        <span className="size-1.5 rounded-full bg-green-500" />
+                                                        Your Matches
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {match.matchedSkills.length > 0 ? (
+                                                            match.matchedSkills.map(skill => <SkillPill key={skill} name={skill} />)
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground italic">No direct matches found</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+
+                                                {/* Gaps */}
+                                                <div className="space-y-2">
+                                                    <span className="text-xs font-medium text-amber-700 uppercase tracking-wide flex items-center gap-1">
+                                                        <span className="size-1.5 rounded-full bg-amber-500" />
+                                                        Missing Skills
+                                                    </span>
+                                                    <div className="flex flex-wrap gap-2">
+                                                        {match.missingSkills.length > 0 ? (
+                                                            match.missingSkills.map(skill => <SkillPill key={skill} name={skill} variant="missing" />)
+                                                        ) : (
+                                                            <span className="text-xs text-muted-foreground italic">No major gaps detected</span>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
                                         </div>
+                                    )}
+
+                                    {/* Actions */}
+                                    <div className="flex items-center gap-2 pt-2 pb-1">
+                                        <Button
+                                            variant="outline"
+                                            size="icon"
+                                            onClick={onSave}
+                                            className={cn(
+                                                "size-10 shrink-0 transition-colors duration-300 border-2",
+                                                isSaved
+                                                    ? "bg-emerald-100 text-emerald-600 border-emerald-200 hover:bg-emerald-200 dark:bg-emerald-950/30 dark:text-emerald-400 dark:border-emerald-900"
+                                                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
+                                            )}
+                                            title={isSaved ? "Saved" : "Save Job"}
+                                        >
+                                            <Bookmark className={cn("size-5", isSaved && "fill-current")} />
+                                        </Button>
+
+                                        <Button
+                                            onClick={props.onDiveDeeper}
+                                            className="flex-1 bg-gradient-to-br from-violet-600 via-violet-500 to-violet-400 text-white hover:from-violet-700 hover:via-violet-600 hover:to-violet-500 font-semibold shadow-md border-t border-white/20 hover:shadow-lg hover:shadow-violet-500/40 transition-all duration-300"
+                                        >
+                                            <Sparkles className="mr-2 size-4" />
+                                            Dive Deeper
+                                        </Button>
+
+                                        <Button
+                                            onClick={onCoach}
+                                            className="flex-1 bg-gradient-to-br from-orange-600 via-orange-500 to-orange-400 text-white hover:from-orange-700 hover:via-orange-600 hover:to-orange-500 font-semibold shadow-md border-t border-white/20 hover:shadow-lg hover:shadow-orange-500/40 transition-all duration-300"
+                                        >
+                                            <Brain className="mr-2 size-4" />
+                                            Talk to Coach
+                                        </Button>
                                     </div>
                                 </div>
-                            </div>
-                        )}
-
-                        {/* Actions */}
-                        <div className="flex items-center gap-3 pt-2">
-                            <Button
-                                onClick={props.onDiveDeeper}
-                                className="flex-1 bg-purple-600 text-white hover:bg-purple-700 font-semibold shadow-md dark:bg-purple-700 dark:hover:bg-purple-600"
-                            >
-                                <Sparkles className="mr-2 size-4" />
-                                Dive Deeper
-                            </Button>
-                            <Button onClick={onCoach} className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 font-semibold shadow-md">
-                                <Brain className="mr-2 size-4" />
-                                Talk to Coach
-                            </Button>
-                        </div>
+                            </CollapsibleContent>
+                        </Collapsible>
                     </>
                 )}
             </CardContent>

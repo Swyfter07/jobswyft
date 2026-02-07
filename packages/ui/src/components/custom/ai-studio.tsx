@@ -68,12 +68,14 @@ export function AIStudio({
         label,
         items,
         currentValue,
-        onChange
+        onChange,
+        activeClassName
     }: {
         label: string,
         items: { value: string, label: string }[],
         currentValue: string,
-        onChange: (val: string) => void
+        onChange: (val: string) => void,
+        activeClassName?: string
     }) => (
         <div className="space-y-1.5">
             <label className="text-xs font-medium text-muted-foreground">{label}</label>
@@ -86,9 +88,10 @@ export function AIStudio({
                         onClick={() => onChange(item.value)}
                         className={cn(
                             "h-7 px-2.5 text-xs rounded-full transition-all",
+                            "h-7 px-2.5 text-xs rounded-full transition-all",
                             currentValue === item.value
-                                ? "border-orange-500 bg-orange-50 text-orange-700 hover:bg-orange-100 hover:text-orange-800 dark:border-orange-600 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900 dark:hover:text-orange-200"
-                                : "text-muted-foreground hover:text-foreground hover:border-orange-200 dark:hover:border-orange-700"
+                                ? (activeClassName || "border-primary/50 bg-primary/10 text-primary hover:bg-primary/20")
+                                : "text-muted-foreground hover:text-foreground hover:border-border"
                         )}
                     >
                         {item.label}
@@ -110,24 +113,17 @@ export function AIStudio({
     return (
         <Card
             className={cn(
-                "w-full overflow-hidden border-2 border-orange-200 transition-all duration-300 dark:border-orange-900 dark:bg-card",
+                "w-full overflow-hidden transition-all duration-300 dark:bg-card p-0 gap-0 shadow-xl",
                 className
             )}
         >
-            <CardHeader className="border-b px-4 py-3 space-y-0 flex flex-row items-center justify-between bg-gradient-to-r from-orange-50/50 to-transparent dark:from-orange-950/30 dark:to-transparent">
+            <CardHeader className="border-b px-4 py-3 space-y-0 flex flex-row items-center justify-between bg-violet-50/50 dark:bg-violet-950/20 border-violet-100 dark:border-violet-900">
                 <div className="flex items-center gap-2">
-                    <Wand2 className="size-4 text-orange-500" />
+                    <Wand2 className="size-4 text-primary" />
                     <CardTitle className="text-base font-bold text-foreground">
                         AI Studio
                     </CardTitle>
-                    {!isLocked && (
-                        <Badge
-                            variant="secondary"
-                            className="ml-2 h-5 px-1.5 text-[10px] font-normal text-muted-foreground bg-white/50 border-orange-100 dark:bg-muted/50 dark:border-orange-900"
-                        >
-                            Powered by Gemini
-                        </Badge>
-                    )}
+
                 </div>
                 {!isLocked && (
                     <Button
@@ -144,33 +140,33 @@ export function AIStudio({
             <CardContent className="p-0">
                 <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
                     <div className="px-4 py-3">
-                        <TabsList className="flex w-full items-center gap-1 rounded-lg bg-secondary/50 p-1 text-muted-foreground h-auto">
+                        <TabsList className="flex w-full items-center gap-1 rounded-full bg-muted/50 p-1 text-muted-foreground h-auto border border-border/50 backdrop-blur-sm shadow-sm">
                             <TabsTrigger
                                 value="match"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
+                                className="group flex-1 flex gap-1.5 items-center justify-center rounded-full px-2 py-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-violet-100 dark:data-[state=active]:bg-violet-950/50 data-[state=active]:text-violet-700 dark:data-[state=active]:text-violet-300 data-[state=active]:shadow-lg data-[state=active]:shadow-violet-500/20 data-[state=active]:ring-2 data-[state=active]:ring-violet-500/20"
                             >
-                                <Sparkles className="size-3.5" />
+                                <Sparkles className="size-3.5 transition-transform duration-300 group-hover:scale-110" />
                                 <span className="text-xs font-medium">Match</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="cover-letter"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
+                                className="group flex-1 flex gap-1.5 items-center justify-center rounded-full px-2 py-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-blue-100 dark:data-[state=active]:bg-blue-950/50 data-[state=active]:text-blue-700 dark:data-[state=active]:text-blue-300 data-[state=active]:shadow-lg data-[state=active]:shadow-blue-500/20 data-[state=active]:ring-2 data-[state=active]:ring-blue-500/20"
                             >
-                                <FileText className="size-3.5" />
+                                <FileText className="size-3.5 transition-transform duration-300 group-hover:scale-110" />
                                 <span className="text-xs font-medium">Cover</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="answer"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
+                                className="group flex-1 flex gap-1.5 items-center justify-center rounded-full px-2 py-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-emerald-100 dark:data-[state=active]:bg-emerald-950/50 data-[state=active]:text-emerald-700 dark:data-[state=active]:text-emerald-300 data-[state=active]:shadow-lg data-[state=active]:shadow-emerald-500/20 data-[state=active]:ring-2 data-[state=active]:ring-emerald-500/20"
                             >
-                                <MessageSquare className="size-3.5" />
+                                <MessageSquare className="size-3.5 transition-transform duration-300 group-hover:scale-110" />
                                 <span className="text-xs font-medium">Answer</span>
                             </TabsTrigger>
                             <TabsTrigger
                                 value="outreach"
-                                className="flex-1 flex gap-1.5 items-center justify-center rounded-md px-2 py-2.5 ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-background data-[state=active]:text-foreground data-[state=active]:shadow-sm data-[state=active]:border-2 data-[state=active]:border-orange-200 dark:data-[state=active]:border-orange-800"
+                                className="group flex-1 flex gap-1.5 items-center justify-center rounded-full px-2 py-2.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:bg-orange-100 dark:data-[state=active]:bg-orange-950/50 data-[state=active]:text-orange-700 dark:data-[state=active]:text-orange-300 data-[state=active]:shadow-lg data-[state=active]:shadow-orange-500/20 data-[state=active]:ring-2 data-[state=active]:ring-orange-500/20"
                             >
-                                <Send className="size-3.5" />
+                                <Send className="size-3.5 transition-transform duration-300 group-hover:scale-110" />
                                 <span className="text-xs font-medium">Outreach</span>
                             </TabsTrigger>
                         </TabsList>
@@ -191,7 +187,7 @@ export function AIStudio({
                                 </p>
                                 <Button
                                     size="sm"
-                                    className="bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white border-0 shadow-sm"
+                                    className="bg-primary hover:bg-primary/90 text-primary-foreground border-0 shadow-sm"
                                     onClick={onUnlock}
                                 >
                                     <Sparkles className="mr-2 size-3.5" />
@@ -202,13 +198,13 @@ export function AIStudio({
 
                         <ScrollArea className={cn("h-[400px]", isLocked && "opacity-20 pointer-events-none")}>
                             <div className="p-4 space-y-4">
-                                <TabsContent value="match" className="mt-0 space-y-4">
-                                    <div className="flex items-center justify-between rounded-lg border border-orange-100 bg-orange-50/50 p-4 dark:border-orange-900 dark:bg-orange-950/30">
+                                <TabsContent value="match" className="mt-0 space-y-4 animate-tab-content">
+                                    <div className="flex items-center justify-between rounded-lg border border-border bg-card p-4">
                                         <div className="space-y-1">
                                             <p className="text-sm font-medium text-foreground">Match Score</p>
-                                            <p className="text-2xl font-bold text-orange-600 dark:text-orange-400">85%</p>
+                                            <p className="text-2xl font-bold text-violet-600 dark:text-violet-400">85%</p>
                                         </div>
-                                        <div className="relative flex size-16 items-center justify-center rounded-full border-4 border-orange-200 bg-background text-xs font-bold text-orange-600 dark:border-orange-800 dark:text-orange-400">
+                                        <div className="relative flex size-16 items-center justify-center rounded-full border-4 border-violet-200 bg-background text-xs font-bold text-violet-600 dark:border-violet-800 dark:text-violet-400">
                                             High
                                         </div>
                                     </div>
@@ -235,18 +231,20 @@ export function AIStudio({
                                     </div>
                                 </TabsContent>
 
-                                <TabsContent value="cover-letter" className="mt-0 space-y-4">
+                                <TabsContent value="cover-letter" className="mt-0 space-y-4 animate-tab-content">
                                     <SelectionChips
                                         label="Tone"
                                         items={tones}
                                         currentValue={tone}
                                         onChange={setTone}
+                                        activeClassName="border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100"
                                     />
                                     <SelectionChips
                                         label="Length"
                                         items={lengths}
                                         currentValue={length}
                                         onChange={setLength}
+                                        activeClassName="border-blue-500 bg-blue-50 text-blue-700 hover:bg-blue-100"
                                     />
 
                                     <div className="space-y-1.5">
@@ -259,24 +257,24 @@ export function AIStudio({
 
                                     {isGenerating ? (
                                         <div className="flex flex-col items-center justify-center py-8 space-y-3">
-                                            <div className="flex items-center gap-2 text-orange-600 dark:text-orange-400">
+                                            <div className="flex items-center gap-2 text-primary">
                                                 <Loader2 className="size-5 animate-spin" />
                                                 <span className="text-sm font-medium">{generatingLabel}</span>
                                             </div>
                                             <div className="w-48 h-1.5 bg-muted rounded-full overflow-hidden">
-                                                <div className="h-full bg-gradient-to-r from-orange-500 to-amber-500 animate-pulse" style={{ width: '60%' }} />
+                                                <div className="h-full bg-primary animate-pulse" style={{ width: '60%' }} />
                                             </div>
                                             <p className="text-xs text-muted-foreground">This may take a few seconds...</p>
                                         </div>
                                     ) : (
-                                        <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
+                                        <Button className="w-full bg-blue-600 hover:bg-blue-700 text-white">
                                             <Wand2 className="mr-2 size-3.5" />
                                             Generate Draft (1 Credit)
                                         </Button>
                                     )}
                                 </TabsContent>
 
-                                <TabsContent value="answer" className="mt-0 space-y-4">
+                                <TabsContent value="answer" className="mt-0 space-y-4 animate-tab-content">
                                     <div className="space-y-1.5">
                                         <label className="text-xs font-medium text-muted-foreground">Application Question</label>
                                         <div className="relative">
@@ -293,21 +291,23 @@ export function AIStudio({
                                         items={tones}
                                         currentValue={tone}
                                         onChange={setTone}
+                                        activeClassName="border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                                     />
                                     <SelectionChips
                                         label="Length"
                                         items={lengths}
                                         currentValue={length}
                                         onChange={setLength}
+                                        activeClassName="border-emerald-500 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
                                     />
 
-                                    <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
+                                    <Button className="w-full bg-emerald-600 hover:bg-emerald-700 text-white">
                                         <Split className="mr-2 size-3.5" />
                                         Generate Answer (1 Credit)
                                     </Button>
                                 </TabsContent>
 
-                                <TabsContent value="outreach" className="mt-0 space-y-4">
+                                <TabsContent value="outreach" className="mt-0 space-y-4 animate-tab-content">
                                     <div className="space-y-3">
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-medium text-muted-foreground">Recipient Role</label>
@@ -320,7 +320,7 @@ export function AIStudio({
                                         <div className="space-y-1.5">
                                             <label className="text-xs font-medium text-muted-foreground">Platform</label>
                                             <div className="flex gap-2">
-                                                <Button variant="outline" size="sm" className="flex-1 active:border-orange-500 active:bg-orange-50 active:text-orange-700 border-orange-500 bg-orange-50 text-orange-700 dark:bg-orange-950 dark:text-orange-300 dark:border-orange-700 dark:active:bg-orange-900">
+                                                <Button variant="outline" size="sm" className="flex-1 active:border-orange-500 active:bg-orange-50 active:text-orange-700 border-orange-500 bg-orange-50 text-orange-700">
                                                     LinkedIn
                                                 </Button>
                                                 <Button variant="outline" size="sm" className="flex-1">
@@ -335,15 +335,17 @@ export function AIStudio({
                                         items={tones}
                                         currentValue={tone}
                                         onChange={setTone}
+                                        activeClassName="border-orange-500 bg-orange-50 text-orange-700 hover:bg-orange-100"
                                     />
                                     <SelectionChips
                                         label="Length"
                                         items={lengths}
                                         currentValue={length}
                                         onChange={setLength}
+                                        activeClassName="border-orange-500 bg-orange-50 text-orange-700 hover:bg-orange-100"
                                     />
 
-                                    <Button className="w-full bg-gradient-to-r from-orange-500 to-amber-500 text-white hover:from-orange-600 hover:to-amber-600">
+                                    <Button className="w-full bg-orange-600 hover:bg-orange-700 text-white">
                                         <Send className="mr-2 size-3.5" />
                                         Draft Message (1 Credit)
                                     </Button>

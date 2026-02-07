@@ -1,4 +1,5 @@
 import React from "react"
+import { Wand2 } from "lucide-react"
 import type { Meta, StoryObj } from "@storybook/react"
 import { ExtensionSidebar } from "./extension-sidebar"
 import { AIStudio } from "./ai-studio"
@@ -8,6 +9,7 @@ import { AppHeader } from "./app-header"
 import { ResumeCard } from "./resume-card"
 import { CreditBalance } from "./credit-balance"
 import { JobCard } from "./job-card"
+import { Badge } from "@/components/ui/badge"
 
 // Mock Data
 const MOCK_RESUME_DATA = {
@@ -78,27 +80,44 @@ export const NoJobDetected: Story = {
                 resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
                 activeResumeId="1"
                 resumeData={MOCK_RESUME_DATA}
+                isCollapsible={true}
             />
         ),
         scanContent: (
             <>
-                <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/25">
-                    <div className="rounded-full bg-muted p-3">
-                        <span className="text-2xl">🔍</span>
+                <div className="flex flex-col items-center justify-center h-[300px] text-center space-y-6 p-6">
+                    <div className="relative">
+                        <div className="absolute inset-0 animate-ping rounded-full bg-violet-400/20 duration-3000" />
+                        <div className="relative flex items-center justify-center size-20 rounded-full bg-violet-50 dark:bg-violet-950/30 border border-violet-100 dark:border-violet-800 shadow-lg">
+                            <Wand2 className="size-8 text-violet-600 dark:text-violet-400" />
+                        </div>
                     </div>
-                    <div>
-                        <h3 className="font-semibold text-foreground">No Job Detected</h3>
-                        <p className="text-sm text-muted-foreground px-4">
-                            Navigate to a job posting to unlock AI tools.
+
+                    <div className="space-y-2 max-w-[240px]">
+                        <h3 className="font-bold text-lg text-foreground">
+                            Waiting for Job Post
+                        </h3>
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                            Navigate to a job posting on LinkedIn or Indeed to activate JobSwyft.
                         </p>
                     </div>
-                    <div className="text-xs text-muted-foreground pt-4">
-                        Supported sites: LinkedIn, Indeed, Glassdoor
+
+                    <div className="flex gap-2">
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground bg-muted/50 font-normal">LinkedIn</Badge>
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground bg-muted/50 font-normal">Indeed</Badge>
+                        <Badge variant="outline" className="text-[10px] text-muted-foreground bg-muted/50 font-normal">Glassdoor</Badge>
                     </div>
                 </div>
-                <CreditBalance total={50} used={12} className="mt-auto" />
             </>
         ),
+        // Use args.creditBar if desired or let the component handle default rendering 
+        // But for NoJobDetected (locked), we usually want to show a limited view.
+        // The user request was "No Job detected does not have proper CreditBar".
+        creditBar: {
+            credits: 38,
+            maxCredits: 50,
+            onBuyMore: () => alert("Buy more credits")
+        },
         isLocked: true,
     },
 }
@@ -107,7 +126,8 @@ import { LoggedOutView } from "./logged-out-view"
 
 // Wrapper for interactive state
 const ExtensionSidebarWithState = (args: any) => {
-    const [activeTab, setActiveTab] = React.useState("scan")
+    // Initialize with defaultTab or use "scan" if not provided
+    const [activeTab, setActiveTab] = React.useState(args.activeTab || args.defaultTab || "scan")
     const [studioTab, setStudioTab] = React.useState("match")
 
     const handleDiveDeeper = () => {
@@ -124,7 +144,7 @@ const ExtensionSidebarWithState = (args: any) => {
             {...args}
             activeTab={activeTab}
             onTabChange={setActiveTab}
-            creditBar={{ credits: 38, maxCredits: 50, onBuyMore: () => alert("Buy more credits") }}
+            creditBar={args.creditBar || { credits: 38, maxCredits: 50, onBuyMore: () => alert("Buy more credits") }}
             // Ensure content is passed if not already in args, or override to inject handlers
             contextContent={args.contextContent || (
                 <ResumeCard
@@ -132,16 +152,17 @@ const ExtensionSidebarWithState = (args: any) => {
                     activeResumeId="1"
                     resumeData={MOCK_RESUME_DATA}
                     isCompact={true}
+                    isCollapsible={true}
                 />
             )}
-            scanContent={
+            scanContent={args.scanContent || (
                 <JobCard
                     job={MOCK_JOB}
                     match={MOCK_MATCH}
                     onDiveDeeper={handleDiveDeeper}
                     onCoach={handleCoach}
                 />
-            }
+            )}
             studioContent={
                 <AIStudio
                     isLocked={false}
@@ -156,6 +177,21 @@ const ExtensionSidebarWithState = (args: any) => {
     )
 }
 
+
+export const LowCredits: Story = {
+    decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
+    args: {
+        ...JobDetected.args,
+        creditBar: {
+            credits: 2,
+            maxCredits: 50,
+            onBuyMore: () => alert("Buy more credits")
+        }
+    }
+}
+
+
 export const DiveDeeperDemo: Story = {
     decorators: [CenteredLayout],
     render: (args) => <ExtensionSidebarWithState {...args} />,
@@ -165,6 +201,53 @@ export const DiveDeeperDemo: Story = {
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
         isLocked: false,
+    }
+}
+
+export const LongJobDescription: Story = {
+    decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
+    args: {
+        ...DiveDeeperDemo.args,
+        scanContent: (
+            <JobCard
+                job={{
+                    ...MOCK_JOB,
+                    description: `We are looking for a Senior Product Designer to join our team.
+
+Responsibilities:
+• Lead design projects from concept to launch
+• Collaborate with engineers and product managers
+• Conduct user research and usability testing
+• Create high-fidelity mockups and prototypes
+• Maintain and evolve our design system
+
+Requirements:
+• 5+ years of experience in product design
+• Strong portfolio showcasing your design process
+• Proficiency in Figma and other design tools
+• Excellent communication and collaboration skills
+• Experience with localized products is a plus
+
+About Us:
+Stripe is a technology company that builds economic infrastructure for the internet. Businesses of every size—from new startups to public companies—use our software to accept payments and manage their businesses online.
+
+Benefits:
+• Competitive salary and equity
+• Comprehensive health, dental, and vision insurance
+• 401(k) plan with company match
+• Generous parental leave
+• Flexible vacation policy
+• Wellness program
+• Learning and development stipend
+
+Join us in building the global economic infrastructure for the internet.`
+                }}
+                match={MOCK_MATCH}
+                onDiveDeeper={() => { }}
+                onCoach={() => { }}
+            />
+        )
     }
 }
 
@@ -199,12 +282,85 @@ export const MaxedOutResume: Story = {
                 activeResumeId="1"
                 resumeData={MOCK_MAXED_RESUME_DATA}
                 isCompact={true}
+                isCollapsible={true}
             />
         ),
     },
 }
 
+const MOCK_MAXED_JOB = {
+    ...MOCK_JOB,
+    title: "Global Principal Product Architect - AI & Core Systems",
+    company: "Stripe Global Ventures",
+    location: "SF / Remote / NYC",
+    salary: "$250,000 - $450,000 + Equity",
+    postedAt: "12m ago",
+    description: `Stripe is a technology company that builds economic infrastructure for the internet.
+
+As a Global Principal Product Architect, you will lead the evolution of our most critical economic systems.
+
+### The Role
+You will be responsible for the end-to-end architectural vision of our AI-driven financial services unit. This is a high-impact, high-visibility role reporting directly to the VP of Engineering.
+
+### Responsibilities
+- Define and execute a multi-year technical roadmap for global financial settlement engines.
+- Collaborate with executive leadership to align technical strategy with business objectives.
+- Mentor a global organization of 500+ engineers through architectural reviews and design standards.
+- Drive the adoption of next-generation technologies including distributed ledgers and real-time reconciliation.
+- Lead response strategies for complex, large-scale system incidents.
+- Represent Stripe at international technology summits and standardization bodies.
+
+### Requirements
+- 15+ years of experience in high-scale systems architecture.
+- Proven track record of delivering mission-critical financial systems at global scale.
+- Deep expertise in distributed systems, consistency models, and multi-region failover.
+- Strong background in AI/ML integration within highly regulated environments.
+- Exceptional communication skills with the ability to influence at all levels of the organization.
+- Advanced degree (MS or PhD) in Computer Science or related field.
+
+### Benefits
+- Competitive compensation package including performance bonuses and generous equity.
+- Comprehensive world-class health, dental, and vision benefits for you and your family.
+- Unlimited PTO policy with a mandatory minimum of 3 weeks off.
+- $10,000 annual learning and development stipend.
+- Fully home-office stipend for remote work.
+- Paid parental leave as well as support for adoption and fertility.
+
+Join us in building the economic engine of the internet.`
+}
+
+export const MaxedOutEverything: Story = {
+    decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
+    args: {
+        ...DiveDeeperDemo.args,
+        contextContent: (
+            <ResumeCard
+                resumes={[{ id: "1", fileName: "Executive_Technical_Leader_Long.pdf" }]}
+                activeResumeId="1"
+                resumeData={MOCK_MAXED_RESUME_DATA}
+                isCompact={true}
+                isCollapsible={true}
+                maxHeight="500px"
+            />
+        ),
+        scanContent: (
+            <JobCard
+                job={MOCK_MAXED_JOB}
+                match={{
+                    ...MOCK_MATCH,
+                    score: 98,
+                    summary: "Exceptional candidate with direct experience in Stripe-scale architecture and AI leadership."
+                }}
+                onDiveDeeper={() => { }}
+                onCoach={() => { }}
+            />
+        )
+    }
+}
+
 export const LoggedOut: Story = {
+    // ... existing code ...
     decorators: [CenteredLayout],
     args: {
         className: "border shadow-2xl rounded-xl",

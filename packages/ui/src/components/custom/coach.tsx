@@ -74,8 +74,8 @@ export function Coach({
     }
 
     return (
-        <Card className={cn("flex flex-col h-full border-2 border-orange-200 shadow-sm overflow-hidden dark:border-orange-900 dark:bg-card", className)}>
-            <CardHeader className="border-b px-4 py-3 bg-gradient-to-r from-orange-50/50 to-transparent flex-shrink-0 dark:from-orange-950/30 dark:to-transparent">
+        <Card className={cn("flex flex-col h-full overflow-hidden dark:bg-card p-0 gap-0 shadow-xl", className)}>
+            <CardHeader className="border-b px-4 py-3 bg-orange-50/50 dark:bg-orange-950/20 border-orange-100 dark:border-orange-900 flex-shrink-0">
                 <div className="flex items-center gap-2">
                     <div className="flex items-center justify-center size-8 rounded-full bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400">
                         <Bot className="size-4" />
@@ -118,16 +118,16 @@ export function Coach({
                                 <div
                                     key={msg.id}
                                     className={cn(
-                                        "flex w-fit max-w-[85%] flex-col gap-1 rounded-2xl px-3 py-2 text-sm shadow-sm",
+                                        "flex flex-col max-w-[85%] rounded-2xl px-4 py-2.5 text-sm shadow-sm",
                                         msg.role === "user"
-                                            ? "ml-auto bg-primary text-primary-foreground rounded-br-none"
-                                            : "bg-muted text-foreground rounded-bl-none"
+                                            ? "self-end bg-orange-600 text-white rounded-tr-sm dark:bg-orange-600"
+                                            : "self-start bg-muted text-foreground rounded-tl-sm border border-border"
                                     )}
                                 >
                                     <p className="leading-snug whitespace-pre-wrap break-words">{msg.content}</p>
                                     <span className={cn(
                                         "text-[9px] opacity-70",
-                                        msg.role === "user" ? "text-primary-foreground" : "text-muted-foreground"
+                                        msg.role === "user" ? "text-white" : "text-muted-foreground"
                                     )}>
                                         {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                                     </span>
@@ -151,14 +151,14 @@ export function Coach({
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
                             disabled={isLocked}
-                            className="flex-1 min-h-[40px] border-orange-200 focus-visible:ring-orange-500/20 dark:border-orange-800 dark:focus-visible:ring-orange-600/30"
+                            className="flex-1 min-h-[40px] border-border focus-visible:ring-ring"
                             autoComplete="off"
                         />
                         <Button
                             type="submit"
                             size="icon"
                             disabled={!inputValue.trim() || isLocked}
-                            className="bg-orange-500 hover:bg-orange-600 text-white shadow-sm shrink-0 dark:bg-orange-600 dark:hover:bg-orange-500"
+                            className="bg-gradient-to-br from-orange-600 via-orange-500 to-orange-400 hover:from-orange-700 hover:via-orange-600 hover:to-orange-500 text-white shadow-sm shrink-0 border-t border-white/20 hover:shadow-lg hover:shadow-orange-500/40 transition-all duration-300"
                         >
                             <Send className="size-4" />
                             <span className="sr-only">Send</span>

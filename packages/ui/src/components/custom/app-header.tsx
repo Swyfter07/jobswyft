@@ -3,6 +3,8 @@ import { Briefcase, Sun, Moon, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 
+import logoImg from "@/assets/logo.png"
+
 export interface AppHeaderProps extends React.HTMLAttributes<HTMLElement> {
     appName?: string
     logo?: React.ReactNode
@@ -13,7 +15,7 @@ export interface AppHeaderProps extends React.HTMLAttributes<HTMLElement> {
 
 export function AppHeader({
     appName = "JobSwyft",
-    logo,
+    logo = <img src={logoImg} alt="JobSwyft Logo" className="size-8 object-contain" />,
     onSettingsClick,
     onThemeToggle,
     isDarkMode = false,

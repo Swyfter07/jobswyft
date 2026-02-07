@@ -3,6 +3,7 @@
 import * as React from "react"
 import {
   ChevronDown,
+  ChevronUp,
   Copy,
   Check,
   Upload,
@@ -89,23 +90,23 @@ function getVariantStyles(variant: ResumeCardVariant) {
       }
     case "bold":
       return {
-        headerHover: "text-primary hover:bg-primary/10 dark:hover:bg-primary/20",
-        headerBg: "bg-primary/5 dark:bg-primary/10",
+        headerHover: "text-primary hover:bg-muted/50 dark:hover:bg-muted/30",
+        headerBg: "bg-muted/40 dark:bg-muted/30",
         icon: "text-primary",
-        border: "border-primary/20 dark:border-primary/40",
+        border: "border-border shadow-md",
         badge: "outline" as const,
-        badgeClass: "bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 dark:bg-primary/20 dark:hover:bg-primary/30",
+        badgeClass: "bg-muted text-foreground border-border hover:bg-muted/80",
       }
-    default: // Now "Orange Polish" based on user request
+    default:
       return {
-        headerHover: "hover:bg-slate-50/80 active:bg-slate-100 transition-colors dark:hover:bg-muted/50 dark:active:bg-muted/70",
-        headerBg: "bg-gradient-to-r from-slate-50 to-white dark:from-muted/30 dark:to-card",
-        icon: "text-orange-600 dark:text-orange-400",
-        border: "border-orange-200 shadow-sm transition-all dark:border-orange-900",
+        headerHover: "hover:bg-muted/50 dark:hover:bg-muted/30 transition-colors",
+        headerBg: "bg-muted/30 dark:bg-muted/20",
+        icon: "text-primary",
+        border: "border-border shadow-sm transition-all",
         badge: "secondary" as const,
-        badgeClass: "bg-slate-100 text-slate-700 hover:bg-slate-200 dark:bg-muted dark:text-slate-300 dark:hover:bg-muted/80",
-        containerBg: "bg-gradient-to-br from-slate-50 to-slate-100 dark:from-card dark:to-muted/50",
-        cardShadow: "shadow-lg",
+        badgeClass: "bg-secondary text-secondary-foreground hover:bg-secondary/80",
+        containerBg: "bg-card",
+        cardShadow: "shadow",
       }
   }
 }
@@ -187,6 +188,12 @@ interface ResumeCardProps {
   maxHeight?: string
   /** Compact mode - collapses sections when job is detected */
   isCompact?: boolean
+  /** Whether the entire card can be collapsed */
+  isCollapsible?: boolean
+  /** Controlled open state (requires onOpenChange) */
+  isOpen?: boolean
+  /** Callback for when open state changes (manual or controlled) */
+  onOpenChange?: (open: boolean) => void
   className?: string
 }
 
@@ -323,7 +330,7 @@ function ResumeSection({
         <button
           type="button"
           className={cn(
-            "flex w-full items-center gap-2 rounded-md px-2 py-1",
+            "flex w-full items-center gap-2 rounded-md px-2 py-0.5",
             "text-sm font-medium text-foreground",
             "transition-colors cursor-pointer select-none",
             title === "Resume Blocks"
@@ -337,7 +344,7 @@ function ResumeSection({
           <span className="flex-1 text-left font-semibold">{title}</span> {/* font-medium -> font-semibold */}
           {count !== undefined && (
             title === "Resume Blocks" ? (
-              <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-200 dark:bg-orange-950 dark:text-orange-300 dark:hover:bg-orange-900 dark:border-orange-800">
+              <Badge variant="secondary" className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
                 {count}
               </Badge>
             ) : (
@@ -837,9 +844,23 @@ function ResumeCard({
   onDelete,
   maxHeight = "600px",
   isCompact = false,
+  isCollapsible = false,
+  isOpen: controlledIsOpen,
+  onOpenChange,
   className,
 }: ResumeCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
+  const [internalIsOpen, setInternalIsOpen] = React.useState(true)
+
+  const isControlled = controlledIsOpen !== undefined
+  const isOpen = isControlled ? controlledIsOpen : internalIsOpen
+
+  const setIsOpen = (open: boolean) => {
+    if (!isControlled) {
+      setInternalIsOpen(open)
+    }
+    onOpenChange?.(open)
+  }
   // In compact mode, collapse all sections by default; otherwise expand personal-info
   const [expandedSection, setExpandedSection] = React.useState<string | null>(isCompact ? null : "personal-info")
   const styles = getVariantStyles(variant)
@@ -879,190 +900,198 @@ function ResumeCard({
     ].filter(Boolean).length
     : 0
 
-  return (
-    <ResumeCardContext.Provider value={{ variant }}>
-      <Card className={cn(
-        "w-full transition-all duration-300 border-2 border-orange-200 dark:border-orange-800 py-0",
-        styles.cardShadow || "shadow-sm",
-        styles.containerBg || "bg-card", // Apply gradient here
-        className
-      )}>
-        {/* Header: Resume selector + actions */}
-        <CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b px-2 py-1">
-          <Select
-            value={activeResumeId}
-            onValueChange={(val) => onResumeSelect?.(val)}
-          >
-            <SelectTrigger className="flex-1 min-w-0 h-8" size="sm">
-              <SelectValue placeholder="Select a resume" />
-            </SelectTrigger>
-            <SelectContent>
-              {resumes.map((r) => (
-                <SelectItem key={r.id} value={r.id}>
-                  <div className="flex items-center gap-2">
-                    <FileText className="size-3.5" />
-                    <span className="truncate">{r.fileName}</span>
-                  </div>
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+  const content = (
+    <>
+      <CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b px-2 py-1">
+        <Select
+          value={activeResumeId}
+          onValueChange={(val) => onResumeSelect?.(val)}
+        >
+          <SelectTrigger className="flex-1 min-w-0 h-8" size="sm">
+            <SelectValue placeholder="Select a resume" />
+          </SelectTrigger>
+          <SelectContent>
+            {resumes.map((r) => (
+              <SelectItem key={r.id} value={r.id}>
+                <div className="flex items-center gap-2">
+                  <FileText className="size-3.5" />
+                  <span className="truncate">{r.fileName}</span>
+                </div>
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-xs text-muted-foreground tabular-nums px-1.5 min-w-[32px] text-center">
-              {activeResumeId
-                ? `${resumes.findIndex((r) => r.id === activeResumeId) + 1}/${resumes.length}`
-                : `${resumes.length} ${resumes.length === 1 ? "resume" : "resumes"}`}
-            </span>
+        <div className="flex items-center gap-1 shrink-0">
+          <span className="text-xs text-muted-foreground tabular-nums px-1.5 min-w-[32px] text-center">
+            {activeResumeId
+              ? `${resumes.findIndex((r) => r.id === activeResumeId) + 1}/${resumes.length}`
+              : `${resumes.length} ${resumes.length === 1 ? "resume" : "resumes"}`}
+          </span>
 
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-8 w-8 text-muted-foreground"
+                onClick={onUpload}
+              >
+                <Upload className="size-4" />
+                <span className="sr-only">Upload</span>
+              </Button>
+            </TooltipTrigger>
+            <TooltipContent>Upload Resume</TooltipContent>
+          </Tooltip>
+
+          {activeResumeId && (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
                   variant="ghost"
                   size="icon"
-                  className="h-8 w-8 text-muted-foreground"
-                  onClick={onUpload}
+                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  onClick={() => setDeleteDialogOpen(true)}
                 >
-                  <Upload className="size-4" />
-                  <span className="sr-only">Upload</span>
+                  <Trash2 className="size-4" />
+                  <span className="sr-only">Delete</span>
                 </Button>
               </TooltipTrigger>
-              <TooltipContent>Upload Resume</TooltipContent>
+              <TooltipContent>Delete Resume</TooltipContent>
             </Tooltip>
-
-            {activeResumeId && (
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                    onClick={() => setDeleteDialogOpen(true)}
-                  >
-                    <Trash2 className="size-4" />
-                    <span className="sr-only">Delete</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent>Delete Resume</TooltipContent>
-              </Tooltip>
-            )}
-          </div>
-        </CardHeader>
-
-        {/* Content: Resume data sections */}
-        <CardContent className="p-0">
-          {!resumeData ? (
-            <ResumeEmptyState onUpload={onUpload} />
-          ) : (
-            <ScrollArea style={{ maxHeight }}>
-              <div className="px-2 pb-2"> {/* Removed top padding */}
-                {/* Resume Blocks - Parent expandable section */}
-                <ResumeSection
-                  icon={<Layers />}
-                  title="Resume Blocks"
-                  count={totalSections}
-                  defaultOpen={!isCompact}
-                >
-                  <div className="space-y-1"> {/* Slightly increased spacing */}
-                    {/* Personal Info */}
-                    <ResumeSection
-                      icon={<User />}
-                      title="Personal Info"
-                      count={
-                        Object.values(resumeData.personalInfo).filter(Boolean)
-                          .length
-                      }
-                      copyAllValue={personalInfoCopyAll}
-                      open={expandedSection === "personal-info"}
-                      onOpenChange={handleAccordionChange("personal-info")}
-                    >
-                      <PersonalInfoContent data={resumeData.personalInfo} />
-                    </ResumeSection>
-
-                    <Separator className="my-0.5" /> {/* Reduced margin my-1 -> my-0.5 */}
-
-                    {/* Skills */}
-                    <ResumeSection
-                      icon={<Wrench />}
-                      title="Skills"
-                      count={resumeData.skills.length}
-                      copyAllValue={skillsCopyAll}
-                      open={expandedSection === "skills"}
-                      onOpenChange={handleAccordionChange("skills")}
-                    >
-                      <SkillsContent skills={resumeData.skills} />
-                    </ResumeSection>
-
-                    {resumeData.experience.length > 0 && (
-                      <>
-                        <Separator className="my-0.5" />
-                        <ResumeSection
-                          icon={<Briefcase />}
-                          title="Experience"
-                          count={resumeData.experience.length}
-                          open={expandedSection === "experience"}
-                          onOpenChange={handleAccordionChange("experience")}
-                        >
-                          <ExperienceContent entries={resumeData.experience} />
-                        </ResumeSection>
-                      </>
-                    )}
-
-                    {resumeData.education.length > 0 && (
-                      <>
-                        <Separator className="my-0.5" />
-                        <ResumeSection
-                          icon={<GraduationCap />}
-                          title="Education"
-                          count={resumeData.education.length}
-                          open={expandedSection === "education"}
-                          onOpenChange={handleAccordionChange("education")}
-                        >
-                          <EducationContent entries={resumeData.education} />
-                        </ResumeSection>
-                      </>
-                    )}
-
-                    {resumeData.certifications &&
-                      resumeData.certifications.length > 0 && (
-                        <>
-                          <Separator className="my-0.5" />
-                          <ResumeSection
-                            icon={<Award />}
-                            title="Certifications"
-                            count={resumeData.certifications.length}
-                            open={expandedSection === "certifications"}
-                            onOpenChange={handleAccordionChange("certifications")}
-                          >
-                            <CertificationsContent
-                              entries={resumeData.certifications}
-                            />
-                          </ResumeSection>
-                        </>
-                      )}
-
-                    {resumeData.projects && resumeData.projects.length > 0 && (
-                      <>
-                        <Separator className="my-0.5" />
-                        <ResumeSection
-                          icon={<FolderOpen />}
-                          title="Projects"
-                          count={resumeData.projects.length}
-                          open={expandedSection === "projects"}
-                          onOpenChange={handleAccordionChange("projects")}
-                        >
-                          <ProjectsContent entries={resumeData.projects} />
-                        </ResumeSection>
-                      </>
-                    )}
-                  </div>
-                </ResumeSection>
-              </div>
-            </ScrollArea>
           )}
-        </CardContent>
+        </div>
+      </CardHeader>
 
-        {/* Delete Confirmation Dialog */}
+      <CardContent className="p-0">
+        {!resumeData ? (
+          <ResumeEmptyState onUpload={onUpload} />
+        ) : (
+          <ScrollArea style={{ maxHeight }}>
+            <div className="px-2 pb-2">
+              <ResumeSection
+                icon={<Layers />}
+                title="Resume Blocks"
+                count={totalSections}
+                defaultOpen={!isCompact}
+              >
+                <div className="space-y-1">
+                  <ResumeSection
+                    icon={<User />}
+                    title="Personal Info"
+                    count={
+                      Object.values(resumeData.personalInfo).filter(Boolean)
+                        .length
+                    }
+                    copyAllValue={personalInfoCopyAll}
+                    open={expandedSection === "personal-info"}
+                    onOpenChange={handleAccordionChange("personal-info")}
+                  >
+                    <PersonalInfoContent data={resumeData.personalInfo} />
+                  </ResumeSection>
+
+                  <Separator className="my-0.5" />
+
+                  <ResumeSection
+                    icon={<Wrench />}
+                    title="Skills"
+                    count={resumeData.skills.length}
+                    copyAllValue={skillsCopyAll}
+                    open={expandedSection === "skills"}
+                    onOpenChange={handleAccordionChange("skills")}
+                  >
+                    <SkillsContent skills={resumeData.skills} />
+                  </ResumeSection>
+
+                  {resumeData.experience.length > 0 && (
+                    <>
+                      <Separator className="my-0.5 opacity-50" />
+                      <ResumeSection
+                        icon={<Briefcase />}
+                        title="Experience"
+                        count={resumeData.experience.length}
+                        open={expandedSection === "experience"}
+                        onOpenChange={handleAccordionChange("experience")}
+                      >
+                        <ExperienceContent entries={resumeData.experience} />
+                      </ResumeSection>
+                    </>
+                  )}
+
+                  {resumeData.education.length > 0 && (
+                    <>
+                      <Separator className="my-0.5" />
+                      <ResumeSection
+                        icon={<GraduationCap />}
+                        title="Education"
+                        count={resumeData.education.length}
+                        open={expandedSection === "education"}
+                        onOpenChange={handleAccordionChange("education")}
+                      >
+                        <EducationContent entries={resumeData.education} />
+                      </ResumeSection>
+                    </>
+                  )}
+
+                  {resumeData.certifications &&
+                    resumeData.certifications.length > 0 && (
+                      <>
+                        <Separator className="my-0.5" />
+                        <ResumeSection
+                          icon={<Award />}
+                          title="Certifications"
+                          count={resumeData.certifications.length}
+                          open={expandedSection === "certifications"}
+                          onOpenChange={handleAccordionChange("certifications")}
+                        >
+                          <CertificationsContent
+                            entries={resumeData.certifications}
+                          />
+                        </ResumeSection>
+                      </>
+                    )}
+
+                  {resumeData.projects && resumeData.projects.length > 0 && (
+                    <>
+                      <Separator className="my-0.5" />
+                      <ResumeSection
+                        icon={<FolderOpen />}
+                        title="Projects"
+                        count={resumeData.projects.length}
+                        open={expandedSection === "projects"}
+                        onOpenChange={handleAccordionChange("projects")}
+                      >
+                        <ProjectsContent entries={resumeData.projects} />
+                      </ResumeSection>
+                    </>
+                  )}
+                </div>
+              </ResumeSection>
+            </div>
+          </ScrollArea>
+        )}
+      </CardContent>
+    </>
+  )
+
+  return (
+    <ResumeCardContext.Provider value={{ variant }}>
+      <Card
+        className={cn(
+          "w-full transition-all duration-300 py-0",
+          styles.cardShadow || "shadow-sm",
+          styles.containerBg || "bg-card",
+          className
+        )}
+      >
+        <ResumeCardCollapsibleWrapper
+          isCollapsible={isCollapsible}
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+        >
+          {content}
+        </ResumeCardCollapsibleWrapper>
+
         <Dialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
           <DialogContent>
             <DialogHeader>
@@ -1095,7 +1124,7 @@ function ResumeCard({
           </DialogContent>
         </Dialog>
       </Card>
-    </ResumeCardContext.Provider >
+    </ResumeCardContext.Provider>
   )
 }
 
@@ -1116,4 +1145,54 @@ export type {
   ResumeData,
   ResumeSummary,
   ResumeCardProps,
+}
+
+// ─── Collapsible Wrapper Helper ────────────────────────────────────
+
+function ResumeCardCollapsibleWrapper({
+  isCollapsible,
+  isOpen,
+  onOpenChange,
+  children,
+}: {
+  isCollapsible: boolean
+  isOpen: boolean
+  onOpenChange: (open: boolean) => void
+  children: React.ReactNode
+}) {
+  if (!isCollapsible) return <>{children}</>
+
+  return (
+    <Collapsible
+      open={isOpen}
+      onOpenChange={onOpenChange}
+      className="flex flex-col group/collapsible"
+    >
+      <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down">
+        {children}
+      </CollapsibleContent>
+
+      <CollapsibleTrigger asChild>
+        <div
+          className={cn(
+            "flex justify-center items-center py-1.5 cursor-pointer transition-all group/toggle border-t border-border/50",
+            "hover:bg-primary/5 hover:text-primary active:bg-primary/10",
+            "bg-muted/30 dark:bg-muted/50",
+            // Unexpanded state overrides
+            "group-data-[state=closed]/collapsible:bg-secondary/40",
+            "group-data-[state=closed]/collapsible:hover:bg-secondary/60",
+            "group-data-[state=closed]/collapsible:text-secondary-foreground"
+          )}
+        >
+          <div className="flex items-center gap-1.5 text-muted-foreground/70 group-hover/toggle:text-primary transition-colors">
+            <span className="text-[10px] font-medium uppercase tracking-wider opacity-0 group-data-[state=closed]/collapsible:opacity-100 transition-opacity duration-300 w-0 group-data-[state=closed]/collapsible:w-auto overflow-hidden text-nowrap">
+              Resume Context
+            </span>
+            <ChevronUp className="size-4 transition-transform duration-300 group-data-[state=closed]/collapsible:rotate-180" />
+          </div>
+          <span className="sr-only">Toggle Resume</span>
+        </div>
+      </CollapsibleTrigger>
+    </Collapsible>
+  )
 }

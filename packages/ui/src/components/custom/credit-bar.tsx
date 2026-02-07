@@ -35,12 +35,10 @@ export function CreditBar({
         >
             <div className="flex items-center gap-2">
                 <div className={cn(
-                    "flex items-center justify-center size-6 rounded-full",
-                    isLow
-                        ? "bg-red-100 text-red-600 dark:bg-red-950 dark:text-red-400"
-                        : "bg-orange-100 text-orange-600 dark:bg-orange-950 dark:text-orange-400"
+                    "flex items-center justify-center size-7 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 shadow-md",
+                    isLow && "from-red-400 to-red-600"
                 )}>
-                    <Zap className="size-3.5" />
+                    <Zap className="size-4 text-white fill-white/20" />
                 </div>
                 <div className="flex items-baseline gap-1">
                     <span className={cn(

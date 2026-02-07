@@ -137,6 +137,94 @@ const fullResumeData: ResumeData = {
   ],
 }
 
+const maxedResumeData: ResumeData = {
+  ...fullResumeData,
+  id: "resume-maxed",
+  fileName: "Executive_Technical_Leader_2026.pdf",
+  personalInfo: {
+    ...fullResumeData.personalInfo,
+    fullName: "Marcus Aurelius Chen",
+    phone: "+1 (415) 555-0192 ext. 4452",
+    location: "San Francisco - New York - London (Global Citizen)",
+    linkedin: "linkedin.com/in/marcus-aurelius-chen-executive-leader",
+    website: "executive-leader.marcus-aurelius.dev",
+  },
+  skills: [
+    ...fullResumeData.skills,
+    "Strategic Planning",
+    "P&L Management",
+    "Cross-functional Leadership",
+    "Digital Transformation",
+    "Quantum Computing",
+    "Machine Learning",
+    "Generative AI",
+    "Cloud Native Architecture",
+    "Blockchain",
+    "Smart Contracts",
+    "Cybersecurity Strategy",
+    "Ethical Hacking",
+    "DevSecOps",
+    "Site Reliability Engineering",
+  ],
+  experience: [
+    {
+      ...fullResumeData.experience[0],
+      highlights: [
+        ...fullResumeData.experience[0].highlights,
+        "Architected a global multi-region failover strategy with 99.999% uptime",
+        "Streamlined operational costs by $15M/year through intelligent automation",
+        "Spearheaded the company-wide adoption of AI-assisted development tools",
+      ],
+    },
+    ...fullResumeData.experience.slice(1),
+    {
+      title: "Founding Engineer",
+      company: "FirstLight SaaS",
+      startDate: "Jan 2016",
+      endDate: "Jul 2018",
+      description: "Third employee at a rapidly scaling SaaS venture. Built the first MVP and scaled to series B.",
+      highlights: [
+        "Wrote 80% of the initial codebase across frontend, backend, and infrastructure",
+        "Scale user base from 0 to 50,000 paid subscribers",
+      ],
+    },
+    {
+      title: "Senior Consultant",
+      company: "Global Systems Integrator",
+      startDate: "Jun 2014",
+      endDate: "Dec 2015",
+      description: "Technical lead for digital transformation projects for Fortune 500 clients.",
+      highlights: [
+        "Led 3 major digital overhauls for retail giants",
+        "Published internal whitepaper on microservices patterns",
+      ],
+    },
+  ],
+  education: [
+    ...fullResumeData.education,
+    {
+      degree: "Executive MBA",
+      school: "Stanford Graduate School of Business",
+      startDate: "2020",
+      endDate: "2022",
+    }
+  ],
+  projects: [
+    ...fullResumeData.projects || [],
+    {
+      name: "QuantLab",
+      description: "Experimental framework for simulating quantum algorithms on classical hardware. Utilized by research students at 3 major universities.",
+      techStack: ["Python", "NumPy", "C++", "Qiskit"],
+      url: "github.com/marcuschen/quantlab",
+    },
+    {
+      name: "EcoScale",
+      description: "Platform for auditing and reducing carbon footprints of large-scale cloud deployments. Awarded Top Innovation at GreenTech 2024.",
+      techStack: ["React", "GraphQL", "Go", "Terraform", "Prometheus"],
+    },
+  ],
+}
+
 const minimalResumeData: ResumeData = {
   id: "resume-3",
   fileName: "Jenna_Morales_Resume.pdf",
@@ -396,6 +484,20 @@ export const EmptyStateDemo: Story = {
   render: () => (
     <div className="w-[380px] border border-border rounded-xl p-4">
       <ResumeEmptyState onUpload={() => console.log("Upload")} />
+    </div>
+  ),
+}
+
+/** Maxed out resume — extreme case with many skills, jobs, highlights, projects, and education. */
+export const MaxedOut: Story = {
+  render: () => (
+    <div className="w-[400px]">
+      <ResumeCard
+        resumes={mockResumes}
+        activeResumeId="resume-maxed"
+        resumeData={maxedResumeData}
+        maxHeight="700px"
+      />
     </div>
   ),
 }

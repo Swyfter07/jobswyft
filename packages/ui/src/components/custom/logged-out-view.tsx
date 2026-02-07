@@ -1,5 +1,6 @@
 import React from "react"
 import { Sparkles, Zap, Shield } from "lucide-react"
+import logo from "@/assets/logo.png"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
@@ -12,7 +13,7 @@ export interface LoggedOutViewProps {
 function FeatureItem({ icon: Icon, title, description }: { icon: any, title: string, description: string }) {
     return (
         <div className="flex gap-3 items-start">
-            <div className="flex-shrink-0 size-8 rounded-lg bg-orange-100 flex items-center justify-center text-orange-500 dark:bg-orange-950 dark:text-orange-400">
+            <div className="flex-shrink-0 size-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                 <Icon className="size-4" />
             </div>
             <div className="space-y-0.5">
@@ -28,8 +29,8 @@ export function LoggedOutView({ onSignIn, className }: LoggedOutViewProps) {
         <div className={cn("flex flex-col h-full bg-background p-6 space-y-8", className)}>
             {/* Header */}
             <div className="flex flex-col items-center text-center space-y-4 pt-4">
-                <div className="size-16 rounded-2xl bg-orange-50 flex items-center justify-center shadow-sm dark:bg-orange-950">
-                    <Sparkles className="size-8 text-orange-500 fill-orange-500/20 dark:text-orange-400 dark:fill-orange-400/20" />
+                <div className="size-16 rounded-2xl bg-white flex items-center justify-center shadow-sm overflow-hidden p-3">
+                    <img src={logo} alt="Jobswyft Logo" className="w-full h-full object-contain" />
                 </div>
                 <div className="space-y-1">
                     <h1 className="text-xl font-bold tracking-tight text-foreground">Welcome to Jobswyft</h1>
@@ -60,7 +61,7 @@ export function LoggedOutView({ onSignIn, className }: LoggedOutViewProps) {
 
             {/* CTA Card */}
             <div className="mt-auto pt-4">
-                <Card className="bg-orange-50/50 border-orange-100 p-5 space-y-4 shadow-sm dark:bg-orange-950/30 dark:border-orange-900">
+                <Card className="bg-muted/30 border-border p-5 space-y-4 shadow-sm">
                     <div className="space-y-1">
                         <h3 className="font-semibold text-foreground">Get Started Free</h3>
                         <p className="text-xs text-muted-foreground">
@@ -70,7 +71,7 @@ export function LoggedOutView({ onSignIn, className }: LoggedOutViewProps) {
 
                     <Button
                         onClick={onSignIn}
-                        className="w-full bg-orange-600 hover:bg-orange-700 text-white font-medium shadow-sm dark:bg-orange-600 dark:hover:bg-orange-500"
+                        className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-medium shadow-sm"
                     >
                         <svg className="mr-2 size-4" viewBox="0 0 24 24">
                             <path

@@ -10,6 +10,7 @@ const meta = {
     tags: ["autodocs"],
     argTypes: {
         onCoach: { action: "coach" },
+        onSave: { action: "save" },
     },
 } satisfies Meta<typeof JobCard>
 
@@ -81,5 +82,53 @@ export const ManualEntry: Story = {
         match: undefined,
         className: "w-[400px]",
         isEditing: true,
+    },
+}
+
+export const LongDescription: Story = {
+    args: {
+        job: {
+            ...sampleJob,
+            description: `We are looking for a Senior Product Designer to join our team.
+
+Responsibilities:
+• Lead design projects from concept to launch
+• Collaborate with engineers and product managers
+• Conduct user research and usability testing
+• Create high-fidelity mockups and prototypes
+• Maintain and evolve our design system
+
+Requirements:
+• 5+ years of experience in product design
+• Strong portfolio showcasing your design process
+• Proficiency in Figma and other design tools
+• Excellent communication and collaboration skills
+• Experience with localized products is a plus
+
+About Us:
+Stripe is a technology company that builds economic infrastructure for the internet. Businesses of every size—from new startups to public companies—use our software to accept payments and manage their businesses online.
+
+Benefits:
+• Competitive salary and equity
+• Comprehensive health, dental, and vision insurance
+• 401(k) plan with company match
+• Generous parental leave
+• Flexible vacation policy
+• Wellness program
+• Learning and development stipend
+
+Join us in building the global economic infrastructure for the internet.`
+        },
+        match: sampleMatch,
+        className: "w-[400px]",
+    },
+}
+
+export const SavedJob: Story = {
+    args: {
+        job: sampleJob,
+        match: sampleMatch,
+        className: "w-[400px]",
+        isSaved: true,
     },
 }
