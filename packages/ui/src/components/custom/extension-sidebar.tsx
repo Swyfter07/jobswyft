@@ -87,7 +87,7 @@ export function ExtensionSidebar({
 
             {/* Context Section (e.g. Resume) - Independent Scroll Area (Option 1) */}
             {!props.children && contextContent && (
-                <div className="relative z-20 bg-muted/30 dark:bg-muted/50 border-b border-border/50">
+                <div className="relative z-20 bg-background">
                     <div className="max-h-[40vh] overflow-y-auto overflow-x-hidden p-3 transition-all duration-300">
                         {enhancedContext}
                     </div>

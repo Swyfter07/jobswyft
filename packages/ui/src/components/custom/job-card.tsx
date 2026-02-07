@@ -173,22 +173,7 @@ export function JobCard({
                     </div>
                 </div>
 
-                {/* Metadata Badges */}
-                <div className="flex flex-wrap gap-2 pt-2">
-                    <Badge variant="outline" className="gap-1 font-normal text-xs px-2 py-0.5 h-6">
-                        <MapPin className="size-3" /> {job.location}
-                    </Badge>
-                    {job.salary && (
-                        <Badge variant="outline" className="gap-1 font-normal text-xs px-2 py-0.5 h-6">
-                            <span className="font-semibold text-blue-600 dark:text-blue-400">$</span> {job.salary}
-                        </Badge>
-                    )}
-                    {job.postedAt && (
-                        <Badge variant="secondary" className="gap-1 font-normal text-muted-foreground text-xs px-2 py-0.5 h-6">
-                            <Clock className="size-3" /> {job.postedAt}
-                        </Badge>
-                    )}
-                </div>
+                {/* Metadata Badges Removed */}
 
                 {/* Description Toggle */}
                 {!isEditing && job.description && (
