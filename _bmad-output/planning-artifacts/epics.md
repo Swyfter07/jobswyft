@@ -5,11 +5,22 @@ stepsCompleted:
   - step-03-create-stories
   - step-04-final-validation
 workflowStatus: complete
-completedAt: '2026-02-05'
-storyApproach: iterative
+completedAt: '2026-02-06'
+previousRun:
+  completedAt: '2026-02-05'
+  storyApproach: iterative
+  note: 'Re-running workflow to create full story breakdown for Epic EXT'
 inputDocuments:
   - _bmad-output/planning-artifacts/prd.md
   - _bmad-output/planning-artifacts/architecture.md
+  - _bmad-output/planning-artifacts/epics.md (existing epic/story structure)
+  - _bmad-output/implementation-artifacts/EXT-1-wxt-extension-setup-ui-integration-login.md (EXT-1 learnings)
+userPreferences:
+  storyOrder: 'Navigation → Resume → Job Scan → AI Studio → Autofill → Job Tracking → Usage/Credits → Feedback → Settings'
+  storyStructure: 'Identify existing components → Identify new components → Apply design language → Verify with user (Storybook) → Implement in extension → Backend integration → End-to-end wiring'
+  approach: 'Create all stories in one go, iteratively refine together'
+  componentFirst: true
+  startWithExistingDesigns: true
 ---
 
 # Jobswyft - Epic Breakdown
@@ -299,216 +310,1054 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 
 ### FR Coverage Map
 
-| FR | Epic | Description |
-|----|------|-------------|
-| FR1-FR4 | EXT | Auth: sign in/out, session persistence |
-| FR5 | Future | View account profile (Dashboard) |
-| FR6 | Future | Account deletion (Dashboard + API) |
-| FR7-FR13c | EXT | Resume upload, parse, view, select, blocks, copy |
-| FR14-FR22 | EXT | Auto-scan, extraction, manual correction, missing fields |
-| FR23-FR25 | EXT | Auto match, detailed match analysis |
-| FR26-FR30 | EXT | Cover letter generation, tone, length, regenerate, PDF |
-| FR31-FR35 | EXT | Chat interface, suggestions, session |
-| FR36-FR37, FR36a-c | EXT | Outreach generation, tone, length, instructions |
-| FR38-FR41 | EXT | Edit output, ephemeral, copy, visual feedback |
-| FR42-FR47 | EXT | Autofill preview, execution, undo, resume/cover letter |
-| FR48-FR49 | EXT | Save job from extension, auto-set "Applied" status |
-| FR50-FR56 | Future | Job tracking dashboard (Dashboard) |
-| FR57-FR60 | EXT | Balance view, tier status, initial credits |
-| FR60a-b, FR66 | EXT | Daily auto match limits |
-| FR61-FR62 | Post-MVP | Subscription management |
-| FR63 | Future | Referral credits |
-| FR64-FR65 | EXT | Credit blocking, upgrade message |
-| FR67-FR72 | EXT | Sidebar open/close, 4-state model, resume tray, dashboard link |
-| FR73-FR77 | Future | Dashboard pages |
-| FR78-FR82 | Future | Privacy, data controls |
-| FR83-FR84a | EXT | Feedback form in sidebar |
-| FR85 | Future | Backend feedback storage |
+| FR | Story | Description |
+|----|-------|-------------|
+| FR1 | EXT.1 (DONE) | Google OAuth sign-in |
+| FR2 | EXT.3 | Sign out from extension |
+| FR4 | EXT.3 | Session persistence across browser sessions |
+| FR5 | WEB | View account profile (Dashboard) |
+| FR6 | WEB | Account deletion (Dashboard + API) |
+| FR7-FR13c | EXT.4 | Resume upload, parse, view, select, blocks, copy |
+| FR14-FR22 | EXT.5 | Auto-scan, extraction, manual correction, missing fields |
+| FR23-FR25 | EXT.6 | Auto match, detailed match analysis |
+| FR26-FR30 | EXT.7 | Cover letter: generate, tone, length, instructions, regenerate, PDF |
+| FR31-FR35 | EXT.8 | Chat: open, suggestions, ask, history, new session |
+| FR36-FR37, FR36a-c | EXT.7 | Outreach: generate, tone, length, instructions, regenerate |
+| FR38-FR41 | EXT.7 | Common AI: edit output, ephemeral, copy, visual feedback |
+| FR42-FR47 | EXT.9 | Autofill: preview, fill, undo, resume upload, cover letter |
+| FR48-FR49 | EXT.5 | Save job from extension, auto "Applied" status |
+| FR50-FR56 | WEB | Job tracking dashboard (Dashboard) |
+| FR57-FR60 | EXT.10 | Balance view, tier status, initial credits |
+| FR60a-b, FR66 | EXT.10 | Daily auto match limits |
+| FR61-FR62 | POST-MVP | Subscription management |
+| FR63 | POST-MVP | Referral credits |
+| FR64-FR65 | EXT.10 | Credit blocking, upgrade message |
+| FR67-FR72 | EXT.3 | Sidebar states, tabs, resume tray slot, dashboard link |
+| FR73-FR77 | WEB | Dashboard pages |
+| FR78-FR82 | WEB | Privacy, data controls |
+| FR83-FR84a | EXT.11 | Feedback form in sidebar |
+| FR85 | WEB | Backend feedback storage (API exists) |
 
-**EXT = Extension Build Epic (current focus)**
-**Future = Deferred to future epics (Dashboard, Privacy, etc.)**
-
-## Epic List
-
-### Epic 8: Deployment & Infrastructure
-
-Deploy all Jobswyft surfaces to their production hosting platforms. Each story covers one deployment target with full configuration, environment setup, and production verification.
-
-**Epic Goal:** All Jobswyft services are deployed and accessible on production URLs — API on Railway, Dashboard on Vercel, Extension unpacked locally for MVP.
-
-**Stories:**
-- Story 8.1: Railway API Deployment — Deploy FastAPI backend to Railway with env vars, health check, and production logging
-- _(subsequent stories: Vercel Dashboard deploy, Extension packaging — defined iteratively)_
+**100% FR coverage. Zero gaps.**
 
 ---
 
-### Epic EXT: Extension UI Build (End-to-End)
+## Component Development Methodology
 
-Build the Chrome Extension surface end-to-end, one page/component at a time. Each story follows the **Storybook → Extension → Backend Tech Debt** workflow cycle.
+> **PERSISTENT GUIDANCE — applies to ALL stories in Epic EXT.**
+> Every story writer and dev agent MUST follow these rules. Do not deviate without user approval.
 
-**Epic Goal:** Users can install and use the Jobswyft Chrome Extension with full UI/UX across all 4 sidebar states, powered by @jobswyft/ui components, supporting dark/light theme, with backend tech debt documented for API integration.
+### Build Order: Atomic → Composite → Feature
 
-**Workflow per Story:**
-1. **Storybook** — Build/refine component in Storybook (complex components broken down first)
-2. **Extension** — Integrate component into WXT extension with real state management
-3. **Tech Debt** — Document backend API requirements/gaps discovered during UI build
+Every story follows this iterative build sequence. Start with the smallest pieces and compose upward:
 
-**Cross-Cutting Rules (ALL Stories):**
-- All components use `globals.css` design tokens (zero hardcoded colors)
-- Dark + Light theme support mandatory
-- Application states (loading, error, empty, offline) where required
-- Find opportunities to extract common patterns into `globals.css`
-- Override design tokens only when user explicitly requests
-- Complex components broken down in Storybook first, then integrated
+1. **Audit** — Check `_reference/` for original demos and current `@jobswyft/ui` components
+2. **Primitives First** — Ensure shadcn primitives have the right variants (Button sizes, Badge colors, Input states)
+3. **Building Blocks** — Build small reusable compositions from primitives (e.g., CreditBar = Progress + Badge + Button)
+4. **Feature Components** — Assemble feature-level components from primitives + blocks (e.g., JobCard = Card + Badge + SkillPill + MatchIndicator)
+5. **Storybook Verify** — Every component gets stories, tested in dark + light at 400×600
+6. **User Verify** — Present to user before proceeding to extension integration
+7. **Extension Integrate** — Wire into WXT side panel with Zustand state management
+8. **Backend Wire** — Connect to existing API endpoints (build new ones if gaps found)
+9. **E2E Verify** — Complete flow works: UI → Extension → API → Database → UI update
 
-**FRs covered:** FR1-FR4, FR7-FR49, FR57-FR60, FR60a-b, FR64-FR72, FR83-FR84a
+### Component Directory Structure
 
-**Surfaces:** Extension (primary), packages/ui (Storybook), Backend tech debt docs
-
-**Story Approach:** Iterative — stories created one at a time, learning from each cycle.
-
-**Stories:**
-- Story EXT.1: WXT Extension Setup, @jobswyft/ui Integration & Login Screen
-- _(subsequent stories defined iteratively after learnings from each cycle)_
-
----
-
-## Epic EXT: Extension UI Build (End-to-End)
-
-### Story EXT.1: WXT Extension Setup, @jobswyft/ui Integration & Login Screen
-
-**As a** job seeker installing the Jobswyft extension,
-**I want** to see a polished login screen when I click the extension icon,
-**So that** I can sign in with Google and start using Jobswyft.
-
-**FRs addressed:** FR1 (Google OAuth sign-in), FR67 (open sidebar), FR68 (close sidebar), FR69 (Logged Out state)
-
----
-
-#### Storybook Phase
-
-**Given** `LoggedOutView` already exists in `packages/ui/src/components/custom/logged-out-view.tsx`
-**When** the developer reviews the component in Storybook
-**Then** it renders correctly at 400x600 (Extension Popup viewport) in both dark and light themes
-**And** the `onSignIn` callback fires when the Google sign-in button is clicked
-**And** no hardcoded colors are used (all semantic tokens from `globals.css`)
-
-**Given** the developer identifies any gaps during extension integration
-**When** component adjustments are needed (e.g. loading state for OAuth flow, error state for auth failure)
-**Then** the component is updated in Storybook first, verified in both themes, then integrated into the extension
-
----
-
-#### Extension Phase
-
-**Given** `apps/extension/` contains only a README.md
-**When** the developer initializes WXT with `pnpm dlx wxt@latest init apps/extension --template react`
-**Then** a working WXT React project exists in `apps/extension/`
-**And** `wxt.config.ts` is configured with the project name "Jobswyft"
-**And** the project builds without errors via `pnpm build`
-
-**Given** the WXT project is initialized
-**When** the developer adds `@jobswyft/ui` as a workspace dependency
-**Then** `package.json` includes `"@jobswyft/ui": "workspace:*"`
-**And** `@jobswyft/ui/styles` (globals.css) is importable
-**And** all exported components from `@jobswyft/ui` are importable
-
-**Given** the extension uses content scripts for sidebar injection
-**When** the developer configures the content script entrypoint
-**Then** the sidebar is rendered inside a **Shadow DOM** container for style isolation from host pages
-**And** `@jobswyft/ui/styles` (globals.css including Tailwind v4, OKLCH tokens, font imports) is injected into the Shadow DOM root
-**And** Tailwind utility classes resolve correctly within the Shadow DOM
-**And** the `.dark` class is applied/removed on the Shadow DOM root based on system color scheme preference (via `prefers-color-scheme` media query)
-
-**Given** the sidebar is mounted via content script
-**When** the user clicks the extension icon (browser action)
-**Then** the `ExtensionSidebar` shell renders as a 400px-wide panel fixed to the right side of the viewport
-**And** the `LoggedOutView` component renders inside the sidebar shell via the `children` prop
-**And** clicking the extension icon again closes the sidebar (FR68)
-
-**Given** the `LoggedOutView` is rendered in the extension
-**When** the user clicks "Sign in with Google"
-**Then** the extension initiates Google OAuth via `chrome.identity.launchWebAuthFlow` (or Supabase Auth helper)
-**And** a loading state is shown on the button during the auth flow
-**And** on success, the auth token is stored in `chrome.storage.local`
-**And** the sidebar re-renders (ready for next story's authenticated state)
-**And** on failure (user cancels or network error), an error message is displayed inline
-
-**Given** the extension is loaded as unpacked in Chrome
-**When** the developer navigates to any webpage and clicks the extension icon
-**Then** the sidebar renders with correct styling (fonts, colors, spacing match Storybook exactly)
-**And** dark mode works when system preference is dark
-**And** light mode works when system preference is light
-
----
-
-#### Developer Context
-
-**Design Token Usage:**
-- All components must use CSS variables from `globals.css` — zero hardcoded Tailwind color classes (no `bg-gray-*`, `text-slate-*`, etc.)
-- Use semantic tokens: `bg-background`, `text-foreground`, `text-muted-foreground`, `bg-primary`, `border-border`, etc.
-- The `card-accent-bg` and `card-accent-border` tokens are available for accent cards (used in LoggedOutView CTA)
-- Font: Figtree Variable (loaded via `@fontsource-variable/figtree` in globals.css)
-
-**Shadow DOM Integration (Critical):**
-- WXT content scripts render in the host page's DOM — Shadow DOM is required to isolate Jobswyft styles from host page styles
-- `globals.css` must be injected into the Shadow DOM, not the host page `<head>`
-- The `.dark` class must be on the Shadow DOM root element, not `<html>`
-- `@theme inline` from Tailwind v4 must resolve within the Shadow DOM context
-- Test on at least 2 different host pages (e.g., LinkedIn job page, plain Google search) to verify style isolation
-
-**Existing Components (from @jobswyft/ui):**
-- `ExtensionSidebar` — Shell component (`children` prop for login view, slot props for authenticated tabs)
-- `LoggedOutView` — Complete login screen with Google sign-in button, feature highlights, accent card CTA
-- `IconBadge` — Used internally by LoggedOutView for feature icons
-
-**Extension File Structure (target):**
 ```
-apps/extension/
-├── package.json              # @jobswyft/ui workspace dep
-├── wxt.config.ts             # WXT configuration
-├── tsconfig.json
-├── src/
-│   ├── entrypoints/
-│   │   ├── content/          # Content script — sidebar injection
-│   │   │   └── index.tsx     # Shadow DOM mount, @jobswyft/ui/styles injection
-│   │   └── background/       # Service worker — auth flow, message handling
-│   │       └── index.ts
-│   ├── components/           # Extension-specific wrappers/compositions
-│   │   └── sidebar-app.tsx   # Root app: state routing (logged out → authenticated)
-│   ├── lib/
-│   │   ├── auth.ts           # Google OAuth via chrome.identity + Supabase
-│   │   └── storage.ts        # chrome.storage.local helpers
-│   └── stores/               # Zustand stores (future — auth-store in next story)
-└── public/
-    └── icon/                 # Extension icons (16, 48, 128)
+packages/ui/src/components/
+├── ui/              # shadcn primitives (installed via CLI, minimal customization)
+│                    # Button, Card, Badge, Input, Tabs, Dialog, Select, etc.
+│
+├── blocks/          # Small reusable building blocks — domain-specific but generic
+│                    # IconBadge, SkillPill, SelectionChips, CreditBar,
+│                    # MatchIndicator, SkillSectionLabel, CreditBalance
+│
+├── features/        # Feature-level compositions — assembled from ui/ + blocks/
+│                    # JobCard, ResumeCard, AiStudio, Coach, Autofill,
+│                    # LoggedOutView, FeedbackForm
+│
+├── layout/          # Shell, navigation, page-level wrappers
+│                    # ExtensionSidebar, AppHeader
+│
+└── _reference/      # Original Storybook demos (READ-ONLY, will be deleted)
+                     # Moved here during EXT.2 cleanup — used as visual reference only
 ```
 
-**Chrome Permissions Required:**
-```json
-{
-  "permissions": ["activeTab", "storage", "identity"],
-  "host_permissions": ["<all_urls>"]
+| Category | Directory | When to Use | Import Pattern |
+|----------|-----------|-------------|----------------|
+| **Primitives** | `ui/` | Base interactive elements from shadcn | `import { Button } from '@jobswyft/ui'` |
+| **Building Blocks** | `blocks/` | Reusable domain pieces, used in 2+ features | `import { SkillPill } from '@jobswyft/ui'` |
+| **Features** | `features/` | Complete feature panels, one per sidebar section | `import { JobCard } from '@jobswyft/ui'` |
+| **Layout** | `layout/` | Page/shell-level wrappers, sidebar chrome | `import { AppHeader } from '@jobswyft/ui'` |
+| **Reference** | `_reference/` | NEVER import. Visual reference only during migration | N/A — delete after migration |
+
+### Design Language Rules (ALL Components)
+
+These are NON-NEGOTIABLE for every component in every story:
+
+1. **Zero hardcoded colors** — No `bg-gray-*`, `text-slate-*`, `text-blue-*`. ALL colors from `globals.css` semantic tokens
+2. **Dark + Light mode** — Every component tested in both themes. Use semantic tokens that auto-switch
+3. **Size tokens** — Use `size-X` not `h-X w-X` (e.g., `size-8` not `h-8 w-8`)
+4. **Text micro** — Use `.text-micro` CSS utility for 10px text, never `text-[10px]`
+5. **Accent card pattern** — `border-2 border-card-accent-border` (border-2 required to show over shadcn ring-1)
+6. **Gradient header pattern** — `bg-gradient-to-r from-card-accent-bg to-transparent`
+7. **Scrollbar pattern** — `.scrollbar-hidden` + `.scroll-fade-y` CSS utilities for scroll areas
+8. **Icon sizing** — Lucide icons via `size` prop or consistent `size-X` className
+9. **Font** — Figtree Variable (loaded via globals.css, never override)
+10. **Color space** — OKLCH (configured in globals.css `:root` and `.dark` blocks)
+
+### Variant Pattern (CVA)
+
+Every component with visual variants uses class-variance-authority:
+
+```tsx
+import { cva, type VariantProps } from "class-variance-authority"
+
+const myComponentVariants = cva("base-classes-here", {
+  variants: {
+    variant: { default: "...", destructive: "...", outline: "..." },
+    size: { sm: "...", md: "...", lg: "..." },
+  },
+  defaultVariants: { variant: "default", size: "md" },
+})
+
+interface MyComponentProps extends VariantProps<typeof myComponentVariants> {
+  // additional props
 }
 ```
 
+### Storybook Pattern
+
+Every component MUST have stories following this structure:
+
+- **Default** — All variants displayed in a grid/row
+- **Sizes** — All size variants if applicable
+- **States** — Loading, error, empty, disabled where applicable
+- **Extension Viewport** — Rendered at 400×600 viewport
+- **Dark Mode** — Only if visual differences go beyond automatic token swap
+
+### Extension Integration Pattern
+
+When integrating a component into the extension:
+
+1. Import from `@jobswyft/ui` — NEVER recreate components locally
+2. Create Zustand store for the feature domain if state management needed
+3. Use `chrome.storage.local` for persistence across sessions
+4. Wire API calls through a shared `api-client.ts` helper
+5. Handle loading/error/offline states at the integration point
+6. Test in Chrome Side Panel with real data
+
+### Backend Integration Rules
+
+1. **Check existing endpoints first** — 36 API endpoints already exist (10 routers)
+2. **If endpoint exists** — Wire directly, document any response shape mismatches
+3. **If endpoint missing** — Build it following architecture patterns (envelope, error codes, Pydantic models)
+4. **API gaps** — Document in story's "Tech Debt" section for tracking
+5. **Snake → camelCase** — Use existing mappers from `@jobswyft/ui` (`mapResumeResponse`, `mapJobResponse`, etc.)
+
+### Cross-Story Learning Protocol
+
+> **MANDATORY for every story.** Dev agents MUST follow this protocol at the end of each story.
+
+**1. Pattern Extraction → globals.css**
+
+After completing any story, the dev agent must audit the components built and:
+- Extract any repeated color, spacing, animation, or typography pattern into a CSS utility in `globals.css`
+- If a Tailwind utility is used 3+ times in a specific combination, create a CSS class for it
+- Document the new utility in the story's dev notes AND update the [Design Language Rules](#design-language-rules-all-components) list above
+- Example: if `flex items-center gap-1.5 text-micro text-muted-foreground` appears in multiple components, extract to `.meta-label` in globals.css
+
+**2. Story Learnings → Architecture File**
+
+Each completed story MUST append learnings to `_bmad-output/planning-artifacts/architecture.md` in a dedicated section:
+
+```markdown
+## Implementation Learnings (Appended Per Story)
+
+### EXT.X: [Story Title]
+- **Pattern discovered:** [description]
+- **Architecture impact:** [what changed or should change]
+- **Reusable for:** [which future stories benefit]
+```
+
+Types of learnings to capture:
+- Chrome extension API gotchas (permissions, messaging, storage limits)
+- Component composition patterns that worked well
+- API response shape mismatches requiring mapper updates
+- Performance observations (bundle size, load time)
+- State management patterns (Zustand store structure, persistence strategy)
+- Content script ↔ Side Panel communication patterns
+
+**3. User Preference Tracking**
+
+When the user provides feedback on component design (colors, spacing, layout, behavior), the dev agent must:
+- Implement the preference immediately
+- Document it in the story's dev notes
+- If it's a generalizable preference, add it to [Design Language Rules](#design-language-rules-all-components) above
+- Update `MEMORY.md` user preferences section
+
+### Backend Tech Debt Registry
+
+> Tech debt discovered during extension stories is tracked in a centralized file that feeds into future epic creation.
+
+**Location:** `_bmad-output/implementation-artifacts/backend-tech-debt.md`
+
+**Format:**
+```markdown
+# Backend Tech Debt Registry
+
+## From Story EXT.X: [Title]
+
+| ID | Description | Priority | Affects Stories | Status |
+|----|-------------|----------|-----------------|--------|
+| AREA-NN | What needs to change | High/Med/Low | EXT.Y, WEB.Z | Open/Done |
+```
+
+**Rules:**
+1. Every story that identifies a backend gap MUST add it to this file
+2. Items are prefixed by area: AUTH-, RESUME-, JOB-, AI-, MATCH-, CHAT-, AUTOFILL-, USAGE-, FEEDBACK-
+3. Priority reflects impact on user experience (High = blocks E2E flow, Med = degraded experience, Low = nice-to-have)
+4. When starting a new epic (e.g., Epic WEB), the tech debt registry is reviewed first
+5. High-priority items should be resolved within the current epic if possible
+6. The registry is the **single source of truth** for API gaps — do not duplicate in story files
+
+**Current known debt (from EXT.1 + story planning):**
+
+| ID | Description | Priority | Affects | Status |
+|----|-------------|----------|---------|--------|
+| AUTH-01 | Verify token exchange flow works E2E (extension → API) | High | EXT.3 | Open |
+| AUTH-04 | Profile auto-creation on first login — verify 5 free credits | High | EXT.3 | Open |
+| MATCH-01 | `/v1/ai/match` needs `match_type` param (auto vs detailed) | High | EXT.6 | Open |
+| MATCH-02 | Daily auto-match rate limiting for free tier (20/day) | High | EXT.6, EXT.10 | Open |
+| AI-01 | Remove `/v1/ai/answer` endpoint (PRD removed Answer tool) | Medium | EXT.7 | Open |
+| CHAT-01 | Build `POST /v1/ai/chat` endpoint (does not exist) | High | EXT.8 | Open |
+| CHAT-02 | AI prompt template for job-context chat | High | EXT.8 | Open |
+| FEEDBACK-01 | Screenshot attachment support (FR84a) | Low | EXT.11 | Open |
+
 ---
 
-#### Tech Debt for Backend API
+### Known API State (as of EXT.1 completion)
+
+| Router | Endpoints | Status |
+|--------|-----------|--------|
+| Auth | 5 (login, callback, logout, me, account delete) | Implemented |
+| Resumes | 5 (upload, list, get, set active, delete) | Implemented |
+| Jobs | 8 (scan, create, list, get, update, status, delete, notes) | Implemented |
+| AI | 5 (match, cover-letter, cover-letter/pdf, answer, outreach) | Implemented (needs: chat endpoint, remove answer, auto-match vs detailed-match param) |
+| Autofill | 1 (data) | Implemented |
+| Feedback | 1 (submit) | Implemented |
+| Usage | 2 (balance, history) | Implemented |
+| Subscriptions | 3 (checkout, portal, mock-cancel) | Implemented |
+| Privacy | 4 (data-summary, delete-request, confirm-delete, cancel-delete) | Implemented |
+| Webhooks | 1 (stripe) | Stub |
+
+**Known gaps to address:**
+- `POST /v1/ai/chat` — Missing. PRD added Chat (FR31-35), API still has old `/answer` instead
+- Auto-match vs Detailed match — `/v1/ai/match` needs parameter to distinguish free auto-match from 1-credit detailed match
+- `/v1/ai/answer` — Should be removed or repurposed (PRD removed Answer Generation tool)
+
+---
+
+## Epic List
+
+### Epic 8: Deployment & Infrastructure (COMPLETE)
+
+Deploy all Jobswyft surfaces to their production hosting platforms.
+
+**Epic Goal:** All Jobswyft services are deployed and accessible on production URLs.
+
+**Stories:**
+- Story 8.1: Railway API Deployment (DONE)
+- _(subsequent: Vercel Dashboard deploy, Extension packaging — future)_
+
+---
+
+### Epic EXT: Chrome Extension Sidepanel Build (Full-Stack Vertical Slices)
+
+Build the Chrome Extension surface end-to-end, one sidepanel section at a time. Each story delivers a **complete vertical slice**: UI components (Storybook) → Extension integration (WXT + Zustand) → Backend wiring (API) → E2E verification.
+
+**Epic Goal:** Users can install and use the Jobswyft Chrome Extension with full UI/UX across all 4 sidebar states — login, navigation, resume management, job scanning, AI-powered content generation, form autofill, usage tracking, and feedback — with complete backend API integration.
+
+**FRs covered:** FR1-FR4, FR7-FR49, FR57-FR60, FR60a-b, FR64-FR72, FR83-FR84a
+
+**Surfaces:** packages/ui (Storybook), apps/extension (WXT Side Panel), apps/api (FastAPI)
+
+**Story approach:** All stories defined upfront. Each follows the [Component Development Methodology](#component-development-methodology).
+
+**Stories (11 total, 1 done):**
+
+| # | Story | User Value | Status |
+|---|-------|------------|--------|
+| EXT.1 | WXT Extension Setup & Login | Users can install extension and sign in with Google | DONE |
+| EXT.2 | Component Library Reorganization | Clean foundation: proper categories, reference separation, consistent patterns | Pending |
+| EXT.3 | Authenticated Navigation & Sidebar Shell | Users can navigate the extension after login | Pending |
+| EXT.4 | Resume Management | Users can upload, view, and manage resumes in the sidebar | Pending |
+| EXT.5 | Job Page Scanning & Job Card | Users can scan job pages and save jobs | Pending |
+| EXT.6 | Match Analysis (Auto + Detailed) | Users can instantly see how they match a job | Pending |
+| EXT.7 | AI Studio — Cover Letter & Outreach | Users can generate tailored application content | Pending |
+| EXT.8 | AI Chat | Users can ask questions about a job posting | Pending |
+| EXT.9 | Form Autofill | Users can auto-fill application forms | Pending |
+| EXT.10 | Usage, Credits & Upgrade Prompts | Users can see their balance and understand limits | Pending |
+| EXT.11 | Feedback | Users can report issues and share ideas | Pending |
+
+**Dependencies:**
+```
+EXT.1 (DONE) → EXT.2 (cleanup) → EXT.3 (navigation, auth store)
+                                     ↓
+                                  EXT.4 (resume) → EXT.5 (scan + job card)
+                                                      ↓
+                                                   EXT.6 (match) → EXT.7 (cover letter + outreach)
+                                                                 → EXT.8 (chat)
+                                                                 → EXT.9 (autofill)
+                                                   EXT.10 (credits — cross-cutting, retrofits into EXT.6-9)
+                                                   EXT.11 (feedback — standalone)
+```
+
+---
+
+### Epic WEB: Web Dashboard (Future)
+
+Build the Next.js web dashboard for job tracking, account management, and privacy controls.
+
+**Epic Goal:** Users can manage their jobs, resumes, account, and data privacy from a web dashboard.
+
+**FRs covered:** FR5-6, FR50-56, FR73-77, FR78-82, FR85
+
+---
+
+### Epic POST-MVP: Subscriptions & Growth (Future)
+
+Add paid subscription management and referral credits.
+
+**Epic Goal:** Users can subscribe to paid plans, manage billing, and earn referral credits.
+
+**FRs covered:** FR61-62, FR63, NFR27-29, NFR33
+
+---
+
+## Story EXT.1: WXT Extension Setup & Login (COMPLETE)
+
+**Status:** DONE (reviewed, verified end-to-end)
+
+**Implementation artifact:** `_bmad-output/implementation-artifacts/EXT-1-wxt-extension-setup-ui-integration-login.md`
+
+**FRs addressed:** FR1, FR67, FR68, FR69 (Logged Out state)
+
+**Key learnings (inform all future stories):**
+- Chrome Side Panel API, not Shadow DOM content script
+- Web Application OAuth client type (not Chrome Extension type)
+- Tailwind v4 `@source` directive in `app.css` to scan `@jobswyft/ui/src`
+- Lazy Supabase client initialization (avoid module-level crash)
+- `action` key required in manifest for `onClicked`
+- `panelClassName` override for ExtensionSidebar in Side Panel context
+
+**Tech debt identified:**
+- AUTH-01: `POST /v1/auth/google` (exchange token) — API has `/v1/auth/login` + `/callback`
+- AUTH-02: `GET /v1/auth/me` (verify auth) — API has this
+- AUTH-03: `POST /v1/auth/logout` (invalidate session) — API has this
+- AUTH-04: Profile auto-creation on first login — Needs verification
+
+---
+
+## Story EXT.2: Component Library Reorganization
+
+**As a** developer working on Jobswyft,
+**I want** a properly organized component library with clear categories and reference separation,
+**So that** every future story follows consistent patterns and builds on a clean foundation.
+
+**FRs addressed:** None (infrastructure/DX story — enables all subsequent stories)
+
+### Component Inventory
+
+**Current state:** 14 custom components in flat `components/custom/` directory.
+
+**Target state:**
+
+| Category | Directory | Components to Move |
+|----------|-----------|--------------------|
+| **Blocks** | `components/blocks/` | IconBadge, SkillPill, SelectionChips, CreditBar, CreditBalance, MatchIndicator, SkillSectionLabel |
+| **Features** | `components/features/` | JobCard, ResumeCard, AiStudio, Coach, Autofill, LoggedOutView |
+| **Layout** | `components/layout/` | ExtensionSidebar, AppHeader |
+| **Reference** | `components/_reference/` | Copy of ALL originals before reorganization (read-only) |
+
+### Acceptance Criteria
+
+**Given** 14 custom components exist in `components/custom/`
+**When** the developer runs the reorganization
+**Then** all original component files are copied to `components/_reference/` as read-only reference
+**And** the `_reference/` directory has a README noting these are original demos, not to be imported
+
+**Given** components are being reorganized
+**When** the developer moves components to their new directories
+**Then** `components/blocks/` contains: IconBadge, SkillPill, SelectionChips, CreditBar, CreditBalance, MatchIndicator, SkillSectionLabel
+**And** `components/features/` contains: JobCard, ResumeCard, AiStudio, Coach, Autofill, LoggedOutView
+**And** `components/layout/` contains: ExtensionSidebar, AppHeader
+**And** the old `components/custom/` directory is removed
+
+**Given** components have been reorganized
+**When** `packages/ui/src/index.ts` is updated
+**Then** all exports resolve correctly from the new paths
+**And** `import { Button, JobCard, AppHeader, SkillPill } from '@jobswyft/ui'` still works
+
+**Given** the reorganization is complete
+**When** `pnpm storybook` is run
+**Then** all 21 story files render correctly (story imports updated to new paths)
+**And** stories are organized under groups matching the directory structure
+
+**Given** the reorganization is complete
+**When** `pnpm build` is run from `packages/ui/`
+**Then** the library builds successfully
+**And** the extension at `apps/extension/` builds without errors
+**And** all component imports in the extension still resolve
+
+### Developer Notes
+
+- Story files (`*.stories.tsx`) move WITH their components to the new directories
+- NO component logic changes in this story — only file moves and import path updates
+- The `_reference/` components are a safety net during migration; each future story may consult them for original behavior/design intent
+- After all EXT stories complete, `_reference/` will be deleted in a final cleanup
+
+---
+
+## Story EXT.3: Authenticated Navigation & Sidebar Shell
+
+**As a** logged-in user,
+**I want** to see a navigation bar and tabbed sidebar after signing in,
+**So that** I can access all extension features and navigate between sections.
+
+**FRs addressed:** FR2 (sign out), FR4 (session persistence), FR67 (open sidebar), FR68 (close sidebar), FR69 (4-state sidebar), FR70 (resume tray slot), FR71 (AI locked until scan), FR72 (dashboard link)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `AppHeader` | `layout/` | Has theme toggle, settings dropdown, sign out. Wire real callbacks |
+| Existing | `ExtensionSidebar` | `layout/` | Has tabs (scan/studio/autofill/coach), isLocked, creditBar. Wire real state |
+| New | `AuthenticatedLayout` | Extension `components/` | Wraps AppHeader + ExtensionSidebar for logged-in state |
+| New | Zustand `auth-store` | Extension `stores/` | Session state, user profile, persist to chrome.storage |
+| Modified | `sidebar-app.tsx` | Extension `components/` | Route between LoggedOutView ↔ AuthenticatedLayout |
+
+### Acceptance Criteria
+
+**Given** the user has completed Google OAuth sign-in (EXT.1)
+**When** the sidebar re-renders after successful auth
+**Then** the `AuthenticatedLayout` renders with AppHeader at top and ExtensionSidebar below
+**And** the AppHeader shows the app name, theme toggle, and settings dropdown
+**And** the ExtensionSidebar shows tabs: Scan, AI Studio, Autofill, Coach
+
+**Given** the user closes and re-opens the sidebar (or restarts Chrome)
+**When** the sidebar initializes
+**Then** auth state is restored from `chrome.storage.local`
+**And** `GET /v1/auth/me` validates the stored session
+**And** valid session → authenticated layout renders immediately
+**And** invalid/expired session → LoggedOutView renders (tokens cleared)
+
+**Given** the user clicks "Sign Out" in the AppHeader settings dropdown
+**When** sign out is triggered
+**Then** `POST /v1/auth/logout` is called
+**And** Zustand auth store is cleared
+**And** `chrome.storage.local` session data is removed
+**And** sidebar returns to LoggedOutView
+
+**Given** the user is authenticated but NOT on a job page
+**When** the sidebar renders
+**Then** the sidebar is in "Non-Job Page" state
+**And** Scan tab shows empty/placeholder state (no job detected)
+**And** AI Studio and Autofill tabs show locked state (`isLocked=true`)
+**And** Coach tab is accessible (general questions)
+
+**Given** the user clicks the theme toggle in AppHeader
+**When** theme switches between dark and light
+**Then** `.dark` class is toggled on `<html>` element
+**And** preference is persisted to `chrome.storage.local`
+**And** all components re-render with correct theme tokens
+
+**Given** the user clicks "Dashboard" in the settings dropdown
+**When** the link is activated
+**Then** a new tab opens to the web dashboard URL
+
+**Given** the CreditBar is rendered at the bottom of ExtensionSidebar
+**When** the sidebar loads
+**Then** the CreditBar displays with placeholder data (credits: 5, maxCredits: 5)
+**And** real credit data will be wired in EXT.10
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/auth/me` | GET | Validate session, get user profile | Exists |
+| `/v1/auth/logout` | POST | Invalidate server session | Exists |
+
+---
+
+## Story EXT.4: Resume Management
+
+**As a** job seeker,
+**I want** to upload, view, and manage my resumes in the sidebar,
+**So that** I can quickly select the right resume for each application.
+
+**FRs addressed:** FR7 (upload PDF), FR8 (AI parse), FR9 (max 5), FR10 (active resume), FR11 (view list), FR12 (delete), FR13 (switch resumes), FR13a (expandable blocks), FR13b (expand full content), FR13c (copy to clipboard)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `ResumeCard` | `features/` | Dropdown selector, expandable blocks, copy, upload/delete buttons. Very complete |
+| New | Zustand `resume-store` | Extension `stores/` | Resume list, active resume ID, parsed data, persist to chrome.storage |
+| New | Upload progress UI | Within ResumeCard | Progress indicator during upload + parse |
+| Modified | `ExtensionSidebar` | `layout/` | Wire `contextContent` slot with ResumeCard |
+
+### Acceptance Criteria
+
+**Given** the user is authenticated and the sidebar is open
+**When** the sidebar loads
+**Then** `GET /v1/resumes` is called to fetch the user's resume list
+**And** the ResumeCard renders in the context section (above tabs) with the resume dropdown
+**And** the active resume is pre-selected in the dropdown
+
+**Given** the user has no resumes uploaded
+**When** the ResumeCard renders
+**Then** an empty state is shown with an upload prompt
+**And** the upload button is prominently displayed
+
+**Given** the user clicks "Upload Resume"
+**When** the file picker opens and they select a PDF (≤10MB)
+**Then** the file is uploaded via `POST /v1/resumes` (multipart/form-data)
+**And** a progress indicator shows during upload and AI parsing
+**And** on success, the resume appears in the dropdown and parsed data loads
+**And** on failure (invalid format, too large, limit reached), an error message displays
+
+**Given** the user has resumes in their list
+**When** they select a different resume from the dropdown
+**Then** `PUT /v1/resumes/:id/active` is called
+**And** the active resume indicator updates
+**And** parsed data for the newly selected resume loads (from `GET /v1/resumes/:id`)
+
+**Given** a resume is selected with parsed data
+**When** the user views the ResumeCard
+**Then** expandable sections show: Personal Info, Skills, Experience, Education, Certifications, Projects
+**And** sections are collapsed by default (`isCompact=true`)
+**And** clicking a section header expands it to show full content
+
+**Given** the user clicks the copy button on a resume block section
+**When** the copy action executes
+**Then** the section content is copied to clipboard
+**And** visual "Copied!" feedback appears momentarily
+
+**Given** the user clicks "Delete" on a resume
+**When** the confirmation dialog appears and user confirms
+**Then** `DELETE /v1/resumes/:id` is called
+**And** the resume is removed from the list
+**And** if the deleted resume was active, the first remaining resume becomes active
+**And** if no resumes remain, the empty state renders
+
+**Given** the user already has 5 resumes
+**When** they try to upload another
+**Then** the upload is blocked with message "Maximum 5 resumes. Delete one to upload more."
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/resumes` | POST | Upload + parse resume | Exists |
+| `/v1/resumes` | GET | List user's resumes | Exists |
+| `/v1/resumes/:id` | GET | Get resume detail + parsed data | Exists |
+| `/v1/resumes/:id/active` | PUT | Set active resume | Exists |
+| `/v1/resumes/:id` | DELETE | Delete resume | Exists |
+
+### Data Mapping
+
+Use existing mapper: `mapResumeResponse()` from `@jobswyft/ui` for snake_case → camelCase transformation.
+
+---
+
+## Story EXT.5: Job Page Scanning & Job Card
+
+**As a** job seeker browsing job postings,
+**I want** the extension to detect and scan job pages automatically,
+**So that** I can see job details and save jobs without copy-pasting.
+
+**FRs addressed:** FR14 (auto-scan), FR14a (URL patterns), FR14b (manual trigger), FR15-FR18 (field extraction), FR19 (ephemeral questions), FR20 (element picker), FR21 (manual edit), FR22 (missing field indicators), FR48 (save job), FR49 (auto "Applied" status)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `JobCard` | `features/` | Job data display, edit mode, metadata badges, action buttons |
+| New | Content script `job-detector.ts` | Extension `features/scanning/` | URL pattern matching for job boards |
+| New | Content script `scanner.ts` | Extension `features/scanning/` | DOM extraction (rules + AI fallback) |
+| New | Zustand `scan-store` | Extension `stores/` | Scan state, extracted job data |
+| New | `ScanEmptyState` | `blocks/` or inline | Placeholder when no job detected |
+| Modified | `ExtensionSidebar` | `layout/` | Wire `scanContent` slot with JobCard / empty state |
+
+### Acceptance Criteria
+
+**Given** the extension is loaded and user is authenticated
+**When** the user navigates to a job posting page (LinkedIn, Indeed, Greenhouse, Lever, Workday, etc.)
+**Then** the content script detects the page via URL pattern matching
+**And** the sidebar state transitions from "Non-Job Page" to "Job Page"
+**And** auto-scan begins: job title, company, description, location, salary, type extracted from DOM
+
+**Given** auto-scan completes successfully
+**When** the scan data is sent to the Side Panel via `chrome.runtime.sendMessage`
+**Then** the JobCard renders in the Scan tab with extracted data
+**And** metadata badges show location, salary, employment type (when available)
+**And** missing required fields (title, company, description) are indicated with warning icons
+
+**Given** auto-detection fails on an unknown job site
+**When** the user sees the scan empty state
+**Then** a "Scan This Page" manual trigger button is displayed
+**And** clicking it attempts AI-powered DOM extraction as fallback
+
+**Given** the JobCard is displaying scanned data
+**When** the user clicks an editable field (or enters edit mode)
+**Then** the field becomes editable inline
+**And** the user can correct extracted data directly
+**And** changes are reflected in the scan store (ephemeral, not persisted until saved)
+
+**Given** a successful scan with complete data
+**When** the user clicks "Save Job"
+**Then** `POST /v1/jobs/scan` is called with the extracted job data
+**And** the job is saved with status "Applied"
+**And** visual confirmation shown (checkmark or toast)
+
+**Given** a scan is in progress
+**When** the content script is extracting data
+**Then** a loading skeleton/spinner shows in the Scan tab
+**And** scan errors show a retry option with error message
+
+**Given** the content script needs to communicate with the Side Panel
+**When** messages are sent via `chrome.runtime`
+**Then** the Side Panel receives scan data and updates the scan-store
+**And** the background service worker relays messages between content script and side panel
+
+### Content Script Architecture
+
+```
+Content Script (injected per page)
+  ├── job-detector.ts — URL patterns: linkedin.com/jobs, indeed.com/viewjob, greenhouse.io, etc.
+  ├── scanner.ts — DOM extraction rules per board + AI fallback
+  └── Communicates via chrome.runtime.sendMessage → Background → Side Panel
+```
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/jobs/scan` | POST | Save scanned job data | Exists |
+
+### Tech Debt
 
 | Item | Description | Priority |
 |------|-------------|----------|
-| **AUTH-01** | `POST /v1/auth/google` — Exchange Google OAuth token for Supabase session. Extension sends Google ID token, API validates and returns Supabase access token + refresh token. | High |
-| **AUTH-02** | `GET /v1/auth/me` — Return current user profile. Used by extension to verify auth state on sidebar open. | High |
-| **AUTH-03** | `POST /v1/auth/logout` — Invalidate server-side session. Extension calls on sign-out. | Medium |
-| **AUTH-04** | Profile auto-creation on first login (Supabase trigger or API-side). Set initial 5 free credits (FR60). | High |
+| **SCAN-01** | Element picker for manual field correction (FR20) — complex DOM interaction, may defer to future iteration | Medium |
+| **SCAN-02** | Application question extraction (FR19) — ephemeral, needs content script intelligence | Low |
 
 ---
 
-#### Out of Scope (Future Stories)
+## Story EXT.6: Match Analysis (Auto + Detailed)
 
-- Authenticated sidebar states (Non-Job Page, Job Page, Application Page)
-- Resume tray and resume management
-- Zustand state management stores
-- Extension popup (vs content script sidebar)
-- Chrome Web Store publishing
+**As a** job seeker viewing a scanned job,
+**I want** to instantly see how well I match and optionally get deeper analysis,
+**So that** I can decide whether to apply and know what to highlight.
+
+**FRs addressed:** FR23 (auto match on scan), FR23a (free with rate limits), FR23b (score + skill indicators), FR23c (side-by-side layout), FR24 (detailed match — 1 credit), FR25 (comprehensive analysis)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `MatchIndicator` | `blocks/` | Score ring (green/yellow/red). Props: `score`, `showLabel` |
+| Existing | `SkillPill` | `blocks/` | Matched (green), missing (dashed), neutral. Props: `name`, `variant` |
+| Existing | `SkillSectionLabel` | `blocks/` | Section header with dot. Props: `label`, `variant` (success/warning) |
+| Existing | `JobCard` | `features/` | Has match area. Props: `match: { score, matchedSkills, missingSkills }` |
+| New | `DetailedMatchView` | `features/` or inline in JobCard | Expanded analysis: strengths, gaps, recommendations |
+| Modified | `JobCard` | `features/` | Ensure match area renders auto-match data; add "Detailed Analysis" button |
+
+### Acceptance Criteria
+
+**Given** a job page has been successfully scanned (EXT.5)
+**When** the scan completes and an active resume is selected
+**Then** auto-match fires automatically: `POST /v1/ai/match` with `match_type=auto`
+**And** the match result renders within the JobCard: MatchIndicator (score), SkillPills (green matched, yellow missing), side-by-side via SkillSectionLabels
+
+**Given** auto-match is loading
+**When** the API call is in progress
+**Then** a subtle loading indicator appears in the match area of JobCard
+**And** the rest of the JobCard (title, company, description) is already visible
+
+**Given** auto-match results are displayed
+**When** the user wants deeper analysis
+**Then** a "Detailed Analysis" button is visible (with "1 credit" label)
+**And** clicking it calls `POST /v1/ai/match` with `match_type=detailed`
+**And** the detailed view expands below with comprehensive strengths, gaps, and actionable recommendations
+
+**Given** the user is on free tier
+**When** they have used 20 auto-matches today
+**Then** auto-match is blocked with message "Daily limit reached (20/day). Upgrade for unlimited."
+**And** the match area shows the blocked state
+
+**Given** the user has 0 AI credits
+**When** they click "Detailed Analysis"
+**Then** the action is blocked with "No credits remaining" message
+**And** the "Upgrade coming soon" prompt is shown
+
+**Given** the match API call fails
+**When** an error occurs
+**Then** the match area shows an error state with "Retry" button
+**And** user's credits are NOT deducted (NFR24)
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/ai/match` | POST | Generate match analysis | Exists — needs `match_type` param (auto/detailed) |
+
+### Tech Debt
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| **MATCH-01** | Update `POST /v1/ai/match` to accept `match_type` parameter (auto = free, detailed = 1 credit) | High |
+| **MATCH-02** | Backend daily auto-match rate limiting for free tier (20/day per user) | High |
+
+---
+
+## Story EXT.7: AI Studio — Cover Letter & Outreach
+
+**As a** job seeker ready to apply,
+**I want** to generate a tailored cover letter and outreach messages,
+**So that** my applications stand out and I can network with hiring managers.
+
+**FRs addressed:** FR26 (generate cover letter), FR26a (length selector), FR27 (tone selector), FR28 (custom instructions), FR29 (regenerate with feedback), FR30 (PDF export), FR36 (generate outreach), FR36a (outreach tone), FR36b (outreach length), FR36c (outreach custom instructions), FR37 (regenerate outreach), FR38 (edit output), FR39 (ephemeral), FR40 (copy to clipboard), FR41 (copy visual feedback)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `AiStudio` | `features/` | Tabbed card (currently: Match, Cover Letter, Answer, Outreach). Has `onGenerate` callback with params |
+| Existing | `SelectionChips` | `blocks/` | Tone/length selectors. Props: `options`, `value`, `onChange` |
+| New | `GeneratedOutput` | `blocks/` | Editable textarea with copy button, regenerate button, PDF button |
+| Modified | `AiStudio` | `features/` | Replace "Answer" tab with placeholder for Chat (EXT.8). Wire Cover Letter + Outreach tabs |
+
+### Acceptance Criteria
+
+**Given** the user is on an application page with valid scan data
+**When** the sidebar shows AI Studio
+**Then** the `isLocked` state is `false` (unlocked)
+**And** tabs show: Match, Cover Letter, Outreach (Answer tab removed)
+
+**Given** the user selects the Cover Letter tab
+**When** the tab renders
+**Then** SelectionChips display for tone: Confident, Friendly, Enthusiastic, Professional
+**And** SelectionChips display for length: Brief, Standard, Detailed
+**And** a custom instructions textarea is available
+**And** a "Generate" button is enabled (if credits available)
+
+**Given** the user configures tone/length/instructions and clicks Generate
+**When** the generation begins
+**Then** `POST /v1/ai/cover-letter` is called with `{ job_id, resume_id, tone, length, custom_instructions }`
+**And** a loading spinner with "Generating cover letter..." shows
+**And** on success, the generated text displays in an editable GeneratedOutput component
+**And** on failure, error message shows and credit is NOT deducted
+
+**Given** the generated cover letter is displayed
+**When** the user interacts with the output
+**Then** they can edit the text inline (textarea)
+**And** they can click "Copy" → content copied to clipboard → "Copied!" feedback shows
+**And** they can click "Regenerate" → optional feedback input → new generation with context
+**And** they can click "Export PDF" → `POST /v1/ai/cover-letter/pdf` → PDF file downloads
+
+**Given** the user selects the Outreach tab
+**When** the tab renders
+**Then** the same pattern applies: tone selector, length selector (Brief, Standard), custom instructions
+**And** Generate → `POST /v1/ai/outreach` with `{ job_id, resume_id, tone, length, custom_instructions }`
+**And** output displayed in GeneratedOutput with edit/copy/regenerate flow
+
+**Given** the user has 0 AI credits
+**When** they try to generate
+**Then** the Generate button is disabled with "No credits" message
+**And** "Upgrade coming soon" prompt is shown
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/ai/cover-letter` | POST | Generate cover letter | Exists |
+| `/v1/ai/cover-letter/pdf` | POST | Export as PDF | Exists |
+| `/v1/ai/outreach` | POST | Generate outreach message | Exists |
+
+### Tech Debt
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| **AI-01** | Remove `/v1/ai/answer` endpoint (PRD removed Answer Generation tool) | Medium |
+| **AI-02** | AiStudio component: remove "Answer" tab, restructure to Match / Cover Letter / Outreach | High (done in this story) |
+
+---
+
+## Story EXT.8: AI Chat
+
+**As a** job seeker with questions about a posting,
+**I want** to chat with AI about the job and get personalized advice,
+**So that** I can prepare better and understand if the role is right for me.
+
+**FRs addressed:** FR31 (open chat), FR32 (question suggestions), FR33 (ask questions — 1 credit/message), FR34 (conversation history), FR35 (new session)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `Coach` | `features/` | Chat UI with message bubbles, input form. Props: `initialMessages`, `onSendMessage`, `isLocked` |
+| New | `QuestionSuggestions` | `blocks/` | Clickable suggestion chips generated from job data |
+| New | Zustand `chat-store` | Extension `stores/` | Messages, session management, credit tracking |
+| Modified | `Coach` | `features/` | Add suggestion chips slot, credit indicator, new session button |
+| New | Backend `POST /v1/ai/chat` | API `routers/ai.py` | **NEW endpoint — does not exist yet** |
+
+### Acceptance Criteria
+
+**Given** the user is authenticated with valid scan data
+**When** they navigate to the Coach tab
+**Then** the Coach component renders with an empty message area
+**And** question suggestions are displayed based on the current job posting (e.g., "What skills should I highlight?", "Is this role a good fit for my experience?", "What questions should I prepare for the interview?")
+
+**Given** question suggestions are displayed
+**When** the user clicks a suggestion chip
+**Then** the suggestion text is populated into the message input
+**And** the user can edit before sending
+
+**Given** the user types or selects a question and clicks send
+**When** the message is submitted
+**Then** credit check passes (1 credit available) → `POST /v1/ai/chat` called
+**And** user message appears as a bubble in the chat area
+**And** loading indicator shows while AI responds
+**And** AI response appears as assistant bubble
+**And** if credit check fails → "No credits" message shown, message not sent
+
+**Given** a conversation is in progress
+**When** the user sends multiple messages
+**Then** conversation history is maintained in the chat-store
+**And** previous messages provide context to the AI (conversation_history sent with each request)
+
+**Given** the user clicks "New Session"
+**When** the action triggers
+**Then** conversation history is cleared from the chat-store
+**And** the chat area resets to empty with fresh question suggestions
+
+**Given** an AI response fails
+**When** the API returns an error
+**Then** an error message shows inline ("Failed to get response. Try again.")
+**And** the user's credit is NOT deducted (NFR24)
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/ai/chat` | POST | Send message, get AI response | **NEW — must be built** |
+
+**New endpoint spec:**
+```
+POST /v1/ai/chat
+Body: { job_id, resume_id, message, conversation_history: [{role, content}] }
+Response: { success: true, data: { message: string, suggestions: string[] } }
+Credits: 1 per message
+```
+
+### Tech Debt
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| **CHAT-01** | Build `POST /v1/ai/chat` endpoint with conversation context | High |
+| **CHAT-02** | AI prompt template for job-context chat | High |
+| **CHAT-03** | Question suggestion generation (can be client-side templates initially, AI-powered later) | Medium |
+
+---
+
+## Story EXT.9: Form Autofill
+
+**As a** job seeker on an application form,
+**I want** to auto-fill form fields with my information,
+**So that** I can submit applications faster without manual data entry.
+
+**FRs addressed:** FR42 (autofill fields), FR42a (display detected fields), FR42b (review before fill), FR43 (auto-map fields), FR44 (highlight filled), FR44a (tick-off state in sidebar), FR45 (undo), FR46 (resume upload), FR47 (cover letter paste)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `Autofill` | `features/` | Field pills with status, fill/undo buttons. Props: `fields[]`, `isFilling`, `showUndoPrompt`, callbacks |
+| New | Content script `autofill.ts` | Extension `features/autofill/` | DOM field detection, mapping, fill execution |
+| New | Zustand `autofill-store` | Extension `stores/` | Detected fields, fill state, undo snapshot |
+| Modified | `ExtensionSidebar` | `layout/` | Wire `autofillContent` slot |
+
+### Acceptance Criteria
+
+**Given** the user navigates to a job application form page
+**When** the content script analyzes the page DOM
+**Then** form fields are detected (inputs, textareas, selects, file uploads)
+**And** fields are categorized: Personal (name, email, phone, LinkedIn), Resume (file upload), Questions (custom fields)
+**And** the sidebar state transitions to "Application Page" (unlocks AI Studio + Autofill)
+
+**Given** detected fields are sent to the Side Panel
+**When** the Autofill tab renders
+**Then** the Autofill component shows detected fields grouped by category
+**And** each field shows status: "ready" (data available), "missing" (no data), or "filled" (already has value)
+**And** the "Fill Application" button is enabled
+
+**Given** the user reviews fields and clicks "Fill Application"
+**When** autofill executes
+**Then** personal data is sourced from `GET /v1/autofill/data`
+**And** content script fills each mapped field in the page DOM
+**And** `isFilling=true` shows progress state in the sidebar
+**And** successfully filled fields update to "filled" status with checkmark (tick-off state)
+**And** fields are visually highlighted on the page
+
+**Given** autofill has completed
+**When** the undo prompt banner appears (`showUndoPrompt=true`)
+**Then** the user can click "Undo" to restore all fields to pre-fill values
+**And** clicking "Dismiss" hides the undo banner
+**And** undo snapshot is stored in the autofill-store
+
+**Given** a file upload field is detected
+**When** autofill executes and active resume is available
+**Then** the resume PDF is uploaded to the file input field programmatically
+
+**Given** a cover letter field/textarea is detected
+**When** autofill executes and a generated cover letter is available (from EXT.7)
+**Then** the cover letter text is pasted into the field
+
+### Content Script Architecture
+
+```
+Content Script (autofill.ts)
+  ├── detectFields() — Scans DOM for form inputs, textareas, selects, file uploads
+  ├── mapFields(fields, userData) — Maps detected fields to user data
+  ├── fillFields(mappings) — Executes DOM manipulation to fill values
+  ├── undoFill(snapshot) — Restores pre-fill values
+  └── Communicates via chrome.runtime messaging ↔ Side Panel
+```
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/autofill/data` | GET | Get personal data + resume for autofill | Exists |
+
+---
+
+## Story EXT.10: Usage, Credits & Upgrade Prompts
+
+**As a** job seeker using AI features,
+**I want** to see my remaining credits and understand my limits,
+**So that** I can use my credits wisely and know when to upgrade.
+
+**FRs addressed:** FR57 (view balance), FR58 (daily auto-match remaining), FR59 (tier status), FR60 (5 free credits), FR60a (20 auto-matches/day free), FR60b (unlimited paid), FR64 (block when no balance), FR65 (upgrade message), FR66 (block auto-match at daily limit)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `CreditBar` | `blocks/` | Compact bar with credit count, color-coded. Props: `credits`, `maxCredits`, `onBuyMore` |
+| Existing | `CreditBalance` | `blocks/` | Detail card with progress bar. Props: `total`, `used`, `onBuyMore` |
+| New | Zustand `usage-store` | Extension `stores/` | Balance, tier, daily counts, refresh logic |
+| New | `UpgradePrompt` | `blocks/` | Modal/dialog for "Upgrade coming soon" message |
+| New | Credit check interceptor | Extension `lib/` | Shared function that gates AI operations |
+| Modified | `CreditBar` | `blocks/` | Wire to real GET /v1/usage data |
+| Modified | `CreditBalance` | `blocks/` | Wire to real data, show tier info |
+
+### Acceptance Criteria
+
+**Given** the user is authenticated and sidebar is open
+**When** `GET /v1/usage` is called on load
+**Then** the CreditBar at the bottom of ExtensionSidebar shows real credit balance
+**And** color coding: green (>50%), yellow (20-50%), red (≤20%)
+
+**Given** the user taps the CreditBar
+**When** the detail view expands
+**Then** CreditBalance shows: tier name (Free/Starter/Pro/Power), credits used, credits remaining, percentage bar
+**And** for free tier: "5 lifetime credits" label
+**And** for free tier: "X of 20 auto-matches remaining today" counter
+
+**Given** the user tries to use an AI feature (detailed match, cover letter, outreach, chat)
+**When** the credit check interceptor runs
+**Then** if credits > 0 → allow operation, decrement locally, refresh from API after
+**And** if credits = 0 → block with disabled button + "No credits remaining" message
+**And** show UpgradePrompt: "Upgrade coming soon — paid plans will unlock unlimited AI features"
+
+**Given** the user is on free tier and tries auto-match
+**When** they have used 20 auto-matches today
+**Then** auto-match is blocked with "Daily limit reached (20/day)" message
+**And** "Upgrade for unlimited auto-matches" prompt shown
+
+**Given** an AI operation completes (success or failure)
+**When** the operation callback fires
+**Then** `GET /v1/usage` is called to refresh the balance from the server
+**And** CreditBar updates with fresh data
+
+**Given** this story retrofits credit checks into previous stories
+**When** EXT.6 (match), EXT.7 (cover letter/outreach), EXT.8 (chat) are already implemented
+**Then** a shared `checkCredits()` function is called before each AI operation
+**And** the function reads from usage-store and blocks if insufficient
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/usage` | GET | Get current balance and limits | Exists |
+
+### Data Mapping
+
+Use existing mapper: `mapUsageResponse()` from `@jobswyft/ui`.
+
+---
+
+## Story EXT.11: Feedback
+
+**As a** user who has ideas or found issues,
+**I want** to submit feedback directly from the extension,
+**So that** the Jobswyft team can improve the product.
+
+**FRs addressed:** FR83 (submit feedback), FR83a (categorization), FR84 (context capture), FR84a (optional screenshot)
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| New | `FeedbackForm` | `features/` | Dialog with category selector, textarea, context auto-capture |
+| Modified | `AppHeader` | `layout/` | Add "Send Feedback" option to settings dropdown |
+
+### Acceptance Criteria
+
+**Given** the user clicks "Send Feedback" in the AppHeader settings dropdown
+**When** the feedback dialog opens
+**Then** a category selector shows: Bug Report, Feature Request, General Feedback
+**And** a textarea is available for feedback content
+**And** a submit button is present
+
+**Given** the user fills in feedback and clicks Submit
+**When** the submission triggers
+**Then** context is auto-captured: current page URL, active sidebar tab, last action performed, browser version
+**And** `POST /v1/feedback` is called with `{ content, category, context }`
+**And** on success: confirmation message shown ("Thanks for your feedback!"), form closes
+**And** on failure: error message shown, form stays open for retry
+
+**Given** the feedback form is open
+**When** the user has not filled in content
+**Then** the submit button is disabled
+**And** minimum content length is enforced (e.g., 10 characters)
+
+**Given** the FeedbackForm component is built
+**When** it renders in Storybook
+**Then** it displays correctly at 400×600 in both dark and light themes
+**And** category selection, textarea, and submit button are all functional
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/feedback` | POST | Submit user feedback | Exists |
+
+### Tech Debt
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| **FEEDBACK-01** | Screenshot attachment (FR84a) — requires additional UI for capture/upload. Defer to iteration. | Low |
