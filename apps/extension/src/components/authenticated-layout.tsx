@@ -1,4 +1,4 @@
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect, useCallback, useMemo } from "react";
 import { AppHeader, ExtensionSidebar, NonJobPageView, ResumeCard } from "@jobswyft/ui";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
@@ -106,31 +106,29 @@ export function AuthenticatedLayout() {
     />
   );
 
-  // Resume context content (collapsible, controlled by ExtensionSidebar)
+  // Memoize resume list transform to avoid unnecessary ResumeCard re-renders
+  const resumeSummaries = useMemo(
+    () => resumes.map((r) => ({ id: r.id, fileName: r.fileName })),
+    [resumes]
+  );
+
+  // Resume context content — must be a DIRECT element (not Fragment) so
+  // ExtensionSidebar's cloneElement can inject isOpen/onOpenChange props
   const resumeContext = (
-    <>
-      <ResumeCard
-        resumes={resumes.map((r) => ({ id: r.id, fileName: r.fileName }))}
-        activeResumeId={activeResumeId}
-        resumeData={activeResumeData}
-        isLoading={resumeLoading}
-        isUploading={resumeUploading}
-        error={resumeError}
-        onResumeSelect={handleResumeSelect}
-        onUpload={handleUpload}
-        onDelete={handleDelete}
-        onRetry={handleRetry}
-        onClearError={clearResumeError}
-        isCollapsible
-      />
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/pdf"
-        className="hidden"
-        onChange={handleFileChange}
-      />
-    </>
+    <ResumeCard
+      resumes={resumeSummaries}
+      activeResumeId={activeResumeId}
+      resumeData={activeResumeData}
+      isLoading={resumeLoading}
+      isUploading={resumeUploading}
+      error={resumeError}
+      onResumeSelect={handleResumeSelect}
+      onUpload={handleUpload}
+      onDelete={handleDelete}
+      onRetry={handleRetry}
+      onClearError={clearResumeError}
+      isCollapsible
+    />
   );
 
   // Placeholder for manual job paste (EXT.5)
@@ -167,22 +165,33 @@ export function AuthenticatedLayout() {
   );
 
   return (
-    <ExtensionSidebar
-      header={header}
-      className={SIDE_PANEL_CLASSNAME}
-      contextContent={resumeContext}
-      isLocked={isLocked}
-      activeTab={activeTab}
-      onTabChange={(tab: string) => setActiveTab(tab as typeof activeTab)}
-      aiStudioSubTab={aiStudioSubTab}
-      onAIStudioSubTabChange={(subTab: string) =>
-        setAIStudioSubTab(subTab as typeof aiStudioSubTab)
-      }
-      scanContent={scanContent}
-      studioContent={studioContent}
-      autofillContent={autofillContent}
-      coachContent={coachContent}
-      creditBar={{ credits, maxCredits }}
-    />
+    <>
+      <ExtensionSidebar
+        header={header}
+        className={SIDE_PANEL_CLASSNAME}
+        contextContent={resumeContext}
+        isLocked={isLocked}
+        activeTab={activeTab}
+        onTabChange={(tab: string) => setActiveTab(tab as typeof activeTab)}
+        aiStudioSubTab={aiStudioSubTab}
+        onAIStudioSubTabChange={(subTab: string) =>
+          setAIStudioSubTab(subTab as typeof aiStudioSubTab)
+        }
+        scanContent={scanContent}
+        studioContent={studioContent}
+        autofillContent={autofillContent}
+        coachContent={coachContent}
+        creditBar={{ credits, maxCredits }}
+      />
+      {/* Hidden file input — placed outside contextContent so cloneElement works */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleFileChange}
+        aria-label="Upload resume PDF"
+      />
+    </>
   );
 }

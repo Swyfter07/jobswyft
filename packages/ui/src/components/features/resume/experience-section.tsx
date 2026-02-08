@@ -46,6 +46,7 @@ function ExperienceSection({ entries }: ExperienceSectionProps) {
           type="button"
           onClick={() => setShowAll(!showAll)}
           className="w-full text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 py-2 border border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50"
+          aria-label={showAll ? "Show fewer positions" : `View all ${entries.length} positions`}
         >
           {showAll ? (
             "Show less"
@@ -142,6 +143,7 @@ function ExperienceEntryCard({
                       setDescExpanded(!descExpanded)
                     }}
                     className="ml-1 text-primary hover:underline font-medium cursor-pointer"
+                    aria-label={descExpanded ? "Show less description" : "Show full description"}
                   >
                     {descExpanded ? "show less" : "show more"}
                   </button>
@@ -171,6 +173,7 @@ function ExperienceEntryCard({
                       setHighlightsExpanded(!highlightsExpanded)
                     }}
                     className="text-xs text-primary hover:underline font-medium cursor-pointer"
+                    aria-label={highlightsExpanded ? "Show fewer highlights" : `Show ${entry.highlights.length - HIGHLIGHTS_VISIBLE_LIMIT} more highlights`}
                   >
                     {highlightsExpanded
                       ? "show less"

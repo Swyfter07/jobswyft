@@ -80,9 +80,9 @@ class ApiClient {
         return null;
       }
 
-      // Server error (5xx) or other HTTP errors → return null (treat as auth failure)
+      // Server error (5xx) or other HTTP errors → throw so caller can distinguish
       if (!res.ok) {
-        return null;
+        throw new Error(`Server error: ${res.status}`);
       }
 
       const body = await res.json();

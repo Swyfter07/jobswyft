@@ -145,16 +145,16 @@ export function ExtensionSidebar({
                         Custom forceMount + hidden pattern preserves state but may affect ARIA.
                         Manual QA required: Test with NVDA/VoiceOver to verify announcements. */}
                     <div className="flex-1 overflow-y-auto scroll-fade-y scrollbar-hidden bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false" onScroll={handleMainScroll}>
-                        <TabsContent value="scan" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "scan" && "hidden")}>
+                        <TabsContent value="scan" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "scan" && "hidden")} aria-hidden={currentTab !== "scan"}>
                             {scanContent}
                         </TabsContent>
-                        <TabsContent value="ai-studio" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "ai-studio" && "hidden")}>
+                        <TabsContent value="ai-studio" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "ai-studio" && "hidden")} aria-hidden={currentTab !== "ai-studio"}>
                             {studioContent}
                         </TabsContent>
-                        <TabsContent value="autofill" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "autofill" && "hidden")}>
+                        <TabsContent value="autofill" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "autofill" && "hidden")} aria-hidden={currentTab !== "autofill"}>
                             {autofillContent}
                         </TabsContent>
-                        <TabsContent value="coach" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "coach" && "hidden")}>
+                        <TabsContent value="coach" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "coach" && "hidden")} aria-hidden={currentTab !== "coach"}>
                             {coachContent}
                         </TabsContent>
                     </div>

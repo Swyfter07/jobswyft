@@ -18,7 +18,7 @@ type Story = StoryObj<typeof meta>
 /** Parent section (top-level wrapper like "Resume Blocks"). */
 export const Parent: Story = {
   render: () => (
-    <div className="w-[380px] p-4">
+    <div className="w-[360px] p-4">
       <CollapsibleSection
         icon={<Layers />}
         title="Resume Blocks"
@@ -42,7 +42,7 @@ export const Parent: Story = {
 /** Child section (sub-section like "Personal Info"). */
 export const Child: Story = {
   render: () => (
-    <div className="w-[380px] p-4">
+    <div className="w-[360px] p-4">
       <CollapsibleSection
         icon={<User />}
         title="Personal Info"
@@ -69,7 +69,7 @@ export const Accordion: Story = {
       setOpenSection(open ? id : null)
     }
     return (
-      <div className="w-[380px] p-4 space-y-1">
+      <div className="w-[360px] p-4 space-y-1">
         <CollapsibleSection
           icon={<User />}
           title="Personal Info"
@@ -91,4 +91,41 @@ export const Accordion: Story = {
       </div>
     )
   },
+}
+
+/** Dark mode variant — verifies section styles render correctly. */
+export const DarkMode: Story = {
+  parameters: {
+    backgrounds: { default: "dark" },
+  },
+  render: () => (
+    <div className="dark bg-background w-[360px] p-4 rounded-xl space-y-1">
+      <CollapsibleSection
+        icon={<Layers />}
+        title="Resume Blocks"
+        count={6}
+        isParent
+        defaultOpen
+      >
+        <CollapsibleSection
+          icon={<User />}
+          title="Personal Info"
+          count={4}
+          defaultOpen
+        >
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>Marcus Chen</p>
+            <p>marcus@email.com</p>
+          </div>
+        </CollapsibleSection>
+        <CollapsibleSection
+          icon={<Wrench />}
+          title="Skills"
+          count={12}
+        >
+          <p className="text-sm text-muted-foreground">Skills content...</p>
+        </CollapsibleSection>
+      </CollapsibleSection>
+    </div>
+  ),
 }

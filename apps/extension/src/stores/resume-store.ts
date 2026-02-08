@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { apiClient } from "../lib/api-client";
 import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
-import { ApiResponseError } from "@jobswyft/ui";
+import { ApiResponseError, mapResumeResponse } from "@jobswyft/ui";
 import type {
   ApiResumeListItem,
   ApiResumeResponse,
@@ -25,23 +25,6 @@ function mapApiListItem(item: ApiResumeListItem): ResumeListEntry {
     isActive: item.is_active,
     parseStatus: item.parse_status,
   };
-}
-
-function mapResumeResponse(apiResume: ApiResumeResponse): ResumeData {
-    // This helper was imported from UI before, but it's simple enough to implement or import
-    // customized for local state if needed.
-    // Actually, `mapResumeResponse` was imported from @jobswyft/ui.
-    // I should check if I removed it from imports.
-    // Yes, I did. I need to re-add it or implement it.
-    // The previous code verified it was imported.
-    // I shall re-import it.
-    return {
-        id: apiResume.id,
-        fileName: apiResume.file_name,
-        content: apiResume.parsed_data?.content ?? "",
-        // Add other fields if ResumeData requires them
-        // For now, let's assume imports handles it or I'll re-add the import.
-    } as any; // Temporary cast if type mismatch, but better to import.
 }
 
 // ─── Error message helpers ──────────────────────────────────────────
@@ -124,11 +107,11 @@ export const useResumeStore = create<ResumeStoreState>()(
 
           // Fetch detail for active resume
           if (activeResumeId) {
-            get().fetchResumeDetail(token, activeResumeId);
+            await get().fetchResumeDetail(token, activeResumeId);
           }
         } catch (error) {
-            // If error is from unwrap (ApiResponseError) it has a message
-          set({ isLoading: false, error: getErrorMessage(error) });
+          const msg = getErrorMessage(error);
+          set({ error: msg, isLoading: false });
         }
       },
 
@@ -136,11 +119,6 @@ export const useResumeStore = create<ResumeStoreState>()(
         set({ isLoading: true, error: null });
         try {
           const data = await apiClient.getResume(token, id);
-          // map it. I need mapResumeResponse imported.
-          // Since I can't easily see internals of @jobswyft/ui from here without reading another file,
-          // I will use strict import "mapResumeResponse" from UI package.
-          // The previous file had `import { mapResumeResponse } from "@jobswyft/ui"`.
-          const { mapResumeResponse } = await import("@jobswyft/ui");
           const resumeData = mapResumeResponse(data);
           set({ activeResumeData: resumeData, isLoading: false });
         } catch (error) {
@@ -183,12 +161,12 @@ export const useResumeStore = create<ResumeStoreState>()(
             isUploading: false,
           });
 
-          // Critical Fix: Ensure uploaded resume becomes active
+          // Ensure uploaded resume becomes active
           if (!apiResume.is_active) {
             await get().setActiveResume(token, apiResume.id);
           } else {
-             set({ activeResumeId: apiResume.id });
-             get().fetchResumeDetail(token, apiResume.id);
+            set({ activeResumeId: apiResume.id });
+            await get().fetchResumeDetail(token, apiResume.id);
           }
 
         } catch (error) {
@@ -215,7 +193,7 @@ export const useResumeStore = create<ResumeStoreState>()(
 
           // If deleted active resume and there's a new active, fetch its detail
           if (wasActive && newActiveId) {
-            get().fetchResumeDetail(token, newActiveId);
+            await get().fetchResumeDetail(token, newActiveId);
           }
         } catch (error) {
           set({ error: getErrorMessage(error) });
@@ -236,7 +214,7 @@ export const useResumeStore = create<ResumeStoreState>()(
           });
 
           // Fetch detail for newly active resume
-          get().fetchResumeDetail(token, id);
+          await get().fetchResumeDetail(token, id);
         } catch (error) {
           set({ error: getErrorMessage(error) });
         }

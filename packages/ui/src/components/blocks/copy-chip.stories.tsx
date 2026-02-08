@@ -58,3 +58,23 @@ export const CopyButtonDemo: Story = {
     </div>
   ),
 }
+
+/** Dark mode variant — verifies all chip states render correctly. */
+export const DarkMode: Story = {
+  parameters: {
+    backgrounds: { default: "dark" },
+  },
+  render: () => (
+    <div className="dark bg-background p-4 rounded-xl space-y-4">
+      <div className="flex flex-wrap gap-2">
+        <CopyChip value="marcus.chen@email.com" icon={<Mail />} label="marcus.chen@email.com" />
+        <CopyChip value="TypeScript" />
+        <CopyChip value="San Francisco, CA" icon={<MapPin />} label="San Francisco, CA" />
+      </div>
+      <div className="flex items-center gap-4">
+        <span className="text-sm text-muted-foreground">Copy button:</span>
+        <CopyButton value="Dark mode copy" label="Copy" />
+      </div>
+    </div>
+  ),
+}

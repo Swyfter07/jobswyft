@@ -26,6 +26,7 @@ function SkillsSection({ skills }: SkillsSectionProps) {
           type="button"
           onClick={() => setShowAll(!showAll)}
           className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
+          aria-label={showAll ? "Show fewer skills" : `Show ${hiddenCount} more skills`}
         >
           {showAll ? (
             "Show less"

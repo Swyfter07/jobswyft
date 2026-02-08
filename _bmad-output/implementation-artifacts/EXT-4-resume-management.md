@@ -648,7 +648,29 @@ Claude Opus 4.6
 - 2026-02-07: Review pass 1 — CopyChip (green tick, icon position variants), ResumeCard (accent border, spacing), experience show-more (description + highlights), API tech debt documented
 - 2026-02-07: Review pass 2 — ResumeCard redesign (empty state standalone, loading/uploading unified, error replaces blocks, Card spacing rebuilt with gap-0), collapsed trigger spacing fixed (sidebar p-3 → px-2 py-1), ResumeEmptyState accent border + className prop
 - 2026-02-07: Review pass 3 — Auto-expand collapsible on upload (useEffect), smooth collapse transition (accordion-down/up animation on CollapsibleContent)
-- 2026-02-08: Code Review Fixes — Refactored `api-client.ts` to return typed responses. Fixed state synchronization bug in `resume-store.ts` (added explicit `setActiveResume` call on upload). Cleaned up error handling. Verified with unit tests.
+- 2026-02-08: Code Review Fixes — Refactored `api-client.ts` to return typed responses. Fixed state synchronization bug in `resume-store.ts`. Cleaned up error handling. Verified with unit tests.
+- 2026-02-08: UI Polish — Fixed `ResumeCard` chevron rotation to use `group-data-[state=closed]` for reliable direction switching.
+- 2026-02-08: Adversarial Code Review (AI) — 14 findings (3 CRITICAL, 4 HIGH, 4 MEDIUM, 3 LOW). All CRITICAL/HIGH/MEDIUM fixed:
+  - CRITICAL: Reverted chevron rotation to `cn()` conditional (group-data-[state] unreliable on trigger button)
+  - CRITICAL: Removed `(error as any).code` / `(error as Error).message` casts — ApiResponseError already has `.code` property
+  - CRITICAL: Replaced local broken `mapResumeResponse` with static import from `@jobswyft/ui`; removed dynamic import
+  - CRITICAL: Awaited all `fetchResumeDetail` calls (was fire-and-forget → silent errors)
+  - HIGH: `api-client.ts` `getMe()` now throws on 5xx instead of returning null (distinguish server error from auth failure)
+  - HIGH: Memoized resume list transform in `authenticated-layout.tsx` via `useMemo`
+  - HIGH: Added `aria-label` to all toggle buttons in skills-section, experience-section (description, highlights, view-all)
+  - MEDIUM: Added DarkMode stories to copy-chip.stories.tsx and collapsible-section.stories.tsx
+  - MEDIUM: Added `aria-hidden` to forceMount hidden tab panels in extension-sidebar.tsx
+  - MEDIUM: Added `role="status" aria-label="No resumes uploaded"` to resume-empty-state.tsx
+  - MEDIUM: Added `aria-label="Upload resume PDF"` to hidden file input in authenticated-layout.tsx
+  - LOW: Fixed collapsible-section story widths from 380px → 360px (matches UX spec)
+  - Builds: UI 128.03 kB (gzip 24.91 kB), Extension 704.26 kB — both pass
+  - Tests: 23 UI + 22 extension (pre-existing theme-store.test.ts failure excluded)
+- 2026-02-08: Fragment/cloneElement Bug Fix — Root cause of persistent chevron rotation failure:
+  - `authenticated-layout.tsx` wrapped `<ResumeCard>` + hidden `<input>` in a Fragment (`<>...</>`) as `contextContent`
+  - `ExtensionSidebar.cloneElement(contextContent, { isOpen, onOpenChange })` injected props onto the Fragment, which silently discards them
+  - `ResumeCard` never received `isOpen`/`onOpenChange` → `controlledOpen` always `undefined` → chevron stuck
+  - Fix: Moved hidden file input out of `contextContent` into main return JSX; `contextContent` is now a direct `<ResumeCard>` element
+  - Controlled collapse (auto-collapse on tab switch, auto-collapse on scroll, manual toggle) now works correctly
 
 ### File List
 

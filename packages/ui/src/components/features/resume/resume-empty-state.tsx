@@ -12,6 +12,8 @@ export interface ResumeEmptyStateProps {
 function ResumeEmptyState({ onUpload, className }: ResumeEmptyStateProps) {
   return (
     <div
+      role="status"
+      aria-label="No resumes uploaded"
       className={cn(
         "flex flex-col items-center justify-center py-6 border-2 border-dashed border-card-accent-border rounded-xl",
         className
