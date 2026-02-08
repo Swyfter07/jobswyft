@@ -17,10 +17,12 @@ stepsCompleted:
   - step-e-03-edit
 workflowStatus: complete
 completedAt: 2026-01-29
-lastEdited: 2026-02-03
+lastEdited: 2026-02-07
 inputDocuments:
   - PRD.md
   - storybook-demo/docs/PRD.md (developer specification merge source)
+  - ux-design-specification.md (UX alignment source, 2026-02-07)
+  - architecture.md (architecture alignment source, 2026-02-07)
 workflowType: 'prd'
 projectContext:
   productName: Jobswyft
@@ -38,6 +40,20 @@ classification:
   complexity: Medium (low regulatory, medium-high technical)
   projectContext: brownfield
 editHistory:
+  - date: 2026-02-07
+    changes: |
+      - Aligned PRD with UX Design Specification and Architecture (2026-02-07 revisions):
+        - CRITICAL: Extension surface changed from Shadow DOM/content scripts to Chrome Side Panel API
+        - CRITICAL: Four-state model updated (Job Page/Application Page → Job Detected/Full Power); AI Studio unlocks on job detection + credits, not application page
+        - CRITICAL: Added Coach tab FRs (FR37a-FR37f) — standalone tab with conversational AI coaching
+        - CRITICAL: NFR22 rewritten — no offline mode, graceful "no connection" state
+        - HIGH: Added streaming AI NFRs (NFR6a-NFR6b) — SSE for generative endpoints
+        - HIGH: Added accessibility NFRs (NFR44a-NFR44e) — WCAG 2.1 AA, keyboard nav, ARIA, reduced motion
+        - HIGH: Added state preservation FRs (FR72a-FR72d) — job switch, non-job page, manual reset, tab persistence
+        - MEDIUM: FR14b enhanced — manual job entry with paste-job-description fallback
+        - MEDIUM: Added sidebar tab structure FRs (FR67a-FR67b) — 4 tabs + AI Studio sub-tabs
+        - Updated Chrome permissions (added sidePanel, corrected scripting/identity descriptions)
+        - Updated sidebar state model table with expanded state transitions
   - date: 2026-02-03
     changes: |
       - Fixed implementation leakage (validation findings):
@@ -745,19 +761,20 @@ npx openapi-typescript-codegen \
 
 **WXT Configuration:**
 
-- Content scripts for sidebar injection
-- Shadow DOM for style isolation from host pages
-- Background service worker for OAuth and API communication
+- Chrome Side Panel API for persistent sidebar alongside job boards (not content script Shadow DOM)
+- Background service worker for OAuth, API communication, and URL change detection (Tabs API)
+- Content script for DOM extraction (autofill field population, job page scanning)
 - Chrome Storage for local state (active resume, scan cache)
 - Local unpacked extension loading for MVP development/testing
 
 **Chrome Permissions Required:**
 
+- `sidePanel` - Persistent side panel alongside browsing
 - `activeTab` - Access current tab for scanning
-- `scripting` - Inject content scripts
+- `scripting` - DOM extraction for autofill and job scanning
 - `storage` - Local state persistence
-- `tabs` - Tab detection for job pages
-- `identity` - Google OAuth flow
+- `tabs` - URL change detection for auto-scan triggers
+- `identity` - Google OAuth via `chrome.identity.launchWebAuthFlow`
 - `host_permissions: <all_urls>` - Work on any job board
 
 **Sidebar State Model:**
@@ -766,14 +783,17 @@ The extension sidebar operates in four distinct states based on authentication a
 
 | State | Condition | Available Features |
 |-------|-----------|-------------------|
-| **Logged Out** | User not authenticated | Google Sign-In button only |
-| **Non-Job Page** | Authenticated, page is not a job posting | Resume tray, Dashboard link; AI Studio and Autofill disabled |
-| **Job Page** | Authenticated, job posting detected | Resume tray, auto-scan displays job card; AI Studio locked until application page |
-| **Application Page** | Authenticated, job application form detected | Full features: Resume tray, AI Studio unlocked, Autofill enabled |
+| **Logged Out** | User not authenticated | Feature showcase + Google Sign-In CTA |
+| **Non-Job Page** | Authenticated, page is not a job posting | Resume management, Dashboard link; AI Studio, Autofill, and Coach disabled |
+| **Job Detected** | Authenticated, job posting auto-scanned | Resume tray, job card with match analysis; AI Studio and Coach unlock with credits |
+| **Full Power** | Job detected + on application form page | All features: AI Studio, Coach, Autofill enabled (form fields available) |
 
 **State Transitions:**
-- Sidebar opens → Check auth → Logged Out or check page type
-- Page navigation → Re-evaluate page type → Update available features
+- Sidebar opens → Check auth → Logged Out or check page context
+- Page navigation → Re-evaluate page context → Update available features
+- Job URL change → Auto-scan new job, reset job-specific state (AI Studio outputs, chat)
+- Non-job page → Preserve last job context (resume, credits persist)
+- Manual reset → Clear job data, match, AI Studio, chat; preserve resume, auth, credits
 - Logout → Clear tokens → Return to Logged Out state
 
 ### Dashboard-Specific Requirements
@@ -848,7 +868,7 @@ The extension sidebar operates in four distinct states based on authentication a
 
 - **FR14:** System automatically scans job posting pages when detected via URL pattern matching
 - **FR14a:** System detects job pages using configurable URL patterns for major job boards
-- **FR14b:** Users can manually trigger scan if automatic detection fails
+- **FR14b:** Users can manually enter job details when automatic detection fails, including pasting a full job description for AI analysis
 - **FR15:** System extracts job title from job posting pages
 - **FR16:** System extracts company name from job posting pages
 - **FR17:** System extracts full job description from job posting pages
@@ -893,6 +913,15 @@ The extension sidebar operates in four distinct states based on authentication a
 - **FR36b:** Users can select a length for outreach message generation (e.g., brief, standard)
 - **FR36c:** Users can provide custom instructions for outreach message generation
 - **FR37:** Users can regenerate outreach messages with feedback on what to change
+
+**Coach (Standalone Tab):**
+
+- **FR37a:** Users can access Coach as a standalone sidebar tab (separate from AI Studio)
+- **FR37b:** Coach provides conversational AI coaching personalized to the user's active resume and current scanned job
+- **FR37c:** Coach can advise on application strategy, interview preparation, and skill gap analysis for the current role
+- **FR37d:** Coach conversations cost 1 AI credit per message
+- **FR37e:** Coach conversation resets when user switches to a different job (new job = new coaching context)
+- **FR37f:** System generates contextual coaching prompts based on match analysis results (e.g., "How do I address the Kubernetes gap?")
 
 **Common AI Capabilities:**
 
@@ -942,14 +971,20 @@ The extension sidebar operates in four distinct states based on authentication a
 
 ### Extension Sidebar Experience
 
-- **FR67:** Users can open the extension sidebar from any webpage
+- **FR67:** Users can open the extension sidebar (Chrome Side Panel) from any webpage
+- **FR67a:** Sidebar navigation uses a 4-tab structure: Scan | AI Studio | Autofill | Coach
+- **FR67b:** AI Studio contains 4 sub-tabs: Match | Cover Letter | Chat | Outreach
 - **FR68:** Users can close the extension sidebar
-- **FR69:** Sidebar displays one of four states: Logged Out (sign-in only), Non-Job Page (resume tray enabled, AI disabled), Job Page (auto-scan with instant match, AI locked), Application Page (full features)
-- **FR69a:** AI Studio tools (detailed match, cover letter, outreach, chat) unlock only when user is on a job application page
-- **FR69b:** Autofill functionality enables only when user is on a job application page
+- **FR69:** Sidebar displays one of four states: Logged Out (feature showcase + sign-in CTA), Non-Job Page (resume management + waiting state), Job Detected (auto-scanned job details + match analysis), Full Power (all tabs: Scan, AI Studio, Autofill, Coach)
+- **FR69a:** AI Studio tools (detailed match, cover letter, outreach, chat) and Coach tab unlock when a job is detected AND user has available credits
+- **FR69b:** Autofill functionality enables only when user is on a page with form fields (application page)
 - **FR70:** Sidebar displays resume tray for resume access when user is authenticated
-- **FR71:** AI Studio tools are locked until user navigates to application page with valid scan data
+- **FR71:** AI Studio tools are locked until a job is scanned and user has available credits; Coach tab follows the same unlock condition
 - **FR72:** Users can navigate to the web dashboard from the sidebar
+- **FR72a:** When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
+- **FR72b:** When user navigates to a non-job page, sidebar preserves the last job context (user can continue working with previous job data)
+- **FR72c:** Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs, chat; preserves resume, auth, credits)
+- **FR72d:** Sidebar tab switching preserves state within each tab (switching Scan → Coach → Scan does not re-trigger scan)
 
 ### Web Dashboard
 
@@ -988,6 +1023,8 @@ The extension sidebar operates in four distinct states based on authentication a
 - **NFR4:** Autofill executes within 1 second
 - **NFR5:** Sidebar opens within 500ms of user click
 - **NFR6:** Resume parsing completes within 10 seconds of upload
+- **NFR6a:** AI generation endpoints (cover letter, outreach, chat, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
+- **NFR6b:** Match analysis and resume parsing return complete JSON responses (non-streaming)
 
 **Accuracy Requirements:**
 
@@ -1022,7 +1059,7 @@ The extension sidebar operates in four distinct states based on authentication a
 **Availability:**
 
 - **NFR21:** Backend API maintains 99.9% uptime (excluding planned maintenance)
-- **NFR22:** Extension functions offline for cached data (resume selection, local state)
+- **NFR22:** No offline mode; extension displays clear "no connection" state when network is unavailable. All AI and data features require an active network connection.
 - **NFR23:** AI provider failures are handled gracefully with user notification
 
 **Error Handling:**
@@ -1066,6 +1103,14 @@ The extension sidebar operates in four distinct states based on authentication a
 - **NFR39:** Minimal automated testing acceptable for MVP
 - **NFR40:** Production code must be thorough with comprehensive error handling
 - **NFR41:** Backend API must handle all edge cases and failure scenarios
+
+**Accessibility:**
+
+- **NFR44a:** Extension and dashboard target WCAG 2.1 AA compliance for color contrast (4.5:1 normal text, 3:1 large text/UI components), keyboard navigation, and screen reader support
+- **NFR44b:** All interactive elements are reachable via keyboard (Tab, Arrow keys, Enter, Escape)
+- **NFR44c:** All icon-only buttons include descriptive ARIA labels for screen readers
+- **NFR44d:** Color is never the sole indicator of information — always paired with text, icons, or numeric values
+- **NFR44e:** All animations respect the `prefers-reduced-motion` system preference; users who enable reduced motion see instant state changes instead of animated transitions
 
 **Logging & Observability (MVP):**
 
