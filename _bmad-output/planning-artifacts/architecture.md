@@ -2,9 +2,10 @@
 stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
 status: complete
 completedAt: '2026-01-30'
-lastUpdated: '2026-02-03-r2'
+lastUpdated: '2026-02-07'
 inputDocuments:
   - prd.md
+  - ux-design-specification.md (source of truth for 2026-02-07 alignment revision)
   - job-jet/CLAUDE.md (reference - development preferences)
   - job-jet/v3-api-contracts.md (reference - API design)
   - job-jet/v3-database-schema.md (reference - database design)
@@ -18,6 +19,8 @@ date: '2026-01-30'
 prototypeRepo: '/Users/enigma/Documents/Projects/job-jet/'
 uiReferenceRepo: '/Users/enigma/Documents/Projects/storybook-demo/'
 revisions:
+  - date: '2026-02-07'
+    change: 'UX-Architecture alignment: Full rewrite of affected sections to match UX Design Specification (source of truth). Updated: width 400→360px fluid, viewports, streaming AI, offline→no offline, Answer→Chat, Side Panel API, Coach tab, functional area tokens, four-state model, shell layout, button hierarchy, error escalation, accessibility, animation strategy, component inventory, state preservation matrix, credit system (daily free matches).'
   - date: '2026-02-03-r2'
     change: 'Post-implementation cleanup: Rewrote UI Package Architecture to match Story 0.1-NEW reality (Tailwind v4 OKLCH, Storybook 10, Vite 7, unified radix-ui, tw-animate-css). Removed packages/design-tokens/ (tokens live in globals.css). Removed atoms/molecules/organisms directory hierarchy (using components/ui/ + components/custom/ pattern). Removed stale HSL colors, tailwind.config.ts, Storybook 8 addons, and individual @radix-ui/* references. Updated project directory tree and all cross-references.'
   - date: '2026-02-03'
@@ -34,6 +37,7 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 
 ### New Implementation (Source of Truth)
 - **PRD**: `_bmad-output/planning-artifacts/prd.md` - 884 lines, comprehensive product requirements
+- **UX Design Specification**: `_bmad-output/planning-artifacts/ux-design-specification.md` - 14-step comprehensive UX spec (source of truth for all UI/UX architectural decisions)
 
 ### Prototype Reference (For Patterns & Acceleration)
 - **CLAUDE.md**: Development preferences, commands, MCP tool usage
@@ -54,6 +58,13 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | **Supabase Project** | New project for Jobswyft | Fresh start, can reuse schema patterns from job-jet |
 | **Development Approach** | Build from scratch iteratively | Use job-jet as reference/baseline, not copy-paste |
 | **Extension Framework** | WXT | Confirmed - battle-tested in prototype |
+| **Extension Surface** | Chrome Side Panel API | Persistent panel alongside job boards; NOT content script Shadow DOM |
+| **Sidebar Tabs** | 4: Scan \| AI Studio \| Autofill \| Coach | Coach is standalone — not nested in AI Studio |
+| **AI Studio Sub-Tabs** | 4: Match \| Cover Letter \| Chat \| Outreach | Chat replaces Answer tab (conversational AI interface) |
+| **Animation Library** | Framer Motion + CSS | Framer for state transitions + match score; CSS for micro-interactions |
+| **Streaming AI** | Yes — streaming text reveal | Cover letters, outreach, coach stream progressively with cancel option |
+| **Offline Mode** | None — graceful degradation | No offline features; clear "no connection" state instead |
+| **Panel Width** | Fluid 360–700px | No fixed-width assumptions; 360px Chrome default, user-draggable |
 
 ---
 
@@ -95,14 +106,14 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 - **Primary Domain:** Multi-Surface Product (Extension + Web + API)
 - **Database Tables:** ~7 (with RLS policies)
 - **API Endpoint Groups:** ~8
-- **AI Operations:** 5 (Match, Cover Letter, Answer, Outreach, Resume Parse)
+- **AI Operations:** 5 (Match, Cover Letter, Chat, Outreach, Resume Parse)
 
 ### Technical Constraints
 
 | Constraint | Architectural Impact |
 |------------|---------------------|
 | Chrome MV3 | Ephemeral service workers → chrome.storage + Zustand persistence |
-| Shadow DOM | Content script isolation → separate styling context |
+| Side Panel API | Persistent panel alongside browsing; no Shadow DOM; `.dark` class on panel root |
 | API-first | OpenAPI spec → generated TypeScript clients |
 | Supabase | Auth + DB + Storage as unified provider |
 | AI Abstraction | Claude primary + GPT fallback → provider interface needed |
@@ -111,13 +122,16 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 ### Cross-Cutting Concerns
 
 1. **Authentication**: Supabase JWT shared across extension ↔ web ↔ API
-2. **State Sync**: Local-first with background cloud sync (not real-time)
-3. **Credit Tracking**: 5 lifetime free generations, then subscription-based
-4. **Error Handling**: Consistent error responses with actionable feedback
-5. **Offline Mode**: Extension features work without network (cached data)
+2. **Four-State Progressive Model**: Logged Out → Non-Job Page → Job Detected → Full Power — side panel auto-adjusts to context
+3. **Credit Tracking**: Hybrid model — 20 daily free match analyses + 5 lifetime AI credits (generative content), then subscription-based
+4. **Error Handling**: Three-tier escalation — Inline Retry → Section Degraded → Full Re-Auth
+5. **No Offline Mode**: Graceful degradation with clear "no connection" state; all AI features require API calls
 6. **Subscription Tiers**: Feature gating based on plan (Free/Starter/Pro/Power)
-7. **Logging**: Comprehensive backend logging viewable on Railway dashboard (NFR42-44)
-8. **User Feedback**: In-app feedback capture for product iteration (FR78-80)
+7. **Streaming AI Responses**: Cover letters, outreach, coach chat stream progressively with cancel option
+8. **State Preservation**: Detailed rules per event (tab switch, job URL change, manual reset, re-login) — see State Preservation Matrix
+9. **Logging**: Comprehensive backend logging viewable on Railway dashboard (NFR42-44)
+10. **User Feedback**: In-app feedback capture for product iteration (FR78-80)
+11. **Accessibility**: WCAG 2.1 AA compliance, semantic HTML, ARIA patterns, reduced motion support
 
 ### Deferred Decisions
 
@@ -133,7 +147,9 @@ _This document builds collaboratively through step-by-step discovery. Sections a
 | Feature | Reason |
 |---------|--------|
 | BYOK (Bring Your Own Key) | Not in PRD - subscription model only |
-| Real-time WebSocket sync | No value add - background sync sufficient |
+| WebSocket real-time sync | No value add - SSE for streaming AI, background sync for data |
+| Offline mode | No offline features; graceful degradation with "no connection" state |
+| Content script Shadow DOM sidebar | Using Chrome Side Panel API instead (persistent, no DOM conflicts) |
 
 ---
 
@@ -248,7 +264,7 @@ jobswyft/
 **Styling Approach:**
 - **Tailwind v4 CSS-first** — No `tailwind.config.ts`; all theming via `@theme inline` in `globals.css`
 - **OKLCH color space** — Perceptually uniform, modern CSS color format
-- **CSS Variables** — Framework-agnostic tokens in `globals.css` (works in WXT Shadow DOM, Next.js, Storybook)
+- **CSS Variables** — Framework-agnostic tokens in `globals.css` (works in WXT Side Panel, Next.js, Storybook)
 - **Dark mode** — `@custom-variant dark (&:is(.dark *))` + `.dark` class on root element
 - **Lucide Icons** — 1000+ tree-shakeable icons (shadcn standard)
 - **CSS Modules** — Only for complex custom effects (glassmorphism, animations) when Tailwind utilities aren't sufficient
@@ -323,9 +339,21 @@ packages/ui/
 │   │   └── custom/             # Domain-specific compositions (built on ui/)
 │   │       ├── job-card.tsx
 │   │       ├── resume-card.tsx
-│   │       ├── empty-state.tsx
-│   │       ├── navbar.tsx
-│   │       └── extension-sidebar.tsx
+│   │       ├── app-header.tsx
+│   │       ├── credit-bar.tsx
+│   │       ├── logged-out-view.tsx
+│   │       ├── ai-studio.tsx
+│   │       ├── autofill.tsx
+│   │       ├── coach.tsx
+│   │       ├── animated-match-score.tsx  # dynamic import (framer-motion)
+│   │       ├── sequential-autofill.tsx
+│   │       ├── card-accent-footer.tsx
+│   │       ├── state-transition.tsx
+│   │       ├── icon-badge.tsx
+│   │       ├── skill-pill.tsx
+│   │       ├── skill-section-label.tsx
+│   │       ├── match-indicator.tsx
+│   │       └── extension-sidebar.tsx     # shell layout + state views
 └── dist/                       # Built output (ESM, ~20KB, deps externalized)
     ├── index.js
     ├── index.d.ts
@@ -338,19 +366,62 @@ packages/ui/
 
 | Directory | Purpose | Source | Examples |
 |-----------|---------|--------|----------|
-| `components/ui/` | shadcn primitives | Installed via `shadcn add` CLI | Button, Badge, Card, Dialog, Select, Tabs, Input |
-| `components/custom/` | Domain-specific compositions | Hand-built using `ui/` primitives | JobCard, ResumeCard, ExtensionSidebar, EmptyState |
-| `styles/` | Design tokens + base styles | `globals.css` is the single source of truth | OKLCH tokens, `@theme inline`, font config |
+| `components/ui/` | shadcn primitives (never modify) | Installed via `shadcn add` CLI | Button, Badge, Card, Input, Textarea, Tabs, Dialog, Select, Separator, ScrollArea, Progress, Accordion, DropdownMenu, Avatar, Tooltip, Collapsible |
+| `components/custom/` | Domain compositions + shared primitives | Hand-built using `ui/` primitives | See Component Inventory below |
+| `styles/` | Design tokens + base styles | `globals.css` is the single source of truth | OKLCH tokens, `@theme inline`, font config, `.btn-gradient-depth-*` utilities |
 | `lib/` | Utility functions | `cn()` from shadcn | Class merging (clsx + tailwind-merge) |
 
 **Adding shadcn components:**
 ```bash
 cd packages/ui
 pnpm dlx shadcn@latest add <component-name>
-# Example: pnpm dlx shadcn@latest add tooltip dropdown-menu popover sheet
+# Example: pnpm dlx shadcn@latest add tooltip dropdown-menu popover sheet collapsible
 ```
 
 Components are **copied** into `src/components/ui/` — you own the code and can customize freely.
+
+### Component Inventory
+
+**Composition Components (structural patterns):**
+
+| Component | Props | Purpose |
+|-----------|-------|---------|
+| `<CardAccentFooter>` | `className?` | Two-tone card accent zone: `bg-primary/5 border-t px-4 py-3` |
+| `<AnimatedMatchScore>` | `score: number`, `size?: 'sm' \| 'md'` | SVG radial ring + framer-motion count-up. **Dynamic import** (framer-motion ~30 kB gzip). |
+| `<SequentialAutofill>` | `fields: Field[]`, `onComplete?` | Staggered field animation wrapper (600ms/field) |
+| `<StateTransition>` | `state: SidebarState`, `children` | AnimatePresence wrapper with slide animation (`x: 20 → 0`, opacity fade, 200ms ease-out) |
+
+**Feature Components:**
+
+| Component | States | Key Props |
+|-----------|--------|-----------|
+| **JobCard** | default, editing, scanning (skeleton) | `job: JobData`, `match?: MatchData`, `isEditing?`, `onAnalyze?` |
+| **AIStudio** | locked, unlocked, generating, generated | `match: MatchData`, `credits: number`, `activeTab?` |
+| **Autofill** | idle, running, completed, error | `fields: Field[]`, `onFill?`, `onReset?` |
+| **Coach** | empty, active, generating | `messages: Message[]`, `onSend?`, `jobContext?: JobData` |
+| **CreditBar** | normal, warning (≤1), exhausted (0) | `used: number`, `total: number`, `renewsIn?: string` |
+| **LoggedOutView** | default, loading, error | `onSignIn?`, `isLoading?`, `error?: string` |
+| **ResumeCard** | collapsed, expanded | `resume: ResumeData`, `isActive?`, `onSelect?` |
+| **AppHeader** | authenticated, with-reset | `user?: User`, `onReset?`, `onSettings?` |
+
+**Shared Primitives (existing, keep):**
+
+| Component | Variants | Purpose |
+|-----------|----------|---------|
+| `<IconBadge>` | 6 variants × 3 sizes | Consistent icon presentation |
+| `<SkillPill>` | matched, missing | Skill badge with semantic colors |
+| `<SkillSectionLabel>` | success, warning | Section label with dot indicator |
+| `<MatchIndicator>` | score-based coloring | Static score display (non-animated fallback) |
+
+**Composed State Views:**
+
+| Component | Contains | Purpose |
+|-----------|----------|---------|
+| `<ExtensionSidebar>` | AppHeader + Tabs + CreditBar | Full sidebar shell with shell layout contract |
+| `<StateLoggedOut>` | LoggedOutView | Feature showcase + Google sign-in CTA |
+| `<StateAuthenticated>` | ResumeCard + empty state | Authenticated, no job detected |
+| `<StateJobDetected>` | JobCard + locked AIStudio preview | Job scanned, AI locked |
+| `<StateFullPower>` | JobCard + AIStudio + Autofill + Coach | Full feature access |
 
 ### Theme Configuration (globals.css)
 
@@ -382,43 +453,122 @@ globals.css
 | **Radius** | `--radius` (base: 0.625rem) | Calculated: sm, md, lg, xl, 2xl, 3xl, 4xl |
 | **Font** | `--font-sans` | `'Figtree Variable', sans-serif` |
 
-**Key Insight:** Tokens are **framework-agnostic**. CSS variables work in any environment — WXT Shadow DOM, Next.js pages, Storybook. The `@theme inline` block maps these variables to Tailwind's utility class system without needing a JS config file.
+**Functional Area Tokens (to be added per UX Design Specification):**
 
-**Dark Mode:** Applied via `.dark` class on root element. Each CSS variable has a corresponding dark override. Components automatically adapt through Tailwind's `dark:` variant (compiled from `@custom-variant dark`).
+Each of the 4 sidebar feature areas has its own color identity via semantic CSS variables (3 tokens per area × 2 modes = 24 CSS vars):
 
-### Application State via Props
+```css
+/* ─── Functional Area: Scan (blue ~245) ─── */
+--scan-accent: oklch(...);
+--scan-accent-foreground: oklch(...);
+--scan-accent-muted: oklch(...);
 
-Components handle application-level states through **props**, not a shared state architecture. shadcn + Radix already manages component-level states (hover, focus, disabled, open/closed) and theme states (dark/light) automatically.
+/* ─── Functional Area: Studio (aliases --ai-accent) ─── */
+--studio-accent: var(--ai-accent);
+--studio-accent-foreground: var(--ai-accent-foreground);
+--studio-accent-muted: oklch(...);  /* violet ~293 */
 
-What custom compositions need to handle:
+/* ─── Functional Area: Autofill (green ~155) ─── */
+--autofill-accent: oklch(...);
+--autofill-accent-foreground: oklch(...);
+--autofill-accent-muted: oklch(...);
 
-```tsx
-// components/custom/job-card.tsx — state-aware via props
-interface JobCardProps {
-  state?: 'default' | 'detected' | 'applied' | 'error'
-  isOffline?: boolean
-}
+/* ─── Functional Area: Coach (aliases --primary) ─── */
+--coach-accent: var(--primary);
+--coach-accent-foreground: var(--primary-foreground);
+--coach-accent-muted: oklch(...);  /* orange ~58 */
+```
 
-// components/custom/extension-sidebar.tsx — context-aware via props
-interface ExtensionSidebarProps {
-  hasResumeLoaded: boolean
-  hasJobDetected: boolean
-  isOffline: boolean
-  creditBalance: number
+**`@theme inline` additions** (grouped with comment blocks):
+```css
+@theme inline {
+  /* ─── Functional Areas ─── */
+  --color-scan-accent: var(--scan-accent);
+  --color-scan-accent-foreground: var(--scan-accent-foreground);
+  --color-scan-accent-muted: var(--scan-accent-muted);
+  --color-studio-accent: var(--studio-accent);
+  --color-studio-accent-foreground: var(--studio-accent-foreground);
+  --color-studio-accent-muted: var(--studio-accent-muted);
+  --color-autofill-accent: var(--autofill-accent);
+  --color-autofill-accent-foreground: var(--autofill-accent-foreground);
+  --color-autofill-accent-muted: var(--autofill-accent-muted);
+  --color-coach-accent: var(--coach-accent);
+  --color-coach-accent-foreground: var(--coach-accent-foreground);
+  --color-coach-accent-muted: var(--coach-accent-muted);
 }
 ```
 
+Use `var()` references for aliased tokens (studio → ai-accent, coach → primary) — single source of truth. If `--ai-accent` changes, `--studio-accent` follows automatically.
+
+**CSS Utility Classes (globals.css):**
+
+| Class | Purpose |
+|-------|---------|
+| `.btn-gradient-depth-scan` | Blue gradient CTA + glass edge (`border-t border-white/20`) + blue shadow glow on hover |
+| `.btn-gradient-depth-studio` | Violet gradient CTA + glass edge + violet shadow glow |
+| `.btn-gradient-depth-autofill` | Green gradient CTA + glass edge + green shadow glow |
+| `.btn-gradient-depth-coach` | Orange gradient CTA + glass edge + orange shadow glow |
+| `.text-micro` | 10px text (exists) |
+| `.scrollbar-hidden` | Hide scrollbar (exists) |
+| `.scroll-fade-y` | Scroll edge shadows (exists) |
+| `.animate-tab-content` | Tab slide-in (exists) |
+
+**Key Insight:** Tokens are **framework-agnostic**. CSS variables work in any environment — WXT Side Panel, Next.js pages, Storybook. The `@theme inline` block maps these variables to Tailwind's utility class system without needing a JS config file.
+
+**Dark Mode:** Applied via `.dark` class on root element. Each CSS variable has a corresponding dark override. Components automatically adapt through Tailwind's `dark:` variant (compiled from `@custom-variant dark`).
+
+### Application State Architecture
+
+#### Four-State Progressive Model
+
+The side panel operates in one of four states, determined by authentication and page context:
+
+| State | Trigger | What's Visible | What's Available |
+|-------|---------|---------------|-----------------|
+| **Logged Out** | No auth session | `<LoggedOutView>` — feature showcase + Google CTA | Nothing — sign-in required |
+| **Non-Job Page** | Authenticated, non-job URL | Resume management + "Waiting for Job Detection" empty state | Resume upload/switch, settings |
+| **Job Detected** | Authenticated, job URL auto-scanned | JobCard + match score + locked AI Studio preview | Scan results, free match analysis |
+| **Full Power** | Job detected + credits available | All tabs: Scan, AI Studio, Autofill, Coach | All features including AI generation |
+
+State transitions use `<StateTransition>` (AnimatePresence wrapper) with slide animation (`x: 20 → 0`, opacity fade, 200ms ease-out).
+
+#### Component State via Props
+
+Components handle application-level states through **props**, not a shared state architecture. shadcn + Radix manages component-level states (hover, focus, disabled, open/closed) and theme states (dark/light) automatically.
+
 | Application State | Visual Treatment | Handled By |
 |-------------------|------------------|------------|
-| Job Detected | Highlight border, pulse animation | `JobCard` prop |
+| Job Detected | Job card slides in (AnimatePresence), match score animates | `JobCard` + `AnimatedMatchScore` props |
 | Resume Loaded | Active indicator, checkmark | `ResumeCard` prop |
-| Loading | Skeleton loaders, spinners | Component prop or Suspense |
-| Error | Destructive variant, error icon, message | Component prop |
-| Offline | Muted colors, offline badge | Component prop (extension only) |
-| Low Credits | Warning badge, upgrade CTA | Component prop |
-| Empty | EmptyState composition | Conditional rendering |
+| Loading | Skeleton shimmer (never generic spinners) | Skeleton composition or purposeful animation |
+| Error | Inline error with retry action (never modal) | Component prop, three-tier escalation |
+| No Connection | Clear "no connection" state | Inline error |
+| Low Credits | Warning color in CreditBar | `CreditBar` prop |
+| Credits Exhausted | Upgrade CTA, free features still work | `CreditBar` + `AIStudio` lock state |
+| Empty | Dashed border + pulsing icon + descriptive text | Conditional rendering |
 
-Both WXT and Next.js consume these identically — `import { JobCard } from '@jobswyft/ui'`. The consuming app determines the state and passes it as props. No special framework-specific handling needed in the component library.
+Both WXT and Next.js consume these identically — `import { JobCard } from '@jobswyft/ui'`. The consuming app determines the state and passes it as props.
+
+#### State Preservation Matrix
+
+| State Category | Tab Switch | Job URL Change | Manual Reset | Re-Login |
+|---------------|------------|---------------|-------------|----------|
+| Job data | persist | **reset** | **reset** | persist |
+| Match data | persist | **reset** | **reset** | persist |
+| AI Studio outputs | persist | persist* | **reset** | **reset** |
+| Chat messages | persist | **reset** | **reset** | **reset** |
+| Resume selection | persist | persist | persist | persist |
+| Auth session | persist | persist | persist | **reset** |
+| Credits balance | persist | persist | persist | persist |
+| Settings | persist | persist | persist | persist |
+
+*AI Studio retains outputs on job URL change until user clicks "Dive Deeper" on the new job (explicit re-generation)
+
+**Reset Patterns:**
+- Small reset button in AppHeader (ghost button, refresh icon `size-4`)
+- Resets: job data, match data, AI Studio outputs, chat messages
+- Preserves: resume, auth, credits, settings
+- No confirmation dialog for reset (low-stakes, easily re-scanned)
 
 ### Lucide Icons
 
@@ -447,10 +597,10 @@ Storybook 10 consolidates addons into core — no separate `@storybook/addon-ess
 
 | Viewport | Dimensions | Use Case |
 |----------|------------|----------|
-| Mobile | 375×667 | Mobile web |
-| Tablet | 768×1024 | Tablet web |
-| Desktop | 1440×900 | Desktop web |
-| Extension Popup | 400×600 | Chrome popup |
+| Extension Default | 360×600 | Chrome side panel default width — primary design target |
+| Extension Wide | 500×600 | Users who drag the panel wider |
+| Mobile | 375×667 | Future web app reference |
+| Tablet | 768×1024 | Future web app reference |
 
 **Autodocs:** Enabled via `tags: ['autodocs']` in preview config.
 
@@ -470,7 +620,7 @@ import { Sparkles } from 'lucide-react'
 
 // 4. Dark mode via class on root element
 <html className="dark">        {/* Next.js */}
-<div className="dark">          {/* WXT Shadow DOM */}
+<div className="dark">          {/* WXT Side Panel */}
 ```
 
 **Package exports:**
@@ -556,7 +706,7 @@ jobs (
 usage_events (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id        UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
-  operation_type TEXT NOT NULL,  -- match, cover_letter, answer, outreach, resume_parse
+  operation_type TEXT NOT NULL,  -- match, cover_letter, chat, outreach, resume_parse
   ai_provider    TEXT NOT NULL,  -- claude, gpt
   credits_used   INTEGER DEFAULT 1,
   period_type    TEXT NOT NULL,  -- lifetime, daily, monthly
@@ -589,10 +739,20 @@ Example config entries:
 
 | Key | Value | Description |
 |-----|-------|-------------|
-| `tier_limits` | `{"free": {"type": "lifetime", "amount": 5}, "starter": {"type": "monthly", "amount": 100}, "pro": {"type": "monthly", "amount": 500}, "power": {"type": "monthly", "amount": 2000}}` | Credits per tier |
+| `tier_limits` | `{"free": {"type": "lifetime", "amount": 5}, "starter": {"type": "monthly", "amount": 100}, "pro": {"type": "monthly", "amount": 500}, "power": {"type": "monthly", "amount": 2000}}` | AI generation credits per tier |
+| `daily_match_limit` | `{"free": 20, "starter": 100, "pro": 500, "power": 2000}` | Free daily match analyses per tier (not deducted from AI credits) |
 | `default_ai_provider` | `"claude"` | System default provider |
 | `ai_fallback_enabled` | `true` | Enable fallback on failure |
 | `referral_bonus_credits` | `5` | Credits awarded per referral |
+
+**Credit System (Hybrid Model):**
+
+| Resource | Type | Free Tier | Paid Tiers |
+|----------|------|-----------|-----------|
+| **Match analysis** | Daily allocation (resets daily) | 20/day | Scales with tier |
+| **AI generation** (cover letters, outreach, chat) | Lifetime (free) / Monthly (paid) | 5 lifetime | 100-2000/month |
+
+Match analyses are tracked separately from AI credits. The `usage_events.operation_type` distinguishes between `match` (daily allocation) and generative operations (`cover_letter`, `outreach`, `chat`) which consume AI credits.
 
 **feedback**
 ```sql
@@ -684,12 +844,45 @@ feedback (
 | User Toggle | Yes - users can switch between Claude/GPT |
 | Fallback Trigger | 500 errors, timeouts |
 | Fallback Enabled | Configurable in `global_config` |
-| Streaming | No (MVP) |
+| Streaming | Yes — SSE for generative endpoints |
 
 **Resolution Order:**
 1. User's `preferred_ai_provider` (if set)
 2. `global_config.default_ai_provider`
 3. Fallback to other provider on failure (if enabled)
+
+**Streaming Architecture:**
+
+AI generation endpoints (`cover_letter`, `outreach`, `chat`) use Server-Sent Events (SSE) to stream responses progressively:
+
+| Endpoint | Streaming | Response Type |
+|----------|-----------|---------------|
+| `/v1/ai/match` | No — returns complete JSON | `application/json` |
+| `/v1/ai/cover-letter` | Yes — streams text chunks | `text/event-stream` |
+| `/v1/ai/outreach` | Yes — streams text chunks | `text/event-stream` |
+| `/v1/ai/chat` | Yes — streams text chunks | `text/event-stream` |
+| `/v1/ai/resume-parse` | No — returns complete JSON | `application/json` |
+
+**SSE Protocol:**
+```
+event: chunk
+data: {"text": "Dear Hiring Manager,\n\n"}
+
+event: chunk
+data: {"text": "I am writing to express..."}
+
+event: done
+data: {"credits_remaining": 4}
+
+event: error
+data: {"code": "AI_GENERATION_FAILED", "message": "..."}
+```
+
+**Frontend Integration:**
+- `EventSource` or `fetch` with `ReadableStream` for SSE consumption
+- Cursor/caret blink at insertion point while streaming
+- "Stop generating" cancel button available throughout
+- On `prefers-reduced-motion`: show final text immediately (no progressive reveal)
 
 ---
 
@@ -755,16 +948,173 @@ apps/
 
 ### Error Handling Patterns
 
+**Three-Tier Error Escalation:**
+
+| Tier | Scope | Trigger | UX Response |
+|------|-------|---------|-------------|
+| **Tier 1: Inline Retry** | Single action | API timeout, network blip | Inline error message + "Retry" button adjacent to error |
+| **Tier 2: Section Degraded** | Dependent features | Match analysis fails → AI Studio can't unlock | Affected section shows "Analysis unavailable — retry match first" with link back to Scan tab |
+| **Tier 3: Full Re-Auth** | Session-wide | Token expired, auth revoked | Slide transition to LoggedOutView with "Session expired — sign in again" |
+
+**Error Format:** `<p className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2">{message}</p>`
+
 | Layer | Pattern |
 |-------|---------|
-| API | Catch → return envelope with error code |
-| Frontend | Try/catch → set error state → show message |
-| Extension | Same + handle offline gracefully |
+| API | Catch → return envelope with error code (+ SSE `event: error` for streaming) |
+| Frontend | Try/catch → set error state → inline message with retry action. **Never modal.** |
+| Extension | Same + "Check your connection and try again" for network errors |
+
+**Rules:**
+- Never auto-retry — always require explicit user action
+- Errors are inline, actionable, and honest — never dead ends
+- Every error state has a next action ("Could not scan" → "Paste description")
 
 ### Loading State Patterns
 
-- Boolean flag per operation: `isLoadingResumes`, `isGeneratingCoverLetter`
-- UI: Skeleton loaders for lists, spinners for actions
+**Never use generic spinners.** All loading states have purposeful visual feedback:
+
+| Duration | Pattern | Example |
+|----------|---------|---------|
+| < 500ms | No indicator (perceived instant) | Tab switch, section expand |
+| 500ms–2s | Skeleton shimmer (shadcn `<Skeleton>` composition) | Job scan, initial data load |
+| 2s–10s | Animated progress (SVG ring fill, sequential autofill) | Match analysis, autofill run |
+| > 10s | Streaming text reveal (word-by-word) + "Stop generating" cancel | Cover letter, outreach, coach |
+
+**Skeleton Rules:**
+- Use shadcn `<Skeleton>` via composition: `<Skeleton className="h-4 w-3/4 rounded" />`
+- Compose skeletons to match loaded component layout shape — do NOT create separate `*Skeleton` components
+- Apply `animate-pulse` (respects `prefers-reduced-motion` → static gray, no animation)
+- Never show skeleton + real content simultaneously — hard cut transition
+
+**Button Loading State:** `<Loader2 className="mr-2 size-4 animate-spin" />` replaces icon, text changes to gerund ("Signing in...", "Analyzing...")
+
+### Button Hierarchy
+
+**Three-Tier System:**
+
+| Tier | shadcn Variant | When | Visual |
+|------|---------------|------|--------|
+| **Primary** | `default` | One per view — the #1 next action | Solid `bg-primary`, white text, `shadow-md` |
+| **Secondary** | `outline` | Supporting actions (Edit, Reset, Cancel) | Border only, foreground text |
+| **Ghost** | `ghost` | Tertiary / inline actions (settings gear, close X) | No border/bg, hover reveals bg |
+
+**Functional Area CTA Buttons:**
+
+| Action | Class | When |
+|--------|-------|------|
+| Dive Deeper / AI actions | `bg-ai-accent text-ai-accent-foreground` | AI Studio, generative actions |
+| Autofill | `btn-gradient-depth-autofill` | Start autofill, apply fields |
+| Coach send | `btn-gradient-depth-coach` | Send to coach, open coaching |
+| Destructive | `variant="destructive"` | Delete resume, clear all |
+
+**Button Pair Ordering:**
+- **Constructive pairs:** Primary left, Secondary right (e.g., "Analyze Job" | "Cancel")
+- **Destructive pairs:** Cancel left, Destructive right (e.g., "Keep" | "Delete Resume")
+
+**Rules:**
+- Maximum 1 primary button per visible section
+- Full-width (`w-full`) for CTAs inside cards
+- Icon + label: icon `size-4` with `mr-2`, always left of text
+- Disabled state: `opacity-50 cursor-not-allowed` (shadcn default)
+
+### Extension Shell Layout Contract
+
+The sidebar shell layout is defined once in `<ExtensionSidebar>` and never reinvented:
+
+```
+<aside className="flex flex-col h-full">       /* sidebar shell */
+  <header><AppHeader className="shrink-0" /></header>  /* fixed top */
+  <nav><TabBar className="shrink-0" /></nav>           /* fixed below header */
+  <main className="flex-1 overflow-y-auto              /* scrollable content */
+    scrollbar-hidden scroll-fade-y">
+    {children}
+  </main>
+  <footer><CreditBar className="shrink-0" /></footer>  /* fixed bottom */
+</aside>
+```
+
+- All composed views (`StateLoggedOut`, `StateJobDetected`, etc.) render inside the `flex-1` scroll region
+- Header, tab bar, and credit bar NEVER scroll — they are `shrink-0` fixed regions
+- Semantic HTML: `aside > header + nav + main + footer`
+- Tab content: preserves state within a session (switching Scan → Coach → Scan doesn't re-scan)
+
+**Tab Structure:**
+
+| Level | Tabs | Component |
+|-------|------|-----------|
+| Main sidebar | Scan \| AI Studio \| Autofill \| Coach | shadcn `<Tabs>` |
+| AI Studio sub-tabs | Match \| Cover Letter \| Chat \| Outreach | Nested shadcn `<Tabs>` |
+
+Active tab indicator uses functional area accent color. Tab switch animation: `animate-tab-content` (slideInFromRight 200ms ease-out).
+
+### Animation Strategy
+
+**Dependency:** `framer-motion` (~30 kB gzip) — **dynamic import** via `<AnimatedMatchScore>` since it only renders in job-detected state.
+
+**Boundary Rules:**
+
+| Technology | Use For | Never For |
+|-----------|---------|-----------|
+| **Framer Motion** | State transitions (AnimatePresence), match score animation (motion.circle), count-up numbers, orchestrated multi-element sequences | Hover/focus states |
+| **CSS animations** | Hover/focus states, tab content transitions, button glow effects, loading skeletons, single-element micro-interactions | N/A — CSS can be used for anything simple |
+
+**Reduced Motion Support:**
+
+```css
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration: 0s;
+    --motion-enabled: 0;
+  }
+  .animate-tab-content { animation: none; }
+}
+```
+
+- `tw-animate-css` handles its own animations automatically
+- Custom keyframes need explicit `animation: none`
+- Framer Motion components read `--motion-enabled` or `useReducedMotion()` hook to skip orchestrated transitions
+- Streaming text: shows full text immediately instead of word-by-word reveal
+
+### Accessibility (WCAG 2.1 AA)
+
+**Color & Contrast:**
+- All text: 4.5:1 contrast ratio against background (OKLCH tokens tuned)
+- UI components: 3:1 contrast ratio (borders, icons as sole indicators)
+- Color never the sole indicator — always paired with text, icons, or numeric values
+- Dark mode tokens independently verified
+
+**Keyboard Navigation:**
+- All interactive elements reachable via Tab key
+- Tab bar: Arrow keys for tab switching (Radix Tabs built-in)
+- Escape: close edit mode, dismiss overlays, cancel generation
+- Enter: submit forms, activate buttons
+- Focus ring: `outline-ring/50` (globals.css base layer)
+
+**Screen Reader Support:**
+- Semantic HTML: `<aside>`, `<header>`, `<nav>`, `<main>`, `<footer>`, `<section>`, `<article>`
+- ARIA labels on icon-only buttons: `aria-label="Reset job data"`, `aria-label="Settings"`
+- Live regions: `aria-live="polite"` on match score updates, error messages, autofill progress
+- Match score: `role="img" aria-label="Match score: {n} percent"`
+- Error messages: `role="alert"` (auto-announced)
+- Loading states: `aria-busy="true"` on container
+
+**ARIA Patterns by Component:**
+
+| Component | ARIA Pattern |
+|-----------|-------------|
+| Tab bar | Radix handles `tablist/tab/tabpanel` automatically |
+| Match score | `role="img" aria-label="Match score: {n} percent"` |
+| Edit toggle | `aria-label="Edit job details"` / `aria-label="Cancel editing"` |
+| Reset button | `aria-label="Reset job data"` |
+| Credit bar | `aria-label="AI credits: {used} of {total} used"` |
+| Error messages | `role="alert"` |
+
+**Development Rules:**
+1. Every icon-only button gets `aria-label` — no exceptions
+2. Every dynamic content update gets `aria-live="polite"` or `role="alert"`
+3. Never use `div`/`span` for interactive elements — use `button`, `a`, or Radix primitives
+4. Never suppress focus outlines without visible alternative
+5. Test with keyboard before marking any component story as complete
 
 ### AI-Assisted Development Tooling
 
@@ -842,8 +1192,20 @@ jobswyft/
 │   │   │       └── custom/         # Domain-specific compositions
 │   │   │           ├── job-card.tsx
 │   │   │           ├── resume-card.tsx
-│   │   │           ├── empty-state.tsx
-│   │   │           ├── navbar.tsx
+│   │   │           ├── app-header.tsx
+│   │   │           ├── credit-bar.tsx
+│   │   │           ├── logged-out-view.tsx
+│   │   │           ├── ai-studio.tsx
+│   │   │           ├── autofill.tsx
+│   │   │           ├── coach.tsx
+│   │   │           ├── animated-match-score.tsx
+│   │   │           ├── sequential-autofill.tsx
+│   │   │           ├── card-accent-footer.tsx
+│   │   │           ├── state-transition.tsx
+│   │   │           ├── icon-badge.tsx
+│   │   │           ├── skill-pill.tsx
+│   │   │           ├── skill-section-label.tsx
+│   │   │           ├── match-indicator.tsx
 │   │   │           └── extension-sidebar.tsx
 │   │   └── dist/                   # Built output (~20KB ESM, deps externalized)
 │   │
@@ -950,7 +1312,7 @@ jobswyft/
 │   │           ├── use-jobs.ts
 │   │           └── use-resumes.ts
 │   │
-│   └── extension/                  # WXT Chrome Extension
+│   └── extension/                  # WXT Chrome Extension (Side Panel)
 │       ├── package.json            # Depends on @jobswyft/ui
 │       ├── tsconfig.json
 │       ├── wxt.config.ts
@@ -958,14 +1320,14 @@ jobswyft/
 │       ├── README.md
 │       └── src/
 │           ├── entrypoints/
-│           │   ├── popup/
+│           │   ├── sidepanel/
 │           │   │   ├── index.html
 │           │   │   ├── main.tsx    # Imports @jobswyft/ui/styles
-│           │   │   └── App.tsx     # Uses ExtensionPopup from @jobswyft/ui
+│           │   │   └── App.tsx     # Uses ExtensionSidebar from @jobswyft/ui
 │           │   ├── content/
-│           │   │   └── index.tsx   # Uses ExtensionSidebar from @jobswyft/ui
+│           │   │   └── index.ts    # DOM extraction for autofill + job scanning
 │           │   └── background/
-│           │       └── index.ts
+│           │       └── index.ts    # Side Panel API, Tabs API (URL change detection)
 │           ├── features/           # Extension-specific business logic
 │           │   ├── scanning/
 │           │   │   ├── scanner.ts
@@ -1008,25 +1370,28 @@ jobswyft/
 | `/v1/auth/*` | `routers/auth.py` | `auth_service.py` |
 | `/v1/resumes/*` | `routers/resumes.py` | `resume_service.py` |
 | `/v1/jobs/*` | `routers/jobs.py` | `job_service.py` |
-| `/v1/ai/*` | `routers/ai.py` | `ai/provider.py` |
+| `/v1/ai/match` | `routers/ai.py` | `ai/provider.py` — JSON response |
+| `/v1/ai/cover-letter` | `routers/ai.py` | `ai/provider.py` — SSE streaming |
+| `/v1/ai/outreach` | `routers/ai.py` | `ai/provider.py` — SSE streaming |
+| `/v1/ai/chat` | `routers/ai.py` | `ai/provider.py` — SSE streaming (conversational, Coach tab) |
+| `/v1/ai/resume-parse` | `routers/ai.py` | `ai/provider.py` — JSON response |
 | `/v1/usage/*` | `routers/usage.py` | `usage_service.py` |
 | `/v1/feedback/*` | `routers/feedback.py` | `feedback_service.py` |
 
 #### Component Communication
 
 ```
-Extension                    API                      Database
+Extension (Side Panel)       API                      Database
 ┌─────────────┐             ┌─────────────┐          ┌──────────┐
 │ Zustand     │──HTTP/JSON──│ FastAPI     │──SQL────▶│ Supabase │
-│ Stores      │             │ Routers     │          │ Postgres │
+│ Stores      │──SSE───────▶│ Routers     │          │ Postgres │
 └─────────────┘             └─────────────┘          └──────────┘
        │                           │
        │                    ┌──────┴──────┐
        │                    │ AI Services │
        │                    └──────┬──────┘
-       │                           │
        │                    ┌──────┴──────┐
-       │                    │ Claude/GPT  │
+       │                    │ Claude/GPT  │ ← streaming responses
        │                    └─────────────┘
 
 Dashboard                   API
@@ -1036,19 +1401,25 @@ Dashboard                   API
 └─────────────┘             └─────────────┘
 ```
 
+**Protocol Note:** AI generation endpoints (`cover-letter`, `outreach`, `chat`) use SSE (`text/event-stream`). All other endpoints use standard JSON request/response.
+
 ### Requirements to Structure Mapping
 
 #### By PRD Feature Area
 
-| Feature | API | Web | Extension |
+| Feature | API | Web | Extension (Side Panel) |
 |---------|-----|-----|-----------|
-| Auth (FR1-6) | `routers/auth.py` | `(auth)/` pages | `stores/auth-store.ts` |
-| Resumes (FR7-13) | `routers/resumes.py` | `resumes/` page | `components/sidebar/resume-tray.tsx` |
-| Scanning (FR14-22) | - | - | `lib/scanner.ts`, `stores/scan-store.ts` |
-| AI Tools (FR23-38) | `routers/ai.py`, `services/ai/` | - | `components/ai-tools/` |
-| Autofill (FR39-44) | - | - | `lib/autofill.ts` |
+| Auth (FR1-6) | `routers/auth.py` | `(auth)/` pages | `stores/auth-store.ts`, `<LoggedOutView>` |
+| Resumes (FR7-13) | `routers/resumes.py` | `resumes/` page | `<ResumeCard>`, resume-store |
+| Scanning (FR14-22) | - | - | `features/scanning/`, `<JobCard>`, auto-scan on URL change |
+| AI Match (FR23-25) | `routers/ai.py` (JSON) | - | `<AnimatedMatchScore>`, Scan tab |
+| AI Cover Letter (FR26-30) | `routers/ai.py` (SSE streaming) | - | `<AIStudio>` → Cover Letter sub-tab |
+| AI Chat (FR31-34) | `routers/ai.py` (SSE streaming) | - | `<AIStudio>` → Chat sub-tab |
+| AI Outreach (FR35-38) | `routers/ai.py` (SSE streaming) | - | `<AIStudio>` → Outreach sub-tab |
+| Coach | `routers/ai.py` (SSE streaming) | - | `<Coach>` tab, conversational AI with job+resume context |
+| Autofill (FR39-44) | - | - | `<Autofill>`, `<SequentialAutofill>`, `features/autofill/` |
 | Job Tracking (FR45-53) | `routers/jobs.py` | `jobs/` page | `stores/job-store.ts` |
-| Usage (FR54-61) | `routers/usage.py` | `account/` page | Display in sidebar |
+| Usage (FR54-61) | `routers/usage.py` | `account/` page | `<CreditBar>` in sidebar footer |
 | Feedback (FR78-80) | `routers/feedback.py` | TBD | TBD |
 
 #### Cross-Cutting Concerns
@@ -1088,10 +1459,12 @@ Dashboard                   API
 
 **Pattern Consistency:**
 - Naming conventions clearly defined (snake_case API ↔ camelCase TS)
-- Response format standardized (envelope pattern + error codes)
+- Response format standardized (envelope pattern + error codes + SSE for streaming)
 - State management consistent (Zustand stores per domain)
+- Button hierarchy and error escalation patterns defined
+- Four-state progressive model aligns with component inventory
 
-**No contradictions found.**
+**UX Design Specification alignment verified (2026-02-07).**
 
 ### Requirements Coverage Validation ✅
 
@@ -1102,11 +1475,15 @@ Dashboard                   API
 | Auth (FR1-6) | ✅ | `routers/auth.py`, Supabase Auth |
 | Resumes (FR7-13) | ✅ | `routers/resumes.py`, Supabase Storage |
 | Scanning (FR14-22) | ✅ | `extension/lib/scanner.ts` |
-| AI Tools (FR23-38) | ✅ | `routers/ai.py`, `services/ai/` |
-| Autofill (FR39-44) | ✅ | `extension/lib/autofill.ts` |
+| AI Match (FR23-25) | ✅ | `routers/ai.py` (JSON), `<AnimatedMatchScore>` |
+| AI Cover Letter (FR26-30) | ✅ | `routers/ai.py` (SSE), `<AIStudio>` Cover Letter sub-tab |
+| AI Chat (FR31-34) | ✅ | `routers/ai.py` (SSE), `<AIStudio>` Chat sub-tab |
+| AI Outreach (FR35-38) | ✅ | `routers/ai.py` (SSE), `<AIStudio>` Outreach sub-tab |
+| Coach | ✅ | `routers/ai.py` (SSE), `<Coach>` tab |
+| Autofill (FR39-44) | ✅ | `extension/features/autofill/`, `<SequentialAutofill>` |
 | Job Tracking (FR45-53) | ✅ | `routers/jobs.py`, `jobs` table |
-| Usage (FR54-61) | ✅ | `routers/usage.py`, `usage_events` table |
-| Sidebar (FR62-67) | ✅ | `extension/entrypoints/content/` |
+| Usage (FR54-61) | ✅ | `routers/usage.py`, `usage_events` table, `<CreditBar>` |
+| Sidebar (FR62-67) | ✅ | `extension/entrypoints/sidepanel/`, Side Panel API |
 | Dashboard (FR68-72) | ✅ | `web/src/app/(dashboard)/` |
 | Privacy (FR73-77) | ✅ | `privacy/` page, account deletion |
 | Feedback (FR78-80) | ✅ | `routers/feedback.py`, `feedback` table |
@@ -1132,6 +1509,12 @@ Dashboard                   API
 | Integration points defined | ✅ |
 | Error codes standardized | ✅ |
 | MCP/CLI tooling documented | ✅ |
+| UX Design Specification aligned | ✅ |
+| Four-state model documented | ✅ |
+| Streaming architecture defined | ✅ |
+| Accessibility patterns specified | ✅ |
+| Component inventory complete | ✅ |
+| Shell layout contract defined | ✅ |
 
 ### Architecture Completeness Checklist
 
@@ -1150,14 +1533,21 @@ Dashboard                   API
 **✅ Implementation Patterns**
 - [x] Naming conventions established
 - [x] Structure patterns defined
-- [x] Communication patterns specified
+- [x] Communication patterns specified (JSON + SSE streaming)
 - [x] Process patterns documented
+- [x] Button hierarchy and error escalation defined
+- [x] Animation strategy documented (Framer Motion + CSS boundary)
+- [x] Accessibility patterns specified (WCAG 2.1 AA)
 
 **✅ Project Structure**
 - [x] Complete directory structure defined
 - [x] Component boundaries established
-- [x] Integration points mapped
+- [x] Integration points mapped (including SSE streaming endpoints)
 - [x] Requirements to structure mapping complete
+- [x] Extension shell layout contract defined
+- [x] Four-state progressive model documented
+- [x] State preservation matrix defined
+- [x] Full component inventory (compositions, features, shared primitives, state views)
 
 ### Architecture Readiness Assessment
 
