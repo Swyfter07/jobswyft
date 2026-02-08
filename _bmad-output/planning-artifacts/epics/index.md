@@ -96,3 +96,4 @@
   - [Story API.6: SSE Migration — Cover Letter + Outreach Endpoints](./story-api6-sse-migration-cover-letter-outreach-endpoints.md)
     - [Acceptance Criteria](./story-api6-sse-migration-cover-letter-outreach-endpoints.md#acceptance-criteria)
     - [Dependencies](./story-api6-sse-migration-cover-letter-outreach-endpoints.md#dependencies)
+  - [Archived: Epics 1-7 & Epic 0 Stories](./archived-epics-1-7-and-epic-0-stories.md) _(reference only — recovered from git history)_
