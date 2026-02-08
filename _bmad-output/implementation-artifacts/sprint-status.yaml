@@ -51,7 +51,7 @@ development_status:
   0-4-molecules-card-modal: superseded  # Covered by Sureel-UI migration
   0-5-organisms-navbar-jobcard-tabs-emptystate: superseded  # Covered by Sureel-UI migration
   0-6-compositions-extensionsidebar-fab-extensionpopup: superseded  # Covered by Sureel-UI migration
-  0-7-ui-api-data-mapper-layer: backlog  # snake_case → camelCase mappers for extension/web integration
+  0-7-ui-api-data-mapper-layer: done  # snake_case → camelCase mappers — implemented ahead of story (18 tests passing)
   epic-0-retrospective: optional
 
   # Epic 1: User Authentication & Account Foundation API
@@ -107,4 +107,5 @@ development_status:
   # NOTE: Iterative epic - stories created one at a time, Storybook → Extension → Backend Tech Debt
   epic-EXT: in-progress
   EXT-1-wxt-extension-setup-ui-integration-login: review
+  EXT-2-component-library-reorganization: done
 

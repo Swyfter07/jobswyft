@@ -80,31 +80,41 @@ export {
   AvatarFallback,
 } from "@/components/ui/avatar"
 
-// Components — custom compositions
+// Components — blocks
+export { IconBadge } from "@/components/blocks/icon-badge"
+export { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
+export { MatchIndicator } from "@/components/blocks/match-indicator"
+export { SelectionChips } from "@/components/blocks/selection-chips"
+export { CreditBar } from "@/components/blocks/credit-bar"
+export { CreditBalance } from "@/components/blocks/credit-balance"
+
+// Components — features
 export {
   ResumeCard,
   CopyChip,
   CopyButton,
   ResumeSection,
   ResumeEmptyState,
-} from "@/components/custom/resume-card"
-export { AppHeader } from "@/components/custom/app-header"
-export { JobCard } from "@/components/custom/job-card"
-export { CreditBar } from "@/components/custom/credit-bar"
-export { CreditBalance } from "@/components/custom/credit-balance"
-export { LoggedOutView } from "@/components/custom/logged-out-view"
-export { ExtensionSidebar } from "@/components/custom/extension-sidebar"
-export { Coach } from "@/components/custom/coach"
-export { Autofill } from "@/components/custom/autofill"
-export { AIStudio } from "@/components/custom/ai-studio"
+} from "@/components/features/resume-card"
+export { JobCard } from "@/components/features/job-card"
+export { LoggedOutView } from "@/components/features/logged-out-view"
+export { Coach } from "@/components/features/coach"
+export { Autofill } from "@/components/features/autofill"
+export { AIStudio } from "@/components/features/ai-studio"
 
-// Components — shared primitives
-export { IconBadge } from "@/components/custom/icon-badge"
-export { SkillPill, SkillSectionLabel } from "@/components/custom/skill-pill"
-export { MatchIndicator } from "@/components/custom/match-indicator"
-export { SelectionChips } from "@/components/custom/selection-chips"
+// Components — layout
+export { AppHeader } from "@/components/layout/app-header"
+export { ExtensionSidebar } from "@/components/layout/extension-sidebar"
 
-// Types — custom compositions
+// Types — blocks
+export type { IconBadgeProps } from "@/components/blocks/icon-badge"
+export type { SkillPillProps, SkillSectionLabelProps } from "@/components/blocks/skill-pill"
+export type { MatchIndicatorProps } from "@/components/blocks/match-indicator"
+export type { SelectionChipsProps, ChipOption } from "@/components/blocks/selection-chips"
+export type { CreditBarProps } from "@/components/blocks/credit-bar"
+export type { CreditBalanceProps } from "@/components/blocks/credit-balance"
+
+// Types — features
 export type {
   ResumePersonalInfo,
   ResumeExperienceEntry,
@@ -114,22 +124,16 @@ export type {
   ResumeData,
   ResumeSummary,
   ResumeCardProps,
-} from "@/components/custom/resume-card"
-export type { AppHeaderProps } from "@/components/custom/app-header"
-export type { JobData, MatchData } from "@/components/custom/job-card"
-export type { CreditBarProps } from "@/components/custom/credit-bar"
-export type { CreditBalanceProps } from "@/components/custom/credit-balance"
-export type { LoggedOutViewProps } from "@/components/custom/logged-out-view"
-export type { ExtensionSidebarProps } from "@/components/custom/extension-sidebar"
-export type { CoachProps, Message } from "@/components/custom/coach"
-export type { AutofillProps, AutofillField } from "@/components/custom/autofill"
-export type { AIStudioProps, AIStudioMatchData } from "@/components/custom/ai-studio"
+} from "@/components/features/resume-card"
+export type { JobData, MatchData } from "@/components/features/job-card"
+export type { LoggedOutViewProps } from "@/components/features/logged-out-view"
+export type { CoachProps, Message } from "@/components/features/coach"
+export type { AutofillProps, AutofillField } from "@/components/features/autofill"
+export type { AIStudioProps, AIStudioMatchData } from "@/components/features/ai-studio"
 
-// Types — shared primitives
-export type { IconBadgeProps } from "@/components/custom/icon-badge"
-export type { SkillPillProps, SkillSectionLabelProps } from "@/components/custom/skill-pill"
-export type { MatchIndicatorProps } from "@/components/custom/match-indicator"
-export type { SelectionChipsProps, ChipOption } from "@/components/custom/selection-chips"
+// Types — layout
+export type { AppHeaderProps } from "@/components/layout/app-header"
+export type { ExtensionSidebarProps } from "@/components/layout/extension-sidebar"
 
 // Utilities
 export { cn } from "@/lib/utils"
