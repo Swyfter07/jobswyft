@@ -1,46 +1,67 @@
-import { detectJobPage } from "../../features/scanning/job-detector";
+import { detectJobPage, getJobBoard } from "../../features/scanning/job-detector";
 
 /** Storage key for auto-scan signals to the side panel */
 const STORAGE_KEY = "jobswyft-auto-scan-request";
 
+/** Storage key for content sentinel readiness signal */
+const SENTINEL_KEY = "jobswyft-content-ready";
+
+/** Session storage key for cooldown data (survives SW restart) */
+const COOLDOWN_KEY = "jobswyft-scan-cooldown";
+
 /** Cooldown (ms) to avoid re-scanning the same URL */
 const SCAN_COOLDOWN_MS = 30_000;
 
-/** Delay (ms) after detection to let SPA content render */
+/** Delay (ms) after detection to let SPA content render (fallback if no sentinel) */
 const SCAN_DELAY_MS = 1500;
 
-/** Track recently scanned URLs to avoid duplicates */
-const recentlyScanned = new Map<string, number>();
+// ─── Session Storage Cooldown (AC8: survives SW restart) ─────────────
 
-function wasRecentlyScanned(url: string): boolean {
-  const last = recentlyScanned.get(url);
-  if (!last) return false;
-  if (Date.now() - last > SCAN_COOLDOWN_MS) {
-    recentlyScanned.delete(url);
-    return false;
-  }
-  return true;
+interface CooldownEntry {
+  url: string;
+  timestamp: number;
 }
 
-function markAsScanned(url: string): void {
-  const now = Date.now();
-  recentlyScanned.set(url, now);
-  // Prune expired entries on every insert
-  for (const [key, time] of recentlyScanned) {
-    if (now - time > SCAN_COOLDOWN_MS) recentlyScanned.delete(key);
+async function wasRecentlyScanned(url: string): Promise<boolean> {
+  try {
+    const result = await chrome.storage.session.get(COOLDOWN_KEY);
+    const entries: CooldownEntry[] = result[COOLDOWN_KEY] || [];
+    const now = Date.now();
+    return entries.some(
+      (e) => e.url === url && now - e.timestamp < SCAN_COOLDOWN_MS
+    );
+  } catch {
+    return false;
+  }
+}
+
+async function markAsScanned(url: string): Promise<void> {
+  try {
+    const result = await chrome.storage.session.get(COOLDOWN_KEY);
+    const entries: CooldownEntry[] = result[COOLDOWN_KEY] || [];
+    const now = Date.now();
+    // Prune expired + add new
+    const pruned = entries.filter((e) => now - e.timestamp < SCAN_COOLDOWN_MS);
+    pruned.push({ url, timestamp: now });
+    await chrome.storage.session.set({ [COOLDOWN_KEY]: pruned });
+  } catch {
+    // Ignore storage errors
   }
 }
 
 /**
  * Signal the side panel via chrome.storage.local.
  * The side panel listens for storage changes and triggers the actual scraping.
+ * Includes board name for board-aware extraction (AC10).
  */
 async function triggerAutoScan(tabId: number, url: string): Promise<void> {
-  if (wasRecentlyScanned(url)) return;
-  markAsScanned(url);
+  if (await wasRecentlyScanned(url)) return;
+  await markAsScanned(url);
+
+  const board = getJobBoard(url);
 
   await chrome.storage.local.set({
-    [STORAGE_KEY]: { tabId, url, timestamp: Date.now() },
+    [STORAGE_KEY]: { tabId, url, board, timestamp: Date.now(), id: crypto.randomUUID() },
   });
 }
 
@@ -80,6 +101,41 @@ export default defineBackground(() => {
       triggerAutoScan(activeInfo.tabId, tab.url);
     } catch {
       // Tab may not exist anymore
+    }
+  });
+
+  // ─── Trigger 4: Hash-based SPA navigation (AC9) ───────────────────
+  // For job boards using hash routing (e.g., #/job/123)
+  chrome.webNavigation.onReferenceFragmentUpdated.addListener((details) => {
+    if (details.frameId !== 0) return; // Main frame only
+    if (!detectJobPage(details.url)) return;
+
+    setTimeout(() => {
+      triggerAutoScan(details.tabId, details.url);
+    }, SCAN_DELAY_MS);
+  });
+
+  // ─── Content Sentinel Integration (AC1, Task 4.3) ─────────────────
+  // When the content sentinel signals readiness, forward to side panel
+  // via the auto-scan signal. This bypasses the fixed delay.
+  chrome.storage.session.onChanged.addListener(async (changes) => {
+    const sentinelChange = changes[SENTINEL_KEY];
+    if (!sentinelChange?.newValue) return;
+
+    const { url } = sentinelChange.newValue as {
+      tabId: number;
+      url: string;
+    };
+
+    // Sentinel sends tabId: -1 (content scripts can't access their own tab ID).
+    // Resolve the actual tab ID before forwarding.
+    try {
+      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+      if (tab?.id) {
+        triggerAutoScan(tab.id, url);
+      }
+    } catch {
+      // Tab query may fail if no active window
     }
   });
 });

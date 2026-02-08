@@ -338,6 +338,67 @@ Do not include any text outside the JSON object.
 - For email platform, include "Subject: " line at the beginning of content"""
 
 
+JOB_EXTRACT_PROMPT = """You are a job posting data extractor. Extract structured job information from the following HTML content.
+
+Return ONLY valid JSON with this exact structure (use null for missing fields):
+
+{{
+  "title": "job title or null",
+  "company": "company name or null",
+  "description": "full job description text or null",
+  "location": "job location or null",
+  "salary": "salary range or null",
+  "employment_type": "Full-time, Part-time, Contract, etc. or null"
+}}
+
+Important rules:
+- Return ONLY the JSON object, no markdown code blocks or extra text
+- Use null for any field you cannot find
+- For title, extract the specific job title (e.g., "Senior Software Engineer"), not the page title
+- For company, extract the hiring company name
+- For description, extract the full job description including responsibilities, requirements, and qualifications
+- For location, include city, state/country, and remote status if mentioned
+- For salary, include the full range if available (e.g., "$120,000 - $160,000/year")
+- For employment_type, normalize to standard values (Full-time, Part-time, Contract, Internship, Temporary)
+- If partial_data is provided, use it to fill in or validate fields you're less confident about
+
+Source URL: {source_url}
+
+{partial_data_section}
+
+HTML Content:
+{html_content}"""
+
+
+def format_job_extract_prompt(
+    html_content: str,
+    source_url: str,
+    partial_data: dict | None = None,
+) -> str:
+    """Format the job extraction prompt.
+
+    Args:
+        html_content: Cleaned HTML from the job page.
+        source_url: URL of the job page.
+        partial_data: Optional partial data from CSS/OG extraction.
+
+    Returns:
+        Formatted prompt string.
+    """
+    import json
+
+    if partial_data and any(v for v in partial_data.values() if v):
+        partial_str = f"Partial data already extracted (use to validate/supplement):\n{json.dumps(partial_data, indent=2)}"
+    else:
+        partial_str = "No partial data available."
+
+    return JOB_EXTRACT_PROMPT.format(
+        source_url=source_url,
+        partial_data_section=partial_str,
+        html_content=html_content,
+    )
+
+
 def format_outreach_prompt(
     resume_data: dict,
     job_description: str,

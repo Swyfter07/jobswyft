@@ -3,6 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
 import type { JobData } from "@jobswyft/ui";
 import { apiClient } from "../lib/api-client";
+import type { ExtractionConfidence } from "../features/scanning/extraction-validator";
 
 interface ScanState {
   scanStatus: "idle" | "scanning" | "success" | "error";
@@ -11,14 +12,20 @@ interface ScanState {
   isEditing: boolean;
   isSaving: boolean;
   error: string | null;
+  confidence: ExtractionConfidence | null;
+  isRefining: boolean;
+  board: string | null;
 
   startScan: () => void;
-  setScanResult: (data: Partial<JobData>) => void;
+  setScanResult: (data: Partial<JobData>, confidence?: ExtractionConfidence | null, board?: string | null) => void;
   setScanError: (error: string) => void;
   toggleEdit: () => void;
   updateField: (field: keyof JobData, value: string) => void;
   saveJob: (token: string) => Promise<void>;
   resetScan: () => void;
+  setRefining: (value: boolean) => void;
+  setConfidence: (conf: ExtractionConfidence | null) => void;
+  setBoard: (name: string | null) => void;
 }
 
 export const useScanStore = create<ScanState>()(
@@ -30,6 +37,9 @@ export const useScanStore = create<ScanState>()(
       isEditing: false,
       isSaving: false,
       error: null,
+      confidence: null,
+      isRefining: false,
+      board: null,
 
       startScan: () => {
         set({
@@ -40,7 +50,7 @@ export const useScanStore = create<ScanState>()(
         });
       },
 
-      setScanResult: (data) => {
+      setScanResult: (data, confidence, board) => {
         const jobData: JobData = {
           title: data.title ?? "",
           company: data.company ?? "",
@@ -55,6 +65,8 @@ export const useScanStore = create<ScanState>()(
           jobData,
           editedJobData: null,
           error: null,
+          ...(confidence !== undefined ? { confidence } : {}),
+          ...(board !== undefined ? { board } : {}),
         });
       },
 
@@ -132,13 +144,31 @@ export const useScanStore = create<ScanState>()(
           isEditing: false,
           isSaving: false,
           error: null,
+          confidence: null,
+          isRefining: false,
+          board: null,
         });
+      },
+
+      setRefining: (value) => {
+        set({ isRefining: value });
+      },
+
+      setConfidence: (conf) => {
+        set({ confidence: conf });
+      },
+
+      setBoard: (name) => {
+        set({ board: name });
       },
     }),
     {
       name: "jobswyft-scan",
       storage: createJSONStorage(() => chromeStorageAdapter),
-      partialize: (state) => ({ jobData: state.jobData }),
+      partialize: (state) => ({
+        jobData: state.jobData,
+        isRefining: state.isRefining,
+      }),
     }
   )
 );

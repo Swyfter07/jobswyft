@@ -115,3 +115,22 @@ class OutreachResponse(BaseModel):
     content: str = Field(..., description="Generated outreach message text")
     ai_provider_used: str = Field(..., description="AI provider that generated the message")
     tokens_used: int = Field(..., description="Approximate tokens used in generation")
+
+
+class ExtractJobRequest(BaseModel):
+    """Request model for POST /v1/ai/extract-job."""
+
+    html_content: str = Field(..., min_length=1, max_length=8000)
+    source_url: str = Field(..., min_length=1, max_length=2048)
+    partial_data: Optional[dict] = Field(default=None)
+
+
+class ExtractJobResponse(BaseModel):
+    """Response model for job extraction result."""
+
+    title: Optional[str] = None
+    company: Optional[str] = None
+    description: Optional[str] = None
+    location: Optional[str] = None
+    salary: Optional[str] = None
+    employment_type: Optional[str] = None

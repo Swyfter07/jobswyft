@@ -26,6 +26,9 @@ describe("useScanStore", () => {
       isEditing: false,
       isSaving: false,
       error: null,
+      confidence: null,
+      isRefining: false,
+      board: null,
     });
     vi.clearAllMocks();
   });
@@ -270,6 +273,91 @@ describe("useScanStore", () => {
       expect(state.jobData?.location).toBe("NYC");
       expect(state.isEditing).toBe(false);
       expect(state.editedJobData).toBeNull();
+    });
+  });
+
+  // ─── confidence / isRefining / board (EXT-5.5) ────────────────────
+
+  describe("setScanResult with confidence and board", () => {
+    it("accepts optional confidence and board params", () => {
+      const confidence = { title: 0.95, company: 0.85, description: 0.60, location: 0.40, salary: 0 };
+      useScanStore.getState().setScanResult(
+        { title: "Eng", company: "Acme", description: "Desc" },
+        confidence,
+        "linkedin"
+      );
+
+      const state = useScanStore.getState();
+      expect(state.confidence).toEqual(confidence);
+      expect(state.board).toBe("linkedin");
+    });
+
+    it("keeps existing confidence/board when params are undefined", () => {
+      useScanStore.setState({ confidence: { title: 0.5, company: 0.5, description: 0.5, location: 0, salary: 0 }, board: "indeed" });
+      useScanStore.getState().setScanResult({ title: "New" });
+
+      const state = useScanStore.getState();
+      // undefined params should not overwrite
+      expect(state.confidence).toEqual({ title: 0.5, company: 0.5, description: 0.5, location: 0, salary: 0 });
+      expect(state.board).toBe("indeed");
+    });
+  });
+
+  describe("setRefining", () => {
+    it("sets isRefining to true", () => {
+      useScanStore.getState().setRefining(true);
+      expect(useScanStore.getState().isRefining).toBe(true);
+    });
+
+    it("sets isRefining to false", () => {
+      useScanStore.setState({ isRefining: true });
+      useScanStore.getState().setRefining(false);
+      expect(useScanStore.getState().isRefining).toBe(false);
+    });
+  });
+
+  describe("setConfidence", () => {
+    it("stores confidence data", () => {
+      const conf = { title: 0.95, company: 0.85, description: 0.60, location: 0.40, salary: 0 };
+      useScanStore.getState().setConfidence(conf);
+      expect(useScanStore.getState().confidence).toEqual(conf);
+    });
+
+    it("clears confidence with null", () => {
+      useScanStore.setState({ confidence: { title: 1, company: 1, description: 1, location: 1, salary: 1 } });
+      useScanStore.getState().setConfidence(null);
+      expect(useScanStore.getState().confidence).toBeNull();
+    });
+  });
+
+  describe("setBoard", () => {
+    it("stores board name", () => {
+      useScanStore.getState().setBoard("greenhouse");
+      expect(useScanStore.getState().board).toBe("greenhouse");
+    });
+
+    it("clears board with null", () => {
+      useScanStore.setState({ board: "linkedin" });
+      useScanStore.getState().setBoard(null);
+      expect(useScanStore.getState().board).toBeNull();
+    });
+  });
+
+  describe("resetScan clears new fields", () => {
+    it("resets confidence, isRefining, and board", () => {
+      useScanStore.setState({
+        scanStatus: "success",
+        confidence: { title: 0.95, company: 0.85, description: 0.60, location: 0.40, salary: 0 },
+        isRefining: true,
+        board: "linkedin",
+      });
+
+      useScanStore.getState().resetScan();
+
+      const state = useScanStore.getState();
+      expect(state.confidence).toBeNull();
+      expect(state.isRefining).toBe(false);
+      expect(state.board).toBeNull();
     });
   });
 });

@@ -16,6 +16,15 @@ export interface ApiDeleteResponse {
   message: string;
 }
 
+export interface AiExtractResult {
+  title?: string;
+  company?: string;
+  description?: string;
+  location?: string;
+  salary?: string;
+  employment_type?: string;
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -153,6 +162,37 @@ class ApiClient {
       method: "DELETE",
       token,
     });
+  }
+
+  // ─── AI extraction endpoint ────────────────────────────────────────
+
+  /**
+   * POST /v1/ai/extract-job — LLM-based extraction fallback.
+   * 5-second timeout via AbortController. Free (no credit cost).
+   */
+  async extractJobWithAI(
+    token: string,
+    htmlContent: string,
+    sourceUrl: string,
+    partialData?: Record<string, string | undefined>
+  ): Promise<AiExtractResult> {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 5000);
+
+    try {
+      return await this.fetch<AiExtractResult>("/v1/ai/extract-job", {
+        method: "POST",
+        body: JSON.stringify({
+          html_content: htmlContent,
+          source_url: sourceUrl,
+          partial_data: partialData ?? {},
+        }),
+        token,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
   }
 
   // ─── Job endpoints ────────────────────────────────────────────────

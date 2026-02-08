@@ -12,6 +12,8 @@ from app.models.ai import (
     CoverLetterPDFRequest,
     CoverLetterRequest,
     CoverLetterResponse,
+    ExtractJobRequest,
+    ExtractJobResponse,
     MatchAnalysisRequest,
     MatchAnalysisResponse,
     OutreachRequest,
@@ -21,6 +23,7 @@ from app.models.base import ok
 from app.services.answer_service import AnswerService
 from app.services.cover_letter_service import CoverLetterService
 from app.services.match_service import MatchService
+from app.services.extract_job_service import ExtractJobService
 from app.services.outreach_service import OutreachService
 from app.services.pdf_service import PDFService
 
@@ -52,6 +55,11 @@ def get_answer_service() -> AnswerService:
 def get_outreach_service() -> OutreachService:
     """Dependency to get outreach service instance."""
     return OutreachService()
+
+
+def get_extract_job_service() -> ExtractJobService:
+    """Dependency to get extract job service instance."""
+    return ExtractJobService()
 
 
 @router.post("/match")
@@ -323,4 +331,42 @@ async def generate_outreach(
     # Validate response with Pydantic model
     response_data = OutreachResponse(**outreach)
 
+    return ok(response_data.model_dump())
+
+
+@router.post("/extract-job")
+async def extract_job(
+    request: ExtractJobRequest,
+    user: CurrentUser,
+    extract_service: ExtractJobService = Depends(get_extract_job_service),
+) -> dict:
+    """Extract job data from HTML using AI.
+
+    LLM-based extraction fallback used when CSS/JSON-LD scanning yields
+    incomplete data. Rate limited to 50 requests per user per day.
+    No credit cost (infrastructure, not user-facing AI feature).
+
+    Args:
+        request: Extract job request with HTML content and source URL.
+        user: Authenticated user from dependency.
+        extract_service: Extract job service instance.
+
+    Returns:
+        Extracted job fields (title, company, description, location, salary, employment_type).
+
+    Raises:
+        AUTH_REQUIRED (401): No authentication token.
+        RATE_LIMITED (429): Daily extraction limit exceeded.
+        AI_PROVIDER_UNAVAILABLE (503): Both AI providers failed.
+    """
+    user_id = user["id"]
+
+    result = await extract_service.extract_job(
+        user_id=user_id,
+        html_content=request.html_content,
+        source_url=request.source_url,
+        partial_data=request.partial_data,
+    )
+
+    response_data = ExtractJobResponse(**result)
     return ok(response_data.model_dump())
