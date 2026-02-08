@@ -63,9 +63,18 @@ export interface CopyChipProps {
   className?: string
 }
 
+const CHIP_LABEL_MAX = 80
+const TOOLTIP_MAX = 120
+
+function truncateText(text: string, max: number) {
+  return text.length > max ? text.slice(0, max).trimEnd() + "…" : text
+}
+
 function CopyChip({ value, icon, iconPosition = "left", label, className }: CopyChipProps) {
   const { copy, isCopied } = useClipboard()
   const copied = isCopied(value)
+  const displayLabel = truncateText(label || value, CHIP_LABEL_MAX)
+  const tooltipLabel = truncateText(label || value, TOOLTIP_MAX)
 
   // Simplified logic:
   // - If icon exists: show it in iconPosition, check replaces it when copied
@@ -119,12 +128,12 @@ function CopyChip({ value, icon, iconPosition = "left", label, className }: Copy
           )}
         >
           {leftSlot}
-          <span className="truncate max-w-[180px]">{label || value}</span>
+          <span className="truncate max-w-[180px]">{displayLabel}</span>
           {rightSlot}
         </button>
       </TooltipTrigger>
       <TooltipContent>
-        {copied ? "Copied!" : `Copy ${label || value}`}
+        {copied ? "Copied!" : `Copy ${tooltipLabel}`}
       </TooltipContent>
     </Tooltip>
   )

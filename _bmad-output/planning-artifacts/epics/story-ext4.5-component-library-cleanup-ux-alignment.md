@@ -855,6 +855,43 @@ export interface MatchData {
 
 10. **Naming Consistency:** Match component/story names to their actual purpose (Login vs LoggedOut, Authenticated vs JobDetected)
 
+### Code Review Fixes (2026-02-08, Post-Completion)
+
+Adversarial code review identified 8 issues (3 High, 3 Medium, 2 Low). All HIGH and MEDIUM issues fixed:
+
+#### H1: Sidebar Context Section Premature Scrolling ✅
+**Problem:** `max-h-[40vh]` hard cap on context section forced internal scrolling at ~320px instead of letting resume blocks expand naturally and push tab content down.
+**Fix:** Removed `max-h-[40vh]`, added `shrink-0` so context grows naturally. Added `min-h-[200px]` on Tabs to prevent context from pushing tabs completely off-screen.
+**File:** `packages/ui/src/components/layout/extension-sidebar.tsx:83,95`
+
+#### H2/H3: Auto-Collapse Scroll Threshold Too Sensitive ✅
+**Problem:** `scrollTop > 20` triggered context collapse on the slightest touch scroll.
+**Fix:** Increased threshold to `80px` for less jarring behavior.
+**File:** `packages/ui/src/components/layout/extension-sidebar.tsx:53`
+
+#### M1: Select Controlled/Uncontrolled Warning ✅
+**Problem:** `value={activeResumeId ?? undefined}` caused React warning — `undefined` makes Radix Select uncontrolled, then switching to a string makes it controlled.
+**Fix:** Changed to `value={activeResumeId ?? ""}` — empty string keeps Select always controlled.
+**File:** `packages/ui/src/components/features/resume/resume-card.tsx:204`
+
+#### M2: Missing overflow-x-hidden ✅
+**Problem:** Long content (emails, URLs) could cause horizontal overflow in context and tab sections.
+**Fix:** Added `overflow-x-hidden` to both context section and tab content container.
+**File:** `packages/ui/src/components/layout/extension-sidebar.tsx:83,138`
+
+#### M3: CopyChip Length Protection for Parsing Errors ✅
+**Problem:** If resume parser returns extremely long field values, CopyChip label and tooltip would balloon.
+**Fix:** Added `truncateText()` helper with `CHIP_LABEL_MAX=80` and `TOOLTIP_MAX=120`. Visual label and tooltip both truncated with ellipsis. Clipboard value unchanged (copies full text).
+**File:** `packages/ui/src/components/blocks/copy-chip.tsx:66-77`
+
+#### L1: aria-atomic on Tab Container ✅
+**Fix:** Changed `aria-atomic="false"` → `aria-atomic="true"` for better screen reader announcements on tab switches.
+
+**Build After Review Fixes:**
+- UI Package: 89.72 kB (gzip: 18.16 kB) — +0.2 kB from truncation logic
+- Extension: 697.22 kB — unchanged
+- Tests: 23/23 passing ✅
+
 ### Next Steps
 
 ✅ **Ready to proceed to EXT.5 (Job Page Scanning & Job Card)**
