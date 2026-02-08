@@ -9,7 +9,7 @@ export default defineConfig({
   manifest: {
     name: "Jobswyft",
     description: "AI-powered job application assistant — apply 5x faster",
-    permissions: ["activeTab", "storage", "identity", "sidePanel"],
+    permissions: ["activeTab", "storage", "identity", "sidePanel", "scripting", "tabs", "webNavigation"],
     host_permissions: ["<all_urls>"],
     action: {
       default_title: "Jobswyft",

@@ -1,6 +1,6 @@
 import { API_URL } from "./constants";
 import type { UserProfile } from "../stores/auth-store";
-import { unwrap, type ApiResumeListItem, type ApiResumeResponse, type ApiPaginatedData, type ApiResponse } from "@jobswyft/ui";
+import { unwrap, type ApiResumeListItem, type ApiResumeResponse, type ApiJobResponse, type ApiPaginatedData, type ApiResponse } from "@jobswyft/ui";
 
 export interface ApiUploadResponse {
   resume: ApiResumeResponse;
@@ -151,6 +151,37 @@ class ApiClient {
   async deleteResume(token: string, id: string): Promise<ApiDeleteResponse> {
     return this.fetch<ApiDeleteResponse>(`/v1/resumes/${id}`, {
       method: "DELETE",
+      token,
+    });
+  }
+
+  // ─── Job endpoints ────────────────────────────────────────────────
+
+  /** POST /v1/jobs/scan — Save a scanned job. */
+  async saveJob(
+    token: string,
+    jobData: {
+      title: string;
+      company: string;
+      description: string;
+      location?: string;
+      salary?: string;
+      employmentType?: string;
+      sourceUrl?: string;
+    }
+  ): Promise<ApiJobResponse> {
+    return this.fetch<ApiJobResponse>("/v1/jobs/scan", {
+      method: "POST",
+      body: JSON.stringify({
+        title: jobData.title,
+        company: jobData.company,
+        description: jobData.description,
+        location: jobData.location ?? null,
+        salary_range: jobData.salary ?? null,
+        employment_type: jobData.employmentType ?? null,
+        source_url: jobData.sourceUrl ?? null,
+        status: "applied", // FR49: auto "Applied" — overrides API default "saved"
+      }),
       token,
     });
   }

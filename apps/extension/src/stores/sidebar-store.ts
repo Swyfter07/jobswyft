@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
+import type { JobData, MatchData } from "@jobswyft/ui";
 
 export type SidebarState =
   | "logged-out"
@@ -10,19 +11,6 @@ export type SidebarState =
 
 export type MainTab = "scan" | "ai-studio" | "autofill" | "coach";
 export type AIStudioSubTab = "match" | "cover-letter" | "chat" | "outreach";
-
-export interface JobData {
-  title: string;
-  company: string;
-  description: string;
-  url: string;
-}
-
-export interface MatchData {
-  score: number;
-  strengths: string[];
-  gaps: string[];
-}
 
 export interface AIStudioOutputs {
   coverLetter: string | null;
@@ -90,7 +78,7 @@ export const useSidebarStore = create<SidebarStoreState>()(
       aiStudioSubTab: "match",
 
       setJobData: (data) => {
-        set({ jobData: data, lastJobUrl: data.url });
+        set({ jobData: data, lastJobUrl: data.sourceUrl ?? null });
       },
 
       setMatchData: (data) => {

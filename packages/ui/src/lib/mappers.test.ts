@@ -247,6 +247,9 @@ describe("mapJobResponse", () => {
       company: "Acme",
       location: "Remote",
       salary: "$120k-$160k",
+      employmentType: "full-time",
+      sourceUrl: "https://example.com/job",
+      status: "saved",
       postedAt: "2026-01-10",
       description: "Build UIs",
       logo: "https://logo.clearbit.com/acme.com",
@@ -272,6 +275,9 @@ describe("mapJobResponse", () => {
     const result = mapJobResponse(job)
     expect(result.location).toBe("")
     expect(result.salary).toBeUndefined()
+    expect(result.employmentType).toBeUndefined()
+    expect(result.sourceUrl).toBeUndefined()
+    expect(result.status).toBe("saved")
     expect(result.postedAt).toBeUndefined()
     expect(result.logo).toBeUndefined()
   })

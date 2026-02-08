@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { useSidebarStore } from "./sidebar-store";
-import type { JobData, MatchData } from "./sidebar-store";
+import type { JobData, MatchData } from "@jobswyft/ui";
 
 // Mock chrome.storage
 vi.mock("../lib/chrome-storage-adapter", () => ({
@@ -15,14 +15,15 @@ describe("useSidebarStore - State Preservation Matrix", () => {
   const mockJobData: JobData = {
     title: "Software Engineer",
     company: "Acme Corp",
+    location: "Remote",
     description: "Build cool stuff",
-    url: "https://example.com/job/1",
+    sourceUrl: "https://example.com/job/1",
   };
 
   const mockMatchData: MatchData = {
     score: 85,
-    strengths: ["React", "TypeScript"],
-    gaps: ["Python"],
+    matchedSkills: ["React", "TypeScript"],
+    missingSkills: ["Python"],
   };
 
   beforeEach(() => {
@@ -50,7 +51,7 @@ describe("useSidebarStore - State Preservation Matrix", () => {
           outreach: "Hi, I saw your posting...",
           chatHistory: [{ role: "user", content: "test" }],
         },
-        lastJobUrl: mockJobData.url,
+        lastJobUrl: mockJobData.sourceUrl,
         sidebarState: "job-detected",
         activeTab: "ai-studio",
         aiStudioSubTab: "cover-letter",
@@ -79,7 +80,7 @@ describe("useSidebarStore - State Preservation Matrix", () => {
       useSidebarStore.setState({
         jobData: mockJobData,
         matchData: mockMatchData,
-        lastJobUrl: mockJobData.url,
+        lastJobUrl: mockJobData.sourceUrl,
         sidebarState: "job-detected",
       });
 
@@ -106,7 +107,7 @@ describe("useSidebarStore - State Preservation Matrix", () => {
           outreach: "Hi, I saw your posting...",
           chatHistory: [{ role: "user", content: "test" }],
         },
-        lastJobUrl: mockJobData.url,
+        lastJobUrl: mockJobData.sourceUrl,
       });
 
       // Action: navigate to new job URL
@@ -125,12 +126,12 @@ describe("useSidebarStore - State Preservation Matrix", () => {
       const initialState = {
         jobData: mockJobData,
         matchData: mockMatchData,
-        lastJobUrl: mockJobData.url,
+        lastJobUrl: mockJobData.sourceUrl,
       };
       useSidebarStore.setState(initialState);
 
       // Action: navigate to same URL
-      useSidebarStore.getState().onUrlChange(mockJobData.url, true);
+      useSidebarStore.getState().onUrlChange(mockJobData.sourceUrl, true);
 
       // Assert: no changes
       const state = useSidebarStore.getState();
@@ -150,7 +151,7 @@ describe("useSidebarStore - State Preservation Matrix", () => {
           outreach: null,
           chatHistory: [],
         },
-        lastJobUrl: mockJobData.url,
+        lastJobUrl: mockJobData.sourceUrl,
         sidebarState: "job-detected" as const,
       };
       useSidebarStore.setState(initialState);
@@ -163,7 +164,7 @@ describe("useSidebarStore - State Preservation Matrix", () => {
       expect(state.jobData).toEqual(mockJobData);
       expect(state.matchData).toEqual(mockMatchData);
       expect(state.aiStudioOutputs.coverLetter).toBe("Dear hiring manager...");
-      expect(state.lastJobUrl).toBe(mockJobData.url);
+      expect(state.lastJobUrl).toBe(mockJobData.sourceUrl);
     });
   });
 

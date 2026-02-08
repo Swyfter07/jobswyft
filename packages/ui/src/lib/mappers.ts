@@ -34,12 +34,15 @@ import type {
 
 // ─── UI Types (for mappers) ─────────────────────────────────────────
 
-/** Job data shape (UI) - mirrors job-card.tsx (in _reference) */
+/** Job data shape (UI) — single source of truth for all surfaces */
 export interface JobData {
   title: string
   company: string
   location: string
   salary?: string
+  employmentType?: string
+  sourceUrl?: string
+  status?: string
   postedAt?: string
   description?: string
   logo?: string
@@ -184,6 +187,9 @@ export function mapJobResponse(job: ApiJobResponse): JobData {
     company: job.company,
     location: job.location ?? "",
     salary: job.salary_range ?? undefined,
+    employmentType: job.employment_type ?? undefined,
+    sourceUrl: job.source_url ?? undefined,
+    status: job.status ?? undefined,
     postedAt: job.posted_at ?? undefined,
     description: job.description ?? undefined,
     logo: job.logo_url ?? undefined,

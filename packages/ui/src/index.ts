@@ -104,6 +104,8 @@ export { CollapsibleSection } from "@/components/blocks/collapsible-section"
 // Components — features (official)
 export { ResumeCard } from "@/components/features/resume/resume-card"
 export { ResumeEmptyState } from "@/components/features/resume/resume-empty-state"
+export { JobCard } from "@/components/features/job-card"
+export { ScanEmptyState } from "@/components/features/scan-empty-state"
 export { LoginView } from "@/components/features/login-view"
 
 // Components — layout
@@ -126,6 +128,8 @@ export type {
   ResumeSummary,
   ResumeCardProps,
 } from "@/components/features/resume/resume-card"
+export type { JobCardProps } from "@/components/features/job-card"
+export type { ScanEmptyStateProps } from "@/components/features/scan-empty-state"
 export type { LoginViewProps } from "@/components/features/login-view"
 
 // Types — layout

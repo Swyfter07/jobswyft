@@ -111,3 +111,4 @@ development_status:
   EXT-3-authenticated-navigation-sidebar-shell: done
   EXT-4-resume-management: done
   EXT-4.5-component-library-cleanup-ux-alignment: done  # Completed 2026-02-08 - UI package 29% smaller, UX compliant baseline
+  EXT-5-job-page-scanning-job-card: done  # Completed 2026-02-08 - Code review passed (7 fixes applied, 44 tests added)
