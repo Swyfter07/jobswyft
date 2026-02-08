@@ -67,39 +67,40 @@ function CopyChip({ value, icon, iconPosition = "left", label, className }: Copy
   const { copy, isCopied } = useClipboard()
   const copied = isCopied(value)
 
-  // Determine if there's a left-side icon slot vs right-side icon slot
+  // Simplified logic:
+  // - If icon exists: show it in iconPosition, check replaces it when copied
+  // - If no icon: show Copy icon on right, check replaces it when copied
   const hasIcon = !!icon
-  const showLeft = iconPosition === "left"
+  const showIconOnLeft = hasIcon && iconPosition === "left"
+  const showIconOnRight = hasIcon && iconPosition === "right"
 
-  // The icon/check element for the left slot
-  const leftSlot = showLeft ? (
+  // Left slot: only show if custom icon is on left
+  const leftSlot = showIconOnLeft ? (
     copied ? (
       <Check className="size-3 shrink-0 text-success" />
-    ) : hasIcon ? (
+    ) : (
       <span className="shrink-0 text-muted-foreground [&>svg]:size-3">
         {icon}
       </span>
-    ) : null
+    )
   ) : null
 
-  // The icon/check element for the right slot
-  const rightSlot = !showLeft ? (
+  // Right slot: show custom icon if on right, OR default Copy icon if no custom icon
+  const rightSlot = showIconOnRight ? (
     copied ? (
       <Check className="size-3 shrink-0 text-success" />
-    ) : hasIcon ? (
+    ) : (
       <span className="shrink-0 text-muted-foreground [&>svg]:size-3">
         {icon}
       </span>
+    )
+  ) : !hasIcon ? (
+    copied ? (
+      <Check className="size-3 shrink-0 text-success" />
     ) : (
       <Copy className="size-2.5 shrink-0 text-muted-foreground/60" />
     )
   ) : null
-
-  // Default right-side copy icon when icon is on the left and no custom icon provided
-  const defaultRightCopy =
-    showLeft && !hasIcon && !copied ? (
-      <Copy className="size-2.5 shrink-0 text-muted-foreground/60" />
-    ) : null
 
   return (
     <Tooltip>
@@ -120,7 +121,6 @@ function CopyChip({ value, icon, iconPosition = "left", label, className }: Copy
           {leftSlot}
           <span className="truncate max-w-[180px]">{label || value}</span>
           {rightSlot}
-          {defaultRightCopy}
         </button>
       </TooltipTrigger>
       <TooltipContent>

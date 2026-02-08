@@ -24,7 +24,7 @@ Build the Chrome Extension surface end-to-end, one sidepanel section at a time. 
 
 **Story approach:** All stories defined upfront. Each follows the [Component Development Methodology](#component-development-methodology).
 
-**Stories (12 total, 1 done):**
+**Stories (13 total, 1 done):**
 
 | # | Story | User Value | Status |
 |---|-------|------------|--------|
@@ -32,6 +32,7 @@ Build the Chrome Extension surface end-to-end, one sidepanel section at a time. 
 | EXT.2 | Component Library Reorganization | Clean foundation: proper categories, reference separation, consistent patterns | Pending |
 | EXT.3 | Authenticated Navigation & Sidebar Shell | Users can navigate the 4-tab sidebar with state preservation | Pending |
 | EXT.4 | Resume Management | Users can upload, view, and manage resumes in the sidebar | Pending |
+| **EXT.4.5** | **Component Library Cleanup & UX Alignment** | **Developers build on official UX-compliant components, not prototype references** | **Pending** |
 | EXT.5 | Job Page Scanning & Job Card | Users can scan job pages and save jobs | Pending |
 | EXT.6 | Match Analysis (Auto + Detailed) | Users can instantly see how they match a job | Pending |
 | EXT.7 | AI Studio — Cover Letter & Outreach | Users can generate tailored application content (SSE streaming) | Pending |
@@ -45,14 +46,14 @@ Build the Chrome Extension surface end-to-end, one sidepanel section at a time. 
 ```
 EXT.1 (DONE) → EXT.2 (cleanup) → EXT.3 (navigation, auth store, state preservation)
                                      ↓
-                                  EXT.4 (resume) → EXT.5 (scan + job card)
-                                                      ↓
-                                                   EXT.6 (match) → EXT.7 (cover letter + outreach, SSE streaming)
-                                                                 → EXT.8 (AI Studio chat sub-tab, SSE streaming)
-                                                                 → EXT.9 (autofill)
-                                                                 → EXT.12 (coach standalone tab, SSE streaming)
-                                                   EXT.10 (credits — cross-cutting, retrofits into EXT.6-9, EXT.12)
-                                                   EXT.11 (feedback — standalone)
+                                  EXT.4 (resume) → EXT.4.5 (component cleanup & UX alignment) → EXT.5 (scan + job card)
+                                                                                                      ↓
+                                                                                                   EXT.6 (match) → EXT.7 (cover letter + outreach, SSE streaming)
+                                                                                                                 → EXT.8 (AI Studio chat sub-tab, SSE streaming)
+                                                                                                                 → EXT.9 (autofill)
+                                                                                                                 → EXT.12 (coach standalone tab, SSE streaming)
+                                                                                                   EXT.10 (credits — cross-cutting, retrofits into EXT.6-9, EXT.12)
+                                                                                                   EXT.11 (feedback — standalone)
 ```
 
 ---

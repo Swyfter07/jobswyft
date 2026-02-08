@@ -96,41 +96,26 @@ export {
 } from "@/components/ui/alert-dialog"
 export { Skeleton } from "@/components/ui/skeleton"
 
-// Components — blocks
+// Components — blocks (official)
 export { IconBadge } from "@/components/blocks/icon-badge"
-export { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
-export { MatchIndicator } from "@/components/blocks/match-indicator"
-export { SelectionChips } from "@/components/blocks/selection-chips"
-export { CreditBar } from "@/components/blocks/credit-bar"
-export { CreditBalance } from "@/components/blocks/credit-balance"
 export { CopyChip, CopyButton } from "@/components/blocks/copy-chip"
 export { CollapsibleSection } from "@/components/blocks/collapsible-section"
 
-// Components — features
+// Components — features (official)
 export { ResumeCard } from "@/components/features/resume/resume-card"
 export { ResumeEmptyState } from "@/components/features/resume/resume-empty-state"
-export { JobCard } from "@/components/features/job-card"
-export { LoggedOutView } from "@/components/features/logged-out-view"
-export { Coach } from "@/components/features/coach"
-export { Autofill } from "@/components/features/autofill"
-export { AIStudio } from "@/components/features/ai-studio"
-export { NonJobPageView } from "@/components/features/non-job-page-view"
+export { LoginView } from "@/components/features/login-view"
 
 // Components — layout
 export { AppHeader } from "@/components/layout/app-header"
 export { ExtensionSidebar } from "@/components/layout/extension-sidebar"
 
-// Types — blocks
+// Types — blocks (official)
 export type { IconBadgeProps } from "@/components/blocks/icon-badge"
-export type { SkillPillProps, SkillSectionLabelProps } from "@/components/blocks/skill-pill"
-export type { MatchIndicatorProps } from "@/components/blocks/match-indicator"
-export type { SelectionChipsProps, ChipOption } from "@/components/blocks/selection-chips"
-export type { CreditBarProps } from "@/components/blocks/credit-bar"
-export type { CreditBalanceProps } from "@/components/blocks/credit-balance"
 export type { CopyChipProps, CopyButtonProps } from "@/components/blocks/copy-chip"
 export type { CollapsibleSectionProps } from "@/components/blocks/collapsible-section"
 
-// Types — features
+// Types — features (official)
 export type {
   ResumePersonalInfo,
   ResumeExperienceEntry,
@@ -141,12 +126,7 @@ export type {
   ResumeSummary,
   ResumeCardProps,
 } from "@/components/features/resume/resume-card"
-export type { JobData, MatchData } from "@/components/features/job-card"
-export type { LoggedOutViewProps } from "@/components/features/logged-out-view"
-export type { CoachProps, Message } from "@/components/features/coach"
-export type { AutofillProps, AutofillField } from "@/components/features/autofill"
-export type { AIStudioProps, AIStudioMatchData } from "@/components/features/ai-studio"
-export type { NonJobPageViewProps } from "@/components/features/non-job-page-view"
+export type { LoginViewProps } from "@/components/features/login-view"
 
 // Types — layout
 export type { AppHeaderProps } from "@/components/layout/app-header"
@@ -184,7 +164,7 @@ export type {
 } from "@/lib/api-types"
 
 // Mapper output types
-export type { CreditData, ProfileData } from "@/lib/mappers"
+export type { CreditData, ProfileData, JobData, MatchData } from "@/lib/mappers"
 
 // Hooks
 export { useClipboard } from "@/hooks/use-clipboard"

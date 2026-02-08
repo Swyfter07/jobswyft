@@ -35,8 +35,9 @@ packages/ui/src/components/
 ├── layout/          # Shell, navigation, page-level wrappers
 │                    # ExtensionSidebar, AppHeader
 │
-└── _reference/      # Original Storybook demos (READ-ONLY, will be deleted)
-                     # Moved here during EXT.2 cleanup — used as visual reference only
+└── _reference/      # Prototype patterns (NOT official, will be deleted after EXT epic)
+    ├── future-features/  # Unofficial feature components (ai-studio, autofill, coach, job-card)
+    └── blocks/           # Unused block components (credit-balance, match-indicator, skill-pill, selection-chips)
 ```
 
 | Category | Directory | When to Use | Import Pattern |
@@ -45,7 +46,68 @@ packages/ui/src/components/
 | **Building Blocks** | `blocks/` | Reusable domain pieces, used in 2+ features | `import { SkillPill } from '@jobswyft/ui'` |
 | **Features** | `features/` | Complete feature panels, one per sidebar section | `import { JobCard } from '@jobswyft/ui'` |
 | **Layout** | `layout/` | Page/shell-level wrappers, sidebar chrome | `import { AppHeader } from '@jobswyft/ui'` |
-| **Reference** | `_reference/` | NEVER import. Visual reference only during migration | N/A — delete after migration |
+| **Reference** | `_reference/` | NEVER import. Pattern reference only — NOT production-ready | N/A — read for patterns, rebuild from UX spec |
+
+## Official vs Reference Components (EXT.4.5+)
+
+**After EXT.4.5 cleanup, components are organized by production readiness:**
+
+### Official Components ✅
+- **Location:** `blocks/`, `features/`, `layout/`, `ui/` (main directories)
+- **Status:** Designed per UX spec, implemented in extension (EXT.1-4), production-ready
+- **Exports:** Exported from `packages/ui/src/index.ts`
+- **Import:** `import { Component } from '@jobswyft/ui'`
+- **Storybook:** Visible in main navigation
+
+**Official components as of EXT.4:**
+- **Layout:** `AppHeader`, `ExtensionSidebar`
+- **Features:** `LoginView`, `NonJobPageView`, `ResumeCard`, `ResumeEmptyState`
+- **Blocks:** `IconBadge`, `CreditBar`, `CopyChip`, `CopyButton`, `CollapsibleSection`
+- **UI:** All shadcn primitives (Button, Card, Badge, etc.)
+
+### Reference Components ⚠️
+- **Location:** `_reference/future-features/`, `_reference/blocks/`
+- **Status:** Prototype patterns to reuse — NOT officially designed per UX spec
+- **Exports:** NOT exported from package
+- **Import:** Cannot import — read for patterns only
+- **Storybook:** Hidden from main navigation (excluded in `.storybook/main.ts`)
+
+**Reference components (future features):**
+- `_reference/future-features/ai-studio.tsx` — Match analysis, cover letter, outreach (EXT.6-7, 9)
+- `_reference/future-features/autofill.tsx` — Sequential autofill animation (EXT.8)
+- `_reference/future-features/coach.tsx` — Career coaching chat (EXT.12)
+- `_reference/future-features/job-card.tsx` — Job details card with match (EXT.5)
+
+**Reference blocks (unused):**
+- `_reference/blocks/credit-balance.tsx` — Only in stories, not in extension
+- `_reference/blocks/match-indicator.tsx` — Only in job-card, ai-studio
+- `_reference/blocks/skill-pill.tsx` — Only in job-card, ai-studio
+- `_reference/blocks/selection-chips.tsx` — Only in ai-studio
+
+### Using Reference Components
+
+When building a new feature (e.g., EXT.5 Job Page Scanning):
+
+1. **Start from UX spec** — Read relevant UX Design Specification section FIRST
+2. **Review reference pattern** — Check if `_reference/` has similar component
+3. **Extract patterns** — Copy ONLY the patterns you need (not whole component)
+4. **Rebuild from scratch** — Create new component following UX spec
+5. **Refine to spec** — Fix hardcoded colors, add dark mode, proper sizing, etc.
+6. **Export** — Add to `packages/ui/src/index.ts` when complete
+7. **Document** — Update `packages/ui/README.md` official components list
+
+**Example:**
+```tsx
+// ❌ WRONG: Don't import from _reference
+import { JobCard } from "@jobswyft/ui" // Won't work — not exported
+
+// ✅ CORRECT: Build new component using reference as pattern
+// 1. Read _reference/future-features/job-card.tsx for patterns
+// 2. Read UX spec for "Job Detected" state requirements
+// 3. Create new src/components/features/job-card.tsx
+// 4. Reuse patterns: MatchIndicator animation, SkillPill layout
+// 5. Fix: hardcoded colors → semantic tokens, proper spacing, etc.
+```
 
 ## Design Language Rules (ALL Components)
 

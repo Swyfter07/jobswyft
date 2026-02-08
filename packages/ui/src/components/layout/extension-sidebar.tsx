@@ -2,7 +2,6 @@ import React from "react"
 import { Search, Sparkles, FormInput, Bot } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { CreditBar } from "@/components/blocks/credit-bar"
 
 export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
     header: React.ReactNode
@@ -15,13 +14,6 @@ export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivEleme
     defaultTab?: string
     activeTab?: string
     onTabChange?: (tab: string) => void
-    aiStudioSubTab?: string
-    onAIStudioSubTabChange?: (subTab: string) => void
-    creditBar?: {
-        credits: number
-        maxCredits?: number
-        onBuyMore?: () => void
-    }
 }
 
 function TabIcon({ locked, children }: { locked?: boolean; children: React.ReactNode }) {
@@ -43,7 +35,6 @@ export function ExtensionSidebar({
     defaultTab = "scan",
     activeTab,
     onTabChange,
-    creditBar,
     className,
     children,
     ...domProps
@@ -82,14 +73,14 @@ export function ExtensionSidebar({
         >
             {/* Header Section */}
             {!children && (
-                <div className="p-2 border-b bg-background z-10">
+                <div className="p-2 bg-background z-10">
                     {header}
                 </div>
             )}
 
             {/* Context Section (e.g. Resume) */}
             {!children && contextContent && (
-                <div className="border-b bg-muted/30 dark:bg-muted/50 max-h-[40vh] overflow-y-auto scroll-fade-y scrollbar-hidden">
+                <div className="bg-muted/30 dark:bg-muted/50 max-h-[40vh] overflow-y-auto scroll-fade-y scrollbar-hidden">
                     <div className="px-2 py-1">
                         {enhancedContext}
                     </div>
@@ -159,15 +150,6 @@ export function ExtensionSidebar({
                         </TabsContent>
                     </div>
                 </Tabs>
-            )}
-
-            {/* Credit Bar - Fixed at bottom */}
-            {creditBar && (
-                <CreditBar
-                    credits={creditBar.credits}
-                    maxCredits={creditBar.maxCredits}
-                    onBuyMore={creditBar.onBuyMore}
-                />
             )}
         </aside>
     )

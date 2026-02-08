@@ -38,7 +38,7 @@ export function AppHeader({
     return (
         <header
             className={cn(
-                "sticky top-0 z-50 w-full bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
+                "sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60",
                 className
             )}
             {...props}
@@ -94,10 +94,12 @@ export function AppHeader({
                                     Dashboard
                                 </DropdownMenuItem>
                             )}
-                            <DropdownMenuItem onClick={onProfileClick}>
-                                <User className="mr-2 size-4" />
-                                Profile
-                            </DropdownMenuItem>
+                            {onProfileClick && (
+                                <DropdownMenuItem onClick={onProfileClick}>
+                                    <User className="mr-2 size-4" />
+                                    Profile
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuSeparator />
                             <DropdownMenuItem onClick={onSignOut}>
                                 <LogOut className="mr-2 size-4" />

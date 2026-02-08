@@ -1,13 +1,9 @@
 import React from "react"
 import type { Meta, StoryObj } from "@storybook/react-vite"
 import { ExtensionSidebar } from "./extension-sidebar"
-import { AIStudio } from "@/components/features/ai-studio"
-import { Coach } from "@/components/features/coach"
-import { Autofill } from "@/components/features/autofill"
 import { AppHeader } from "./app-header"
-import { ResumeCard } from "@/components/features/resume-card"
-import { CreditBalance } from "@/components/blocks/credit-balance"
-import { JobCard } from "@/components/features/job-card"
+import { ResumeCard } from "@/components/features/resume/resume-card"
+import { LoginView } from "@/components/features/login-view"
 
 // Mock Data
 const MOCK_RESUME_DATA = {
@@ -17,22 +13,6 @@ const MOCK_RESUME_DATA = {
     skills: ["Figma", "React", "TypeScript", "Design Systems"],
     experience: [{ title: "Senior Product Designer", company: "Tech Corp", startDate: "2021", endDate: "Present", description: "Design systems.", highlights: [] }],
     education: [], certifications: [], projects: []
-}
-
-const MOCK_JOB = {
-    title: "Senior Product Designer",
-    company: "Stripe",
-    location: "Remote",
-    salary: "$140k - $180k",
-    postedAt: "2h ago",
-    description: "We are looking for a Senior Product Designer...",
-}
-
-const MOCK_MATCH = {
-    score: 92,
-    matchedSkills: ["Figma", "Design Systems", "Prototyping"],
-    missingSkills: ["Principle", "Origami"],
-    summary: "Strong match for your experience in design systems."
 }
 
 const meta = {
@@ -47,7 +27,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const CenteredLayout = (Story: any) => (
+const CenteredLayout = (Story: React.ComponentType) => (
     <div className="flex items-center justify-center min-h-screen bg-muted p-8">
         <div className="relative w-[400px]" style={{ height: '85vh' }}>
             <Story />
@@ -55,18 +35,26 @@ const CenteredLayout = (Story: any) => (
     </div>
 )
 
-export const JobDetected: Story = {
+/** Authenticated with resume context - shell only (tabs will be populated in EXT.5+) */
+export const Authenticated: Story = {
     decorators: [CenteredLayout],
-    render: (args) => <ExtensionSidebarWithState {...args} />,
     args: {
         header: <AppHeader appName="JobSwyft" />,
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        // scanContent is handled by the wrapper to inject handlers
+        contextContent: (
+            <ResumeCard
+                resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
+                activeResumeId="1"
+                resumeData={MOCK_RESUME_DATA}
+                isCollapsible
+            />
+        ),
         isLocked: false,
     },
 }
 
+/** No job detected - tabs locked with resume context visible */
 export const NoJobDetected: Story = {
     decorators: [CenteredLayout],
     args: {
@@ -78,95 +66,16 @@ export const NoJobDetected: Story = {
                 resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
                 activeResumeId="1"
                 resumeData={MOCK_RESUME_DATA}
+                isCollapsible
             />
-        ),
-        scanContent: (
-            <>
-                <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 bg-muted/30 rounded-lg border border-dashed border-muted-foreground/25">
-                    <div className="rounded-full bg-muted p-3">
-                        <span className="text-2xl">🔍</span>
-                    </div>
-                    <div>
-                        <h3 className="font-semibold text-foreground">No Job Detected</h3>
-                        <p className="text-sm text-muted-foreground px-4">
-                            Navigate to a job posting to unlock AI tools.
-                        </p>
-                    </div>
-                    <div className="text-xs text-muted-foreground pt-4">
-                        Supported sites: LinkedIn, Indeed, Glassdoor
-                    </div>
-                </div>
-                <CreditBalance total={50} used={12} className="mt-auto" />
-            </>
         ),
         isLocked: true,
     },
 }
 
-import { LoggedOutView } from "@/components/features/logged-out-view"
+// Note: Tab content (scan/studio/autofill/coach) will be added in future stories (EXT.5+)
+// Current stories focus on shell layout + authentication states
 
-// Wrapper for interactive state
-const ExtensionSidebarWithState = (args: any) => {
-    const [activeTab, setActiveTab] = React.useState("scan")
-    const [studioTab, setStudioTab] = React.useState("match")
-
-    const handleDiveDeeper = () => {
-        setActiveTab("ai-studio")
-        setTimeout(() => setStudioTab("match"), 0) // Ensure tab switch happens
-    }
-
-    const handleCoach = () => {
-        setActiveTab("coach")
-    }
-
-    return (
-        <ExtensionSidebar
-            {...args}
-            activeTab={activeTab}
-            onTabChange={setActiveTab}
-            creditBar={{ credits: 38, maxCredits: 50, onBuyMore: () => alert("Buy more credits") }}
-            // Ensure content is passed if not already in args, or override to inject handlers
-            contextContent={args.contextContent || (
-                <ResumeCard
-                    resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
-                    activeResumeId="1"
-                    resumeData={MOCK_RESUME_DATA}
-                    isCompact={true}
-                />
-            )}
-            scanContent={
-                <JobCard
-                    job={MOCK_JOB}
-                    match={MOCK_MATCH}
-                    onDiveDeeper={handleDiveDeeper}
-                    onCoach={handleCoach}
-                />
-            }
-            studioContent={
-                <AIStudio
-                    isLocked={false}
-                    className="h-full"
-                    activeTab={studioTab}
-                    onTabChange={setStudioTab}
-                />
-            }
-            autofillContent={<Autofill className="h-full" />}
-            coachContent={<Coach className="h-full" />}
-        />
-    )
-}
-
-export const DiveDeeperDemo: Story = {
-    decorators: [CenteredLayout],
-    render: (args) => <ExtensionSidebarWithState {...args} />,
-    args: {
-        // Inherit base args but ensure interactivity
-        header: <AppHeader appName="JobSwyft" />,
-        className: "border shadow-2xl rounded-xl",
-        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        isLocked: false,
-    }
-}
 
 // Maxed out data for stress testing
 const MOCK_MAXED_RESUME_DATA = {
@@ -189,28 +98,33 @@ const MOCK_MAXED_RESUME_DATA = {
     skills: ["Figma", "Sketch", "Principle", "Protopie", "React", "HTML/CSS", "JavaScript", "TypeScript", "Storybook", "JIRA", "Notion", "Linear", "User Research", "Usability Testing", "Wireframing", "Prototyping", "Interaction Design", "Visual Design"]
 }
 
+/** Maxed out resume data for stress testing scrolling and layout */
 export const MaxedOutResume: Story = {
     decorators: [CenteredLayout],
     args: {
-        ...JobDetected.args,
+        header: <AppHeader appName="JobSwyft" />,
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
         contextContent: (
             <ResumeCard
                 resumes={[{ id: "1", fileName: "Senior_Product_Designer_Long.pdf" }]}
                 activeResumeId="1"
                 resumeData={MOCK_MAXED_RESUME_DATA}
-                isCompact={true}
+                isCollapsible
             />
         ),
+        isLocked: false,
     },
 }
 
-export const LoggedOut: Story = {
+/** Login view before authentication */
+export const Login: Story = {
     decorators: [CenteredLayout],
     args: {
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
         children: (
-            <LoggedOutView />
+            <LoginView />
         ),
     },
 }

@@ -1,9 +1,9 @@
 import type { Meta, StoryObj } from "@storybook/react-vite"
-import { LoggedOutView } from "./logged-out-view"
+import { LoginView } from "./login-view"
 
 const meta = {
-    title: "Custom/LoggedOutView",
-    component: LoggedOutView,
+    title: "Features/Login View",
+    component: LoginView,
     parameters: { layout: "centered" },
     tags: ["autodocs"],
     argTypes: {
@@ -16,7 +16,7 @@ const meta = {
             </div>
         ),
     ],
-} satisfies Meta<typeof LoggedOutView>
+} satisfies Meta<typeof LoginView>
 
 export default meta
 type Story = StoryObj<typeof meta>

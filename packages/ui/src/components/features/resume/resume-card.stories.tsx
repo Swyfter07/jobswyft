@@ -209,60 +209,84 @@ export const Default: Story = {
 
 /** Empty state — just the dotted upload card (no header/dropdown). */
 export const EmptyState: Story = {
-  render: () => (
-    <div className="w-[400px]">
-      <ResumeCard
-        resumes={[]}
-        activeResumeId={null}
-        resumeData={null}
-        onUpload={() => console.log("Upload clicked")}
-      />
-    </div>
-  ),
+  render: () => {
+    const [isOpen, setIsOpen] = React.useState(true)
+    return (
+      <div className="w-[400px]">
+        <ResumeCard
+          resumes={[]}
+          activeResumeId={null}
+          resumeData={null}
+          onUpload={() => console.log("Upload clicked")}
+          isCollapsible
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+        />
+      </div>
+    )
+  },
 }
 
 /** Loading — Skeleton shimmer while fetching or uploading. */
 export const Loading: Story = {
-  render: () => (
-    <div className="w-[400px]">
-      <ResumeCard
-        resumes={mockResumes}
-        activeResumeId="resume-1"
-        resumeData={null}
-        isLoading
-      />
-    </div>
-  ),
+  render: () => {
+    const [isOpen, setIsOpen] = React.useState(true)
+    return (
+      <div className="w-[400px]">
+        <ResumeCard
+          resumes={mockResumes}
+          activeResumeId="resume-1"
+          resumeData={null}
+          isLoading
+          isCollapsible
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+        />
+      </div>
+    )
+  },
 }
 
 /** Uploading from empty state — shows skeleton (same as loading). */
 export const UploadingFromEmpty: Story = {
-  render: () => (
-    <div className="w-[400px]">
-      <ResumeCard
-        resumes={[]}
-        activeResumeId={null}
-        resumeData={null}
-        isUploading
-      />
-    </div>
-  ),
+  render: () => {
+    const [isOpen, setIsOpen] = React.useState(true)
+    return (
+      <div className="w-[400px]">
+        <ResumeCard
+          resumes={[]}
+          activeResumeId={null}
+          resumeData={null}
+          isUploading
+          isCollapsible
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+        />
+      </div>
+    )
+  },
 }
 
 /** Connection error — shows error only, no resume blocks. */
 export const Error: Story = {
-  render: () => (
-    <div className="w-[400px]">
-      <ResumeCard
-        resumes={mockResumes}
-        activeResumeId="resume-1"
-        resumeData={null}
-        error="Check your connection and try again"
-        onRetry={() => console.log("Retry clicked")}
-        onClearError={() => console.log("Clear error")}
-      />
-    </div>
-  ),
+  render: () => {
+    const [isOpen, setIsOpen] = React.useState(true)
+    return (
+      <div className="w-[400px]">
+        <ResumeCard
+          resumes={mockResumes}
+          activeResumeId="resume-1"
+          resumeData={null}
+          error="Check your connection and try again"
+          onRetry={() => console.log("Retry clicked")}
+          onClearError={() => console.log("Clear error")}
+          isCollapsible
+          isOpen={isOpen}
+          onOpenChange={setIsOpen}
+        />
+      </div>
+    )
+  },
 }
 
 /** Five resumes at limit. */

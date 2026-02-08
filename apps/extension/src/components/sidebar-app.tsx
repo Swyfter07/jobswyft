@@ -1,9 +1,8 @@
 import { useEffect, useState, useCallback } from "react";
-import { ExtensionSidebar, LoggedOutView } from "@jobswyft/ui";
+import { ExtensionSidebar, LoginView } from "@jobswyft/ui";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { signInWithGoogle } from "../lib/auth";
-import { getSession } from "../lib/storage";
 import { AuthenticatedLayout } from "./authenticated-layout";
 import { SIDE_PANEL_CLASSNAME } from "../lib/constants";
 
@@ -86,7 +85,7 @@ export function SidebarApp() {
 
   return (
     <ExtensionSidebar header={header} className={SIDE_PANEL_CLASSNAME}>
-      <LoggedOutView
+      <LoginView
         onSignIn={handleSignIn}
         isLoading={signInLoading}
         error={signInError}

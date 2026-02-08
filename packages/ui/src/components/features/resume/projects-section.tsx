@@ -81,25 +81,11 @@ function ProjectEntryCard({
                   <ExternalLink className="size-3 text-muted-foreground" />
                 )}
               </div>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {entry.techStack.slice(0, 3).map((tech) => (
-                  <Badge
-                    key={tech}
-                    variant="secondary"
-                    className="h-4 px-1.5 text-micro font-normal"
-                  >
-                    {tech}
-                  </Badge>
-                ))}
-                {entry.techStack.length > 3 && (
-                  <Badge
-                    variant="outline"
-                    className="h-4 px-1.5 text-micro font-normal"
-                  >
-                    +{entry.techStack.length - 3}
-                  </Badge>
-                )}
-              </div>
+              {!isOpen && (
+                <div className="text-micro text-muted-foreground mt-0.5 line-clamp-1">
+                  {entry.description}
+                </div>
+              )}
             </div>
           </button>
         </CollapsibleTrigger>

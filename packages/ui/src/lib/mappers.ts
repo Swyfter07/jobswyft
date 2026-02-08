@@ -30,9 +30,28 @@ import type {
   ResumeCertificationEntry,
   ResumeProjectEntry,
   ResumeSummary,
-  JobData,
-  MatchData,
 } from "../index"
+
+// ─── UI Types (for mappers) ─────────────────────────────────────────
+
+/** Job data shape (UI) - mirrors job-card.tsx (in _reference) */
+export interface JobData {
+  title: string
+  company: string
+  location: string
+  salary?: string
+  postedAt?: string
+  description?: string
+  logo?: string
+}
+
+/** Match analysis data shape (UI) - mirrors job-card.tsx (in _reference) */
+export interface MatchData {
+  score: number // 0-100
+  matchedSkills: string[]
+  missingSkills: string[]
+  summary?: string
+}
 
 // ─── Envelope Helpers ───────────────────────────────────────────────
 

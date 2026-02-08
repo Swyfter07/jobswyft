@@ -12,8 +12,8 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { MatchIndicator } from "@/components/blocks/match-indicator"
-import { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
+import { MatchIndicator } from "../blocks/match-indicator"
+import { SkillPill, SkillSectionLabel } from "../blocks/skill-pill"
 import { IconBadge } from "@/components/blocks/icon-badge"
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────

@@ -3,9 +3,9 @@ import { Sparkles, Zap, Shield, Loader2 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { cn } from "@/lib/utils"
-import { IconBadge } from "@/components/custom/icon-badge"
+import { IconBadge } from "@/components/blocks/icon-badge"
 
-export interface LoggedOutViewProps {
+export interface LoginViewProps {
     onSignIn?: () => void
     isLoading?: boolean
     error?: string | null
@@ -24,7 +24,7 @@ function FeatureItem({ icon, title, description }: { icon: React.ReactNode, titl
     )
 }
 
-export function LoggedOutView({ onSignIn, isLoading, error, className }: LoggedOutViewProps) {
+export function LoginView({ onSignIn, isLoading, error, className }: LoginViewProps) {
     return (
         <div className={cn("flex flex-col h-full bg-background p-6 space-y-8", className)}>
             {/* Header */}
@@ -77,7 +77,7 @@ export function LoggedOutView({ onSignIn, isLoading, error, className }: LoggedO
                         {isLoading ? (
                             <Loader2 className="mr-2 size-4 animate-spin" />
                         ) : (
-                            <svg className="mr-2 size-4" viewBox="0 0 24 24">
+                            <svg className="mr-2 size-4" viewBox="0 0 24 24" aria-hidden="true">
                                 <path
                                     d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
                                     fill="currentColor"

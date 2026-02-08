@@ -18,9 +18,9 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { SelectionChips } from "@/components/blocks/selection-chips"
-import { MatchIndicator } from "@/components/blocks/match-indicator"
-import { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
+import { SelectionChips } from "../blocks/selection-chips"
+import { MatchIndicator } from "../blocks/match-indicator"
+import { SkillPill, SkillSectionLabel } from "../blocks/skill-pill"
 import { IconBadge } from "@/components/blocks/icon-badge"
 
 // ─── Types ──────────────────────────────────────────────────────────────
