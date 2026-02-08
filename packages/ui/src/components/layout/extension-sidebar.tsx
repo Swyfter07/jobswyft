@@ -15,6 +15,8 @@ export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivEleme
     defaultTab?: string
     activeTab?: string
     onTabChange?: (tab: string) => void
+    aiStudioSubTab?: string
+    onAIStudioSubTabChange?: (subTab: string) => void
     creditBar?: {
         credits: number
         maxCredits?: number
@@ -56,7 +58,7 @@ export function ExtensionSidebar({
     return (
         <aside
             className={cn(
-                "fixed right-0 top-0 h-screen w-[400px] bg-background flex flex-col z-50 border-l shadow-2xl",
+                "fixed right-0 top-0 h-screen w-full bg-background flex flex-col z-50 border-l shadow-2xl",
                 className
             )}
             {...domProps}
@@ -86,7 +88,7 @@ export function ExtensionSidebar({
                     <div className="px-3 pt-3 pb-2 bg-background border-b z-10">
                         <TabsList className="w-full grid grid-cols-4 h-9">
                             <TabsTrigger value="scan" className="text-xs gap-1.5 px-1">
-                                <Search className="size-3.5" />
+                                <Search className="size-4" />
                                 <span className="hidden sm:inline">Scan</span>
                             </TabsTrigger>
                             <TabsTrigger
@@ -95,7 +97,7 @@ export function ExtensionSidebar({
                                 disabled={isLocked}
                             >
                                 <TabIcon locked={isLocked}>
-                                    <Sparkles className="size-3.5" />
+                                    <Sparkles className="size-4" />
                                 </TabIcon>
                                 <span className="hidden sm:inline">Studio</span>
                             </TabsTrigger>
@@ -105,7 +107,7 @@ export function ExtensionSidebar({
                                 disabled={isLocked}
                             >
                                 <TabIcon locked={isLocked}>
-                                    <FormInput className="size-3.5" />
+                                    <FormInput className="size-4" />
                                 </TabIcon>
                                 <span className="hidden sm:inline">Autofill</span>
                             </TabsTrigger>
@@ -115,24 +117,27 @@ export function ExtensionSidebar({
                                 disabled={isLocked}
                             >
                                 <TabIcon locked={isLocked}>
-                                    <Bot className="size-3.5" />
+                                    <Bot className="size-4" />
                                 </TabIcon>
                                 <span className="hidden sm:inline">Coach</span>
                             </TabsTrigger>
                         </TabsList>
                     </div>
 
+                    {/* aria-live="polite" on container ensures screen reader announces tab changes.
+                        Custom forceMount + hidden pattern preserves state but may affect ARIA.
+                        Manual QA required: Test with NVDA/VoiceOver to verify announcements. */}
                     <div className="flex-1 overflow-y-auto scroll-fade-y scrollbar-hidden bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false">
-                        <TabsContent value="scan" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
+                        <TabsContent value="scan" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "scan" && "hidden")}>
                             {scanContent}
                         </TabsContent>
-                        <TabsContent value="ai-studio" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
+                        <TabsContent value="ai-studio" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "ai-studio" && "hidden")}>
                             {studioContent}
                         </TabsContent>
-                        <TabsContent value="autofill" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
+                        <TabsContent value="autofill" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "autofill" && "hidden")}>
                             {autofillContent}
                         </TabsContent>
-                        <TabsContent value="coach" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
+                        <TabsContent value="coach" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "coach" && "hidden")}>
                             {coachContent}
                         </TabsContent>
                     </div>

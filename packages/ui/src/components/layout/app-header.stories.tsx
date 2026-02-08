@@ -13,6 +13,8 @@ const meta = {
         onProfileClick: { action: "profile clicked" },
         onSignOut: { action: "sign out" },
         onThemeToggle: { action: "theme toggled" },
+        onOpenDashboard: { action: "dashboard opened" },
+        onReset: { action: "reset clicked" },
     },
 } satisfies Meta<typeof AppHeader>
 
@@ -22,6 +24,29 @@ type Story = StoryObj<typeof meta>
 export const Default: Story = {
     args: {
         isDarkMode: false,
+    },
+}
+
+export const WithDashboardLink: Story = {
+    args: {
+        isDarkMode: false,
+        onOpenDashboard: () => {},
+    },
+}
+
+export const WithResetButton: Story = {
+    args: {
+        isDarkMode: false,
+        resetButton: true,
+        onOpenDashboard: () => {},
+    },
+}
+
+export const DarkMode: Story = {
+    args: {
+        isDarkMode: true,
+        resetButton: true,
+        onOpenDashboard: () => {},
     },
 }
 

@@ -49,7 +49,7 @@ export async function signInWithGoogle(): Promise<void> {
   const responseUrl = await new Promise<string>((resolve, reject) => {
     chrome.identity.launchWebAuthFlow(
       { url: authUrl.href, interactive: true },
-      (redirectedTo) => {
+      (redirectedTo: string | undefined) => {
         if (chrome.runtime.lastError || !redirectedTo) {
           reject(
             new Error(chrome.runtime.lastError?.message ?? "Auth flow cancelled")

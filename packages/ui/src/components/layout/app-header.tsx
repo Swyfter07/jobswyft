@@ -1,5 +1,5 @@
 import React from "react"
-import { Briefcase, Sun, Moon, Settings, User, LogOut } from "lucide-react"
+import { Briefcase, Sun, Moon, Settings, User, LogOut, ExternalLink, RefreshCw } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,7 +16,10 @@ export interface AppHeaderProps extends React.HTMLAttributes<HTMLElement> {
     onProfileClick?: () => void
     onSignOut?: () => void
     onThemeToggle?: () => void
+    onOpenDashboard?: () => void
+    onReset?: () => void
     isDarkMode?: boolean
+    resetButton?: boolean
 }
 
 export function AppHeader({
@@ -25,7 +28,10 @@ export function AppHeader({
     onProfileClick,
     onSignOut,
     onThemeToggle,
+    onOpenDashboard,
+    onReset,
     isDarkMode = false,
+    resetButton = false,
     className,
     ...props
 }: AppHeaderProps) {
@@ -50,11 +56,25 @@ export function AppHeader({
                         variant="ghost"
                         size="icon"
                         onClick={onThemeToggle}
+                        aria-label={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
                         title={isDarkMode ? "Switch to light mode" : "Switch to dark mode"}
                         className="size-8 text-muted-foreground hover:text-foreground"
                     >
                         {isDarkMode ? <Moon className="size-4" /> : <Sun className="size-4" />}
                     </Button>
+
+                    {resetButton && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onReset}
+                            aria-label="Reset job data"
+                            title="Reset job data"
+                            className="size-8 text-muted-foreground hover:text-foreground"
+                        >
+                            <RefreshCw className="size-4" />
+                        </Button>
+                    )}
 
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -68,6 +88,12 @@ export function AppHeader({
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end" className="w-40">
+                            {onOpenDashboard && (
+                                <DropdownMenuItem onClick={onOpenDashboard}>
+                                    <ExternalLink className="mr-2 size-4" />
+                                    Dashboard
+                                </DropdownMenuItem>
+                            )}
                             <DropdownMenuItem onClick={onProfileClick}>
                                 <User className="mr-2 size-4" />
                                 Profile

@@ -101,6 +101,7 @@ export { LoggedOutView } from "@/components/features/logged-out-view"
 export { Coach } from "@/components/features/coach"
 export { Autofill } from "@/components/features/autofill"
 export { AIStudio } from "@/components/features/ai-studio"
+export { NonJobPageView } from "@/components/features/non-job-page-view"
 
 // Components — layout
 export { AppHeader } from "@/components/layout/app-header"
@@ -130,6 +131,7 @@ export type { LoggedOutViewProps } from "@/components/features/logged-out-view"
 export type { CoachProps, Message } from "@/components/features/coach"
 export type { AutofillProps, AutofillField } from "@/components/features/autofill"
 export type { AIStudioProps, AIStudioMatchData } from "@/components/features/ai-studio"
+export type { NonJobPageViewProps } from "@/components/features/non-job-page-view"
 
 // Types — layout
 export type { AppHeaderProps } from "@/components/layout/app-header"

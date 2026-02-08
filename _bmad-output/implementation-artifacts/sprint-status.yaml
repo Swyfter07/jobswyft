@@ -108,4 +108,5 @@ development_status:
   epic-EXT: in-progress
   EXT-1-wxt-extension-setup-ui-integration-login: review
   EXT-2-component-library-reorganization: done
+  EXT-3-authenticated-navigation-sidebar-shell: done
 
