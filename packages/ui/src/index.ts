@@ -80,6 +80,22 @@ export {
   AvatarFallback,
 } from "@/components/ui/avatar"
 
+// Components — shadcn (new)
+export {
+  AlertDialog,
+  AlertDialogPortal,
+  AlertDialogOverlay,
+  AlertDialogTrigger,
+  AlertDialogContent,
+  AlertDialogHeader,
+  AlertDialogFooter,
+  AlertDialogTitle,
+  AlertDialogDescription,
+  AlertDialogAction,
+  AlertDialogCancel,
+} from "@/components/ui/alert-dialog"
+export { Skeleton } from "@/components/ui/skeleton"
+
 // Components — blocks
 export { IconBadge } from "@/components/blocks/icon-badge"
 export { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
@@ -87,15 +103,12 @@ export { MatchIndicator } from "@/components/blocks/match-indicator"
 export { SelectionChips } from "@/components/blocks/selection-chips"
 export { CreditBar } from "@/components/blocks/credit-bar"
 export { CreditBalance } from "@/components/blocks/credit-balance"
+export { CopyChip, CopyButton } from "@/components/blocks/copy-chip"
+export { CollapsibleSection } from "@/components/blocks/collapsible-section"
 
 // Components — features
-export {
-  ResumeCard,
-  CopyChip,
-  CopyButton,
-  ResumeSection,
-  ResumeEmptyState,
-} from "@/components/features/resume-card"
+export { ResumeCard } from "@/components/features/resume/resume-card"
+export { ResumeEmptyState } from "@/components/features/resume/resume-empty-state"
 export { JobCard } from "@/components/features/job-card"
 export { LoggedOutView } from "@/components/features/logged-out-view"
 export { Coach } from "@/components/features/coach"
@@ -114,6 +127,8 @@ export type { MatchIndicatorProps } from "@/components/blocks/match-indicator"
 export type { SelectionChipsProps, ChipOption } from "@/components/blocks/selection-chips"
 export type { CreditBarProps } from "@/components/blocks/credit-bar"
 export type { CreditBalanceProps } from "@/components/blocks/credit-balance"
+export type { CopyChipProps, CopyButtonProps } from "@/components/blocks/copy-chip"
+export type { CollapsibleSectionProps } from "@/components/blocks/collapsible-section"
 
 // Types — features
 export type {
@@ -125,7 +140,7 @@ export type {
   ResumeData,
   ResumeSummary,
   ResumeCardProps,
-} from "@/components/features/resume-card"
+} from "@/components/features/resume/resume-card"
 export type { JobData, MatchData } from "@/components/features/job-card"
 export type { LoggedOutViewProps } from "@/components/features/logged-out-view"
 export type { CoachProps, Message } from "@/components/features/coach"

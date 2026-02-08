@@ -1,12 +1,14 @@
-import { AppHeader, ExtensionSidebar, NonJobPageView } from "@jobswyft/ui";
+import { useRef, useEffect, useCallback } from "react";
+import { AppHeader, ExtensionSidebar, NonJobPageView, ResumeCard } from "@jobswyft/ui";
 import { useAuthStore } from "../stores/auth-store";
 import { useThemeStore } from "../stores/theme-store";
 import { useSidebarStore } from "../stores/sidebar-store";
 import { useCreditsStore } from "../stores/credits-store";
+import { useResumeStore } from "../stores/resume-store";
 import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME } from "../lib/constants";
 
 export function AuthenticatedLayout() {
-  const { user, signOut } = useAuthStore();
+  const { user, accessToken, signOut } = useAuthStore();
   const { theme, toggleTheme } = useThemeStore();
   const {
     sidebarState,
@@ -17,8 +19,29 @@ export function AuthenticatedLayout() {
     resetJob,
   } = useSidebarStore();
   const { credits, maxCredits } = useCreditsStore();
+  const {
+    resumes,
+    activeResumeId,
+    activeResumeData,
+    isLoading: resumeLoading,
+    isUploading: resumeUploading,
+    error: resumeError,
+    fetchResumes,
+    setActiveResume,
+    uploadResume,
+    deleteResume,
+    clearError: clearResumeError,
+  } = useResumeStore();
 
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const isDark = theme === "dark";
+
+  // Fetch resumes on mount when authenticated
+  useEffect(() => {
+    if (accessToken && resumes.length === 0) {
+      fetchResumes(accessToken);
+    }
+  }, [accessToken, resumes.length, fetchResumes]);
 
   // Determine locked state: AI Studio, Autofill, Coach locked when no job detected
   const isLocked = sidebarState === "non-job-page" || sidebarState === "logged-out";
@@ -28,10 +51,49 @@ export function AuthenticatedLayout() {
       chrome.tabs.create({ url: DASHBOARD_URL });
     } catch (error) {
       console.error("Failed to open dashboard:", error);
-      // Fallback: open in current tab if extension API unavailable
       window.open(DASHBOARD_URL, "_blank");
     }
   };
+
+  const handleUpload = useCallback(() => {
+    fileInputRef.current?.click();
+  }, []);
+
+  const handleFileChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (file && accessToken) {
+        uploadResume(accessToken, file);
+      }
+      // Reset input so same file can be re-selected
+      e.target.value = "";
+    },
+    [accessToken, uploadResume]
+  );
+
+  const handleResumeSelect = useCallback(
+    (id: string) => {
+      if (accessToken) {
+        setActiveResume(accessToken, id);
+      }
+    },
+    [accessToken, setActiveResume]
+  );
+
+  const handleDelete = useCallback(
+    (id: string) => {
+      if (accessToken) {
+        deleteResume(accessToken, id);
+      }
+    },
+    [accessToken, deleteResume]
+  );
+
+  const handleRetry = useCallback(() => {
+    if (accessToken) {
+      fetchResumes(accessToken);
+    }
+  }, [accessToken, fetchResumes]);
 
   const header = (
     <AppHeader
@@ -42,6 +104,33 @@ export function AuthenticatedLayout() {
       resetButton
       isDarkMode={isDark}
     />
+  );
+
+  // Resume context content (collapsible, controlled by ExtensionSidebar)
+  const resumeContext = (
+    <>
+      <ResumeCard
+        resumes={resumes.map((r) => ({ id: r.id, fileName: r.fileName }))}
+        activeResumeId={activeResumeId}
+        resumeData={activeResumeData}
+        isLoading={resumeLoading}
+        isUploading={resumeUploading}
+        error={resumeError}
+        onResumeSelect={handleResumeSelect}
+        onUpload={handleUpload}
+        onDelete={handleDelete}
+        onRetry={handleRetry}
+        onClearError={clearResumeError}
+        isCollapsible
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/pdf"
+        className="hidden"
+        onChange={handleFileChange}
+      />
+    </>
   );
 
   // Placeholder for manual job paste (EXT.5)
@@ -81,6 +170,7 @@ export function AuthenticatedLayout() {
     <ExtensionSidebar
       header={header}
       className={SIDE_PANEL_CLASSNAME}
+      contextContent={resumeContext}
       isLocked={isLocked}
       activeTab={activeTab}
       onTabChange={(tab: string) => setActiveTab(tab as typeof activeTab)}

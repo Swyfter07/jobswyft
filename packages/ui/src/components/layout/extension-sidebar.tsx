@@ -49,11 +49,28 @@ export function ExtensionSidebar({
     ...domProps
 }: ExtensionSidebarProps) {
     const [internalTab, setInternalTab] = React.useState(defaultTab)
+    const [isContextExpanded, setIsContextExpanded] = React.useState(true)
     const currentTab = activeTab ?? internalTab
+
     const handleTabChange = (val: string) => {
         setInternalTab(val)
+        setIsContextExpanded(false)
         onTabChange?.(val)
     }
+
+    const handleMainScroll = (e: React.UIEvent<HTMLDivElement>) => {
+        if (isContextExpanded && e.currentTarget.scrollTop > 20) {
+            setIsContextExpanded(false)
+        }
+    }
+
+    // Inject controlled collapse props into contextContent
+    const enhancedContext = contextContent && React.isValidElement(contextContent)
+        ? React.cloneElement(contextContent as React.ReactElement<Record<string, unknown>>, {
+            isOpen: isContextExpanded,
+            onOpenChange: setIsContextExpanded,
+        })
+        : contextContent
 
     return (
         <aside
@@ -73,8 +90,8 @@ export function ExtensionSidebar({
             {/* Context Section (e.g. Resume) */}
             {!children && contextContent && (
                 <div className="border-b bg-muted/30 dark:bg-muted/50 max-h-[40vh] overflow-y-auto scroll-fade-y scrollbar-hidden">
-                    <div className="p-3">
-                        {contextContent}
+                    <div className="px-2 py-1">
+                        {enhancedContext}
                     </div>
                 </div>
             )}
@@ -127,7 +144,7 @@ export function ExtensionSidebar({
                     {/* aria-live="polite" on container ensures screen reader announces tab changes.
                         Custom forceMount + hidden pattern preserves state but may affect ARIA.
                         Manual QA required: Test with NVDA/VoiceOver to verify announcements. */}
-                    <div className="flex-1 overflow-y-auto scroll-fade-y scrollbar-hidden bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false">
+                    <div className="flex-1 overflow-y-auto scroll-fade-y scrollbar-hidden bg-muted/20 dark:bg-muted/40" aria-live="polite" aria-atomic="false" onScroll={handleMainScroll}>
                         <TabsContent value="scan" forceMount className={cn("h-full mt-0 p-3 space-y-3 animate-tab-content", currentTab !== "scan" && "hidden")}>
                             {scanContent}
                         </TabsContent>

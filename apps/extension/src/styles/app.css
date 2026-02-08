@@ -1,3 +1,4 @@
+@import "tailwindcss";
 @import "@jobswyft/ui/styles";
 
 /* Tell Tailwind v4 to scan UI package source files for class names */
