@@ -1,11 +1,17 @@
 ---
 stepsCompleted:
   - step-01-validate-prerequisites
+  - step-01-validate-prerequisites-revised-2026-02-07
   - step-02-design-epics
+  - step-02-design-epics-revised-2026-02-07
   - step-03-create-stories
+  - step-03-create-stories-revised-2026-02-07
   - step-04-final-validation
+  - step-04-final-validation-revised-2026-02-07
 workflowStatus: complete
 completedAt: '2026-02-06'
+lastRevised: '2026-02-07'
+revision2Note: 'Surgical update — aligned with updated PRD/Architecture/UX, added Epic API (6 stories), deferred FR20, resolved 3 ambiguities'
 previousRun:
   completedAt: '2026-02-05'
   storyApproach: iterative
@@ -56,7 +62,7 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 **Job Page Scanning (11):**
 - FR14: System automatically scans job posting pages when detected via URL pattern matching
 - FR14a: System detects job pages using configurable URL patterns for major job boards
-- FR14b: Users can manually trigger scan if automatic detection fails
+- FR14b: Users can manually enter job details when automatic detection fails, including pasting a full job description for AI analysis
 - FR15: System extracts job title from job posting pages
 - FR16: System extracts company name from job posting pages
 - FR17: System extracts full job description from job posting pages
@@ -95,6 +101,14 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 - FR36b: Users can select a length for outreach message generation (e.g., brief, standard)
 - FR36c: Users can provide custom instructions for outreach message generation
 - FR37: Users can regenerate outreach messages with feedback on what to change
+
+**Coach (Standalone Tab) (6):**
+- FR37a: Users can access Coach as a standalone sidebar tab (separate from AI Studio)
+- FR37b: Coach provides conversational AI coaching personalized to the user's active resume and current scanned job
+- FR37c: Coach can advise on application strategy, interview preparation, and skill gap analysis for the current role
+- FR37d: Coach conversations cost 1 AI credit per message
+- FR37e: Coach conversation resets when user switches to a different job (new job = new coaching context)
+- FR37f: System generates contextual coaching prompts based on match analysis results (e.g., "How do I address the Kubernetes gap?")
 
 **Common AI Capabilities (4):**
 - FR38: Users can edit any AI-generated output before using it
@@ -138,15 +152,21 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 - FR65: System displays "upgrade coming soon" message when user is out of paid credits
 - FR66: System blocks auto match analysis when free tier user exceeds daily limit (20/day)
 
-**Extension Sidebar Experience (8):**
-- FR67: Users can open the extension sidebar from any webpage
+**Extension Sidebar Experience (14):**
+- FR67: Users can open the extension sidebar (Chrome Side Panel) from any webpage
+- FR67a: Sidebar navigation uses a 4-tab structure: Scan | AI Studio | Autofill | Coach
+- FR67b: AI Studio contains 4 sub-tabs: Match | Cover Letter | Chat | Outreach
 - FR68: Users can close the extension sidebar
-- FR69: Sidebar displays one of four states: Logged Out (sign-in only), Non-Job Page (resume tray enabled, AI disabled), Job Page (auto-scan with instant match, AI locked), Application Page (full features)
-- FR69a: AI Studio tools (detailed match, cover letter, outreach, chat) unlock only when user is on a job application page
-- FR69b: Autofill functionality enables only when user is on a job application page
+- FR69: Sidebar displays one of four states: Logged Out (feature showcase + sign-in CTA), Non-Job Page (resume management + waiting state), Job Detected (auto-scanned job details + match analysis), Full Power (all tabs: Scan, AI Studio, Autofill, Coach)
+- FR69a: AI Studio tools (detailed match, cover letter, outreach, chat) and Coach tab unlock when a job is detected AND user has available credits
+- FR69b: Autofill functionality enables only when user is on a page with form fields (application page)
 - FR70: Sidebar displays resume tray for resume access when user is authenticated
-- FR71: AI Studio tools are locked until user navigates to application page with valid scan data
+- FR71: AI Studio tools are locked until a job is scanned and user has available credits; Coach tab follows the same unlock condition
 - FR72: Users can navigate to the web dashboard from the sidebar
+- FR72a: When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
+- FR72b: When user navigates to a non-job page, sidebar preserves the last job context (user can continue working with previous job data)
+- FR72c: Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs, chat; preserves resume, auth, credits)
+- FR72d: Sidebar tab switching preserves state within each tab (switching Scan → Coach → Scan does not re-trigger scan)
 
 **Web Dashboard (5):**
 - FR73: Users can access a dedicated jobs management page
@@ -179,6 +199,8 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 - NFR4: Autofill executes within 1 second
 - NFR5: Sidebar opens within 500ms of user click
 - NFR6: Resume parsing completes within 10 seconds of upload
+- NFR6a: AI generation endpoints (cover letter, outreach, chat, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
+- NFR6b: Match analysis and resume parsing return complete JSON responses (non-streaming)
 
 **Performance - Accuracy (3):**
 - NFR7: Auto-scan successfully extracts required fields on 95%+ of top 50 job boards
@@ -204,7 +226,7 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 
 **Reliability (6):**
 - NFR21: Backend API maintains 99.9% uptime (excluding planned maintenance)
-- NFR22: Extension functions offline for cached data (resume selection, local state)
+- NFR22: No offline mode; extension displays clear "no connection" state when network is unavailable. All AI and data features require an active network connection.
 - NFR23: AI provider failures are handled gracefully with user notification
 - NFR24: AI generation failures do not decrement user's usage balance
 - NFR25: Scan failures display partial results with clear error indication
@@ -234,6 +256,13 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 - NFR39: Minimal automated testing acceptable for MVP
 - NFR40: Production code must be thorough with comprehensive error handling
 - NFR41: Backend API must handle all edge cases and failure scenarios
+
+**Accessibility (5):**
+- NFR44a: Extension and dashboard target WCAG 2.1 AA compliance for color contrast (4.5:1 normal text, 3:1 large text/UI components), keyboard navigation, and screen reader support
+- NFR44b: All interactive elements are reachable via keyboard (Tab, Arrow keys, Enter, Escape)
+- NFR44c: All icon-only buttons include descriptive ARIA labels for screen readers
+- NFR44d: Color is never the sole indicator of information — always paired with text, icons, or numeric values
+- NFR44e: All animations respect the `prefers-reduced-motion` system preference; users who enable reduced motion see instant state changes instead of animated transitions
 
 **Logging & Observability (3):**
 - NFR42: Backend API includes comprehensive application logging
@@ -274,7 +303,8 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 - Provider interface for abstraction/switching
 - User preference stored in profiles.preferred_ai_provider
 - Fallback configurable via global_config
-- No streaming for MVP
+- SSE streaming for generative endpoints (cover letter, outreach, chat, coach) with cancel option
+- Match analysis and resume parsing return complete JSON (non-streaming)
 
 **From Architecture - UI Package:**
 - @jobswyft/ui shared component library (shadcn/ui + Tailwind v4 + Storybook 10)
@@ -285,10 +315,12 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 
 **From Architecture - Extension:**
 - Chrome Manifest V3 (service workers, chrome.storage)
-- Shadow DOM for style isolation
+- Chrome Side Panel API for persistent sidebar alongside job boards (NOT content script Shadow DOM)
 - Zustand stores per domain (auth, resume, job, scan)
-- Chrome permissions: activeTab, scripting, storage, tabs, identity, host_permissions
-- 4-state sidebar model (Logged Out, Non-Job Page, Job Page, Application Page)
+- Chrome permissions: sidePanel, activeTab, scripting, storage, tabs, identity, host_permissions
+- 4-state sidebar model (Logged Out, Non-Job Page, Job Detected, Full Power)
+- Sidebar tabs: 4 main (Scan | AI Studio | Autofill | Coach) + AI Studio has 4 sub-tabs (Match | Cover Letter | Chat | Outreach)
+- State preservation rules per event (tab switch, job URL change, manual reset, re-login)
 
 **From Architecture - Deployment:**
 - Railway CLI for API deployment
@@ -314,16 +346,19 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 |----|-------|-------------|
 | FR1 | EXT.1 (DONE) | Google OAuth sign-in |
 | FR2 | EXT.3 | Sign out from extension |
+| FR3 | WEB | Sign out from dashboard |
 | FR4 | EXT.3 | Session persistence across browser sessions |
 | FR5 | WEB | View account profile (Dashboard) |
 | FR6 | WEB | Account deletion (Dashboard + API) |
 | FR7-FR13c | EXT.4 | Resume upload, parse, view, select, blocks, copy |
-| FR14-FR22 | EXT.5 | Auto-scan, extraction, manual correction, missing fields |
+| FR14-FR19, FR21-FR22 | EXT.5 | Auto-scan, extraction, manual entry fallback, missing fields |
+| FR20 | POST-MVP | Element picker for manual field correction (deferred) |
 | FR23-FR25 | EXT.6 | Auto match, detailed match analysis |
 | FR26-FR30 | EXT.7 | Cover letter: generate, tone, length, instructions, regenerate, PDF |
-| FR31-FR35 | EXT.8 | Chat: open, suggestions, ask, history, new session |
+| FR31-FR35 | EXT.8 + API.2 | AI Studio Chat: UI (EXT.8), backend endpoint (API.2) |
 | FR36-FR37, FR36a-c | EXT.7 | Outreach: generate, tone, length, instructions, regenerate |
-| FR38-FR41 | EXT.7 | Common AI: edit output, ephemeral, copy, visual feedback |
+| FR37a-FR37f | EXT.12 + API.4 | Coach: UI (EXT.12), prompt templates (API.4), backend via shared chat endpoint (API.2) |
+| FR38-FR41 | EXT.7, EXT.8 | Common AI: edit output, ephemeral, copy, visual feedback |
 | FR42-FR47 | EXT.9 | Autofill: preview, fill, undo, resume upload, cover letter |
 | FR48-FR49 | EXT.5 | Save job from extension, auto "Applied" status |
 | FR50-FR56 | WEB | Job tracking dashboard (Dashboard) |
@@ -332,13 +367,25 @@ This document provides the complete epic and story breakdown for Jobswyft, decom
 | FR61-FR62 | POST-MVP | Subscription management |
 | FR63 | POST-MVP | Referral credits |
 | FR64-FR65 | EXT.10 | Credit blocking, upgrade message |
-| FR67-FR72 | EXT.3 | Sidebar states, tabs, resume tray slot, dashboard link |
+| FR67-FR67b | EXT.3 | Sidebar tabs (4 main + AI Studio sub-tabs) |
+| FR68-FR69b | EXT.3 | Sidebar states (Logged Out, Non-Job Page, Job Detected, Full Power), unlock conditions |
+| FR70-FR72 | EXT.3 | Resume tray slot, AI locked state, dashboard link |
+| FR72a-FR72d | EXT.3 | State preservation: job switch reset, non-job page persistence, manual reset, tab state |
 | FR73-FR77 | WEB | Dashboard pages |
 | FR78-FR82 | WEB | Privacy, data controls |
 | FR83-FR84a | EXT.11 | Feedback form in sidebar |
 | FR85 | WEB | Backend feedback storage (API exists) |
+| NFR6a | API.1, API.6 | SSE streaming infrastructure + endpoint migration |
+| NFR6b | API.3 | Match/resume parsing stay JSON (non-streaming) |
+| MATCH-01 | API.3 | Match type param (auto vs detailed) |
+| MATCH-02 | API.3 | Daily auto-match rate limiting (20/day free tier) |
+| CHAT-01 | API.2 | Build `POST /v1/ai/chat` endpoint |
+| CHAT-02 | API.2 | Chat AI prompt template |
+| COACH-01 | API.4 | Coach AI prompt template (strategic/advisory) |
+| COACH-02 | API.4 | Match-analysis-based coaching prompt generation |
+| AI-01 | API.5 | Remove `/v1/ai/answer` dead endpoint |
 
-**100% FR coverage. Zero gaps.**
+**100% FR coverage. Zero gaps. Backend tech debt mapped to Epic API.**
 
 ---
 
@@ -355,7 +402,7 @@ Every story follows this iterative build sequence. Start with the smallest piece
 2. **Primitives First** — Ensure shadcn primitives have the right variants (Button sizes, Badge colors, Input states)
 3. **Building Blocks** — Build small reusable compositions from primitives (e.g., CreditBar = Progress + Badge + Button)
 4. **Feature Components** — Assemble feature-level components from primitives + blocks (e.g., JobCard = Card + Badge + SkillPill + MatchIndicator)
-5. **Storybook Verify** — Every component gets stories, tested in dark + light at 400×600
+5. **Storybook Verify** — Every component gets stories, tested in dark + light at 360×600
 6. **User Verify** — Present to user before proceeding to extension integration
 7. **Extension Integrate** — Wire into WXT side panel with Zustand state management
 8. **Backend Wire** — Connect to existing API endpoints (build new ones if gaps found)
@@ -433,7 +480,7 @@ Every component MUST have stories following this structure:
 - **Default** — All variants displayed in a grid/row
 - **Sizes** — All size variants if applicable
 - **States** — Loading, error, empty, disabled where applicable
-- **Extension Viewport** — Rendered at 400×600 viewport
+- **Extension Viewport** — Rendered at 360×600 viewport
 - **Dark Mode** — Only if visual differences go beyond automatic token swap
 
 ### Extension Integration Pattern
@@ -533,6 +580,9 @@ When the user provides feedback on component design (colors, spacing, layout, be
 | CHAT-01 | Build `POST /v1/ai/chat` endpoint (does not exist) | High | EXT.8 | Open |
 | CHAT-02 | AI prompt template for job-context chat | High | EXT.8 | Open |
 | FEEDBACK-01 | Screenshot attachment support (FR84a) | Low | EXT.11 | Open |
+| COACH-01 | AI prompt template for coaching context (strategic/advisory tone, different from chat) | High | EXT.12 | Open |
+| COACH-02 | Match-analysis-based coaching prompt generation (FR37f) | Medium | EXT.12 | Open |
+| COACH-03 | Shared ChatPanel base component — Coach + AI Studio Chat share UI with different styling | Medium | EXT.8, EXT.12 | Open |
 
 ---
 
@@ -543,7 +593,7 @@ When the user provides feedback on component design (colors, spacing, layout, be
 | Auth | 5 (login, callback, logout, me, account delete) | Implemented |
 | Resumes | 5 (upload, list, get, set active, delete) | Implemented |
 | Jobs | 8 (scan, create, list, get, update, status, delete, notes) | Implemented |
-| AI | 5 (match, cover-letter, cover-letter/pdf, answer, outreach) | Implemented (needs: chat endpoint, remove answer, auto-match vs detailed-match param) |
+| AI | 5 (match, cover-letter, cover-letter/pdf, answer, outreach) | Implemented (needs: chat endpoint with SSE streaming, remove answer, auto-match vs detailed-match param, SSE streaming for cover-letter/outreach) |
 | Autofill | 1 (data) | Implemented |
 | Feedback | 1 (submit) | Implemented |
 | Usage | 2 (balance, history) | Implemented |
@@ -551,10 +601,12 @@ When the user provides feedback on component design (colors, spacing, layout, be
 | Privacy | 4 (data-summary, delete-request, confirm-delete, cancel-delete) | Implemented |
 | Webhooks | 1 (stripe) | Stub |
 
-**Known gaps to address:**
-- `POST /v1/ai/chat` — Missing. PRD added Chat (FR31-35), API still has old `/answer` instead
-- Auto-match vs Detailed match — `/v1/ai/match` needs parameter to distinguish free auto-match from 1-credit detailed match
-- `/v1/ai/answer` — Should be removed or repurposed (PRD removed Answer Generation tool)
+**Known gaps → tracked in Epic API:**
+- `POST /v1/ai/chat` → **API.2** — Missing. Needs SSE streaming + `context_type` param (chat vs coach)
+- Auto-match vs Detailed match → **API.3** — `/v1/ai/match` needs `match_type` param + daily rate limiting
+- `/v1/ai/answer` → **API.5** — Remove dead endpoint (PRD removed Answer tool)
+- SSE streaming → **API.1** (infrastructure) + **API.6** (cover-letter + outreach migration)
+- Coach prompt templates → **API.4** — Strategic/advisory tone, match-analysis-based prompts
 
 ---
 
@@ -578,40 +630,77 @@ Build the Chrome Extension surface end-to-end, one sidepanel section at a time. 
 
 **Epic Goal:** Users can install and use the Jobswyft Chrome Extension with full UI/UX across all 4 sidebar states — login, navigation, resume management, job scanning, AI-powered content generation, form autofill, usage tracking, and feedback — with complete backend API integration.
 
-**FRs covered:** FR1-FR4, FR7-FR49, FR57-FR60, FR60a-b, FR64-FR72, FR83-FR84a
+**FRs covered:** FR1-FR4, FR7-FR49, FR37a-FR37f, FR57-FR60, FR60a-b, FR64-FR72d, FR83-FR84a
 
 **Surfaces:** packages/ui (Storybook), apps/extension (WXT Side Panel), apps/api (FastAPI)
 
 **Story approach:** All stories defined upfront. Each follows the [Component Development Methodology](#component-development-methodology).
 
-**Stories (11 total, 1 done):**
+**Stories (12 total, 1 done):**
 
 | # | Story | User Value | Status |
 |---|-------|------------|--------|
 | EXT.1 | WXT Extension Setup & Login | Users can install extension and sign in with Google | DONE |
 | EXT.2 | Component Library Reorganization | Clean foundation: proper categories, reference separation, consistent patterns | Pending |
-| EXT.3 | Authenticated Navigation & Sidebar Shell | Users can navigate the extension after login | Pending |
+| EXT.3 | Authenticated Navigation & Sidebar Shell | Users can navigate the 4-tab sidebar with state preservation | Pending |
 | EXT.4 | Resume Management | Users can upload, view, and manage resumes in the sidebar | Pending |
 | EXT.5 | Job Page Scanning & Job Card | Users can scan job pages and save jobs | Pending |
 | EXT.6 | Match Analysis (Auto + Detailed) | Users can instantly see how they match a job | Pending |
-| EXT.7 | AI Studio — Cover Letter & Outreach | Users can generate tailored application content | Pending |
-| EXT.8 | AI Chat | Users can ask questions about a job posting | Pending |
+| EXT.7 | AI Studio — Cover Letter & Outreach | Users can generate tailored application content (SSE streaming) | Pending |
+| EXT.8 | AI Studio — Chat | Users can ask questions about a job posting (AI Studio sub-tab) | Pending |
 | EXT.9 | Form Autofill | Users can auto-fill application forms | Pending |
 | EXT.10 | Usage, Credits & Upgrade Prompts | Users can see their balance and understand limits | Pending |
 | EXT.11 | Feedback | Users can report issues and share ideas | Pending |
+| EXT.12 | Coach Tab | Users get personalized AI coaching for the current job | Pending |
 
 **Dependencies:**
 ```
-EXT.1 (DONE) → EXT.2 (cleanup) → EXT.3 (navigation, auth store)
+EXT.1 (DONE) → EXT.2 (cleanup) → EXT.3 (navigation, auth store, state preservation)
                                      ↓
                                   EXT.4 (resume) → EXT.5 (scan + job card)
                                                       ↓
-                                                   EXT.6 (match) → EXT.7 (cover letter + outreach)
-                                                                 → EXT.8 (chat)
+                                                   EXT.6 (match) → EXT.7 (cover letter + outreach, SSE streaming)
+                                                                 → EXT.8 (AI Studio chat sub-tab, SSE streaming)
                                                                  → EXT.9 (autofill)
-                                                   EXT.10 (credits — cross-cutting, retrofits into EXT.6-9)
+                                                                 → EXT.12 (coach standalone tab, SSE streaming)
+                                                   EXT.10 (credits — cross-cutting, retrofits into EXT.6-9, EXT.12)
                                                    EXT.11 (feedback — standalone)
 ```
+
+---
+
+### Epic API: Backend API Enhancements (Parallel with EXT)
+
+Deliver all backend API changes discovered during Chrome Extension development. Each story addresses a gap identified in Epic EXT stories, enabling frontend stories to proceed with mocked responses while real endpoints are built in parallel.
+
+**Epic Goal:** All API endpoints required by the Chrome Extension are production-ready — SSE streaming infrastructure, new chat/coach endpoints, match parameter additions, rate limiting, and dead endpoint cleanup.
+
+**Surfaces:** apps/api (FastAPI), supabase/migrations (if schema changes needed)
+
+**Relationship to Epic EXT:** Epic API runs **in parallel** with Epic EXT. Frontend stories mock API responses; when an API story ships, the corresponding EXT story wires to the real endpoint. Tech debt items from EXT stories feed directly into API stories.
+
+**Stories (initial — grows as EXT stories discover gaps):**
+
+| # | Story | Source Tech Debt | Unblocks | Priority |
+|---|-------|-----------------|----------|----------|
+| API.1 | SSE Streaming Infrastructure | NFR6a | EXT.7, EXT.8, EXT.12 | High |
+| API.2 | Chat Endpoint (`POST /v1/ai/chat`) | CHAT-01, CHAT-02 | EXT.8, EXT.12 | High |
+| API.3 | Match Type Param + Daily Rate Limiting | MATCH-01, MATCH-02 | EXT.6, EXT.10 | High |
+| API.4 | Coach Prompt Templates | COACH-01, COACH-02 | EXT.12 | High |
+| API.5 | Remove `/v1/ai/answer` Endpoint | AI-01 | EXT.7 (cleanup) | Medium |
+| API.6 | SSE Migration — Cover Letter + Outreach | NFR6a | EXT.7 | Medium |
+| *More discovered during EXT development* | | | |
+
+**Dependencies:**
+```
+API.1 (SSE infra) → API.2 (chat endpoint, uses SSE)
+                   → API.6 (cover-letter + outreach SSE migration)
+API.2 → API.4 (coach prompts, extends chat endpoint with context_type)
+API.3 (match params) — standalone
+API.5 (remove /answer) — standalone
+```
+
+**FRs covered:** FR31-FR35 (backend), FR37a-FR37f (backend), NFR6a-NFR6b (streaming)
 
 ---
 
@@ -621,7 +710,7 @@ Build the Next.js web dashboard for job tracking, account management, and privac
 
 **Epic Goal:** Users can manage their jobs, resumes, account, and data privacy from a web dashboard.
 
-**FRs covered:** FR5-6, FR50-56, FR73-77, FR78-82, FR85
+**FRs covered:** FR3, FR5-6, FR50-56, FR73-77, FR78-82, FR85
 
 ---
 
@@ -725,7 +814,7 @@ Add paid subscription management and referral credits.
 **I want** to see a navigation bar and tabbed sidebar after signing in,
 **So that** I can access all extension features and navigate between sections.
 
-**FRs addressed:** FR2 (sign out), FR4 (session persistence), FR67 (open sidebar), FR68 (close sidebar), FR69 (4-state sidebar), FR70 (resume tray slot), FR71 (AI locked until scan), FR72 (dashboard link)
+**FRs addressed:** FR2 (sign out), FR4 (session persistence), FR67 (open sidebar), FR67a (4-tab structure), FR67b (AI Studio sub-tabs), FR68 (close sidebar), FR69 (4-state sidebar: Logged Out, Non-Job Page, Job Detected, Full Power), FR69a (AI Studio + Coach unlock on job detection + credits), FR69b (Autofill on form page), FR70 (resume tray slot), FR71 (AI locked until scan + credits), FR72 (dashboard link), FR72a (job URL change reset), FR72b (non-job page preserves context), FR72c (manual reset button), FR72d (tab state preservation)
 
 ### Component Inventory
 
@@ -735,6 +824,8 @@ Add paid subscription management and referral credits.
 | Existing | `ExtensionSidebar` | `layout/` | Has tabs (scan/studio/autofill/coach), isLocked, creditBar. Wire real state |
 | New | `AuthenticatedLayout` | Extension `components/` | Wraps AppHeader + ExtensionSidebar for logged-in state |
 | New | Zustand `auth-store` | Extension `stores/` | Session state, user profile, persist to chrome.storage |
+| New | Reset button | In `AppHeader` | Ghost button, refresh icon `size-4`, triggers FR72c manual reset |
+| New | State preservation logic | Extension `hooks/` | `useStatePreservation` — handles FR72a-d (job switch, non-job page, manual reset, tab persistence) |
 | Modified | `sidebar-app.tsx` | Extension `components/` | Route between LoggedOutView ↔ AuthenticatedLayout |
 
 ### Acceptance Criteria
@@ -762,9 +853,31 @@ Add paid subscription management and referral credits.
 **Given** the user is authenticated but NOT on a job page
 **When** the sidebar renders
 **Then** the sidebar is in "Non-Job Page" state
-**And** Scan tab shows empty/placeholder state (no job detected)
-**And** AI Studio and Autofill tabs show locked state (`isLocked=true`)
-**And** Coach tab is accessible (general questions)
+**And** Scan tab shows empty/placeholder state ("Navigate to a job posting" + "Or paste a job description" link)
+**And** AI Studio, Autofill, and Coach tabs show locked state (`isLocked=true`) — all require job detection + credits
+**And** Resume tray is accessible for resume management
+
+**Given** the user navigates to a new job page (different URL)
+**When** auto-scan detects the new job
+**Then** sidebar resets: job data, match data, AI Studio outputs, and chat history are cleared
+**And** resume selection, auth session, and credits are preserved (FR72a)
+
+**Given** the user navigates from a job page to a non-job page (Gmail, Google Docs, etc.)
+**When** the page context changes
+**Then** sidebar preserves the last job context — user can continue working with previous job data (FR72b)
+
+**Given** the user clicks the reset button in the AppHeader
+**When** the reset action triggers
+**Then** job data, match data, AI Studio outputs, and chat are cleared
+**And** resume, auth, credits, and settings are preserved (FR72c)
+**And** sidebar returns to "Non-Job Page" / waiting state
+**And** no confirmation dialog (low-stakes, easily re-scanned)
+
+**Given** the user switches between sidebar tabs (Scan → Coach → Scan)
+**When** tab content re-renders
+**Then** each tab preserves its state within the session (FR72d)
+**And** switching back to Scan does not re-trigger scan
+**And** switching back to Coach preserves conversation
 
 **Given** the user clicks the theme toggle in AppHeader
 **When** theme switches between dark and light
@@ -877,7 +990,9 @@ Use existing mapper: `mapResumeResponse()` from `@jobswyft/ui` for snake_case �
 **I want** the extension to detect and scan job pages automatically,
 **So that** I can see job details and save jobs without copy-pasting.
 
-**FRs addressed:** FR14 (auto-scan), FR14a (URL patterns), FR14b (manual trigger), FR15-FR18 (field extraction), FR19 (ephemeral questions), FR20 (element picker), FR21 (manual edit), FR22 (missing field indicators), FR48 (save job), FR49 (auto "Applied" status)
+**FRs addressed:** FR14 (auto-scan), FR14a (URL patterns), FR14b (manual entry with paste-job-description fallback), FR15-FR18 (field extraction), FR19 (ephemeral questions), FR21 (manual edit), FR22 (missing field indicators), FR48 (save job), FR49 (auto "Applied" status)
+
+**Deferred:** FR20 (element picker for field correction) — deferred to post-MVP. Manual inline editing (FR21) covers 90% of the use case.
 
 ### Component Inventory
 
@@ -895,7 +1010,7 @@ Use existing mapper: `mapResumeResponse()` from `@jobswyft/ui` for snake_case �
 **Given** the extension is loaded and user is authenticated
 **When** the user navigates to a job posting page (LinkedIn, Indeed, Greenhouse, Lever, Workday, etc.)
 **Then** the content script detects the page via URL pattern matching
-**And** the sidebar state transitions from "Non-Job Page" to "Job Page"
+**And** the sidebar state transitions from "Non-Job Page" to "Job Detected"
 **And** auto-scan begins: job title, company, description, location, salary, type extracted from DOM
 
 **Given** auto-scan completes successfully
@@ -907,7 +1022,9 @@ Use existing mapper: `mapResumeResponse()` from `@jobswyft/ui` for snake_case �
 **Given** auto-detection fails on an unknown job site
 **When** the user sees the scan empty state
 **Then** a "Scan This Page" manual trigger button is displayed
-**And** clicking it attempts AI-powered DOM extraction as fallback
+**And** an "Or paste a job description" link is shown for manual entry fallback (FR14b)
+**And** clicking manual trigger attempts AI-powered DOM extraction as fallback
+**And** clicking paste link opens edit mode with textarea for full job description paste
 
 **Given** the JobCard is displaying scanned data
 **When** the user clicks an editable field (or enters edit mode)
@@ -950,7 +1067,7 @@ Content Script (injected per page)
 
 | Item | Description | Priority |
 |------|-------------|----------|
-| **SCAN-01** | Element picker for manual field correction (FR20) — complex DOM interaction, may defer to future iteration | Medium |
+| **SCAN-01** | Element picker for manual field correction (FR20) — **DEFERRED to post-MVP**. Manual inline editing (FR21) covers primary use case | Low (Post-MVP) |
 | **SCAN-02** | Application question extraction (FR19) — ephemeral, needs content script intelligence | Low |
 
 ---
@@ -1041,10 +1158,10 @@ Content Script (injected per page)
 
 ### Acceptance Criteria
 
-**Given** the user is on an application page with valid scan data
+**Given** the user is on a page where a job has been detected and has available credits
 **When** the sidebar shows AI Studio
 **Then** the `isLocked` state is `false` (unlocked)
-**And** tabs show: Match, Cover Letter, Outreach (Answer tab removed)
+**And** sub-tabs show: Match, Cover Letter, Chat, Outreach (FR67b)
 
 **Given** the user selects the Cover Letter tab
 **When** the tab renders
@@ -1056,8 +1173,9 @@ Content Script (injected per page)
 **Given** the user configures tone/length/instructions and clicks Generate
 **When** the generation begins
 **Then** `POST /v1/ai/cover-letter` is called with `{ job_id, resume_id, tone, length, custom_instructions }`
-**And** a loading spinner with "Generating cover letter..." shows
-**And** on success, the generated text displays in an editable GeneratedOutput component
+**And** SSE streaming begins — text appears progressively with cursor/caret blink at insertion point (NFR6a)
+**And** a "Stop generating" cancel button is available throughout streaming
+**And** on completion, the full text is displayed in an editable GeneratedOutput component
 **And** on failure, error message shows and credit is NOT deducted
 
 **Given** the generated cover letter is displayed
@@ -1071,6 +1189,7 @@ Content Script (injected per page)
 **When** the tab renders
 **Then** the same pattern applies: tone selector, length selector (Brief, Standard), custom instructions
 **And** Generate → `POST /v1/ai/outreach` with `{ job_id, resume_id, tone, length, custom_instructions }`
+**And** SSE streaming with progressive text reveal + cancel option (same as cover letter)
 **And** output displayed in GeneratedOutput with edit/copy/regenerate flow
 
 **Given** the user has 0 AI credits
@@ -1095,29 +1214,31 @@ Content Script (injected per page)
 
 ---
 
-## Story EXT.8: AI Chat
+## Story EXT.8: AI Studio — Chat
 
 **As a** job seeker with questions about a posting,
-**I want** to chat with AI about the job and get personalized advice,
-**So that** I can prepare better and understand if the role is right for me.
+**I want** to chat with AI about the job within AI Studio,
+**So that** I can get quick answers about the role, requirements, and application strategy.
 
-**FRs addressed:** FR31 (open chat), FR32 (question suggestions), FR33 (ask questions — 1 credit/message), FR34 (conversation history), FR35 (new session)
+**FRs addressed:** FR31 (open chat from AI Studio), FR32 (question suggestions), FR33 (ask questions — 1 credit/message), FR34 (conversation history), FR35 (new session)
+
+**Note:** This is the **Chat sub-tab within AI Studio** (FR67b). The standalone **Coach tab** is covered in EXT.12.
 
 ### Component Inventory
 
 | Status | Component | Directory | Notes |
 |--------|-----------|-----------|-------|
-| Existing | `Coach` | `features/` | Chat UI with message bubbles, input form. Props: `initialMessages`, `onSendMessage`, `isLocked` |
+| New | `ChatPanel` | `features/` | Chat UI with message bubbles, input form, streaming response display. Reusable by both AI Studio Chat and Coach (EXT.12) |
 | New | `QuestionSuggestions` | `blocks/` | Clickable suggestion chips generated from job data |
-| New | Zustand `chat-store` | Extension `stores/` | Messages, session management, credit tracking |
-| Modified | `Coach` | `features/` | Add suggestion chips slot, credit indicator, new session button |
+| New | Zustand `chat-store` | Extension `stores/` | Messages, session management, credit tracking (separate sessions for Chat vs Coach) |
+| Modified | `AiStudio` | `features/` | Add Chat as 3rd sub-tab (Match | Cover Letter | Chat | Outreach) |
 | New | Backend `POST /v1/ai/chat` | API `routers/ai.py` | **NEW endpoint — does not exist yet** |
 
 ### Acceptance Criteria
 
-**Given** the user is authenticated with valid scan data
-**When** they navigate to the Coach tab
-**Then** the Coach component renders with an empty message area
+**Given** the user is on a page where a job has been detected and has available credits
+**When** they open AI Studio and select the Chat sub-tab
+**Then** the ChatPanel component renders with an empty message area
 **And** question suggestions are displayed based on the current job posting (e.g., "What skills should I highlight?", "Is this role a good fit for my experience?", "What questions should I prepare for the interview?")
 
 **Given** question suggestions are displayed
@@ -1128,9 +1249,10 @@ Content Script (injected per page)
 **Given** the user types or selects a question and clicks send
 **When** the message is submitted
 **Then** credit check passes (1 credit available) → `POST /v1/ai/chat` called
-**And** user message appears as a bubble in the chat area
-**And** loading indicator shows while AI responds
-**And** AI response appears as assistant bubble
+**And** user message appears as a bubble in the chat area (`bg-muted`)
+**And** AI response streams in progressively via SSE (NFR6a) with cursor/caret blink
+**And** "Stop generating" cancel button available during streaming
+**And** completed AI response appears as assistant bubble
 **And** if credit check fails → "No credits" message shown, message not sent
 
 **Given** a conversation is in progress
@@ -1143,8 +1265,13 @@ Content Script (injected per page)
 **Then** conversation history is cleared from the chat-store
 **And** the chat area resets to empty with fresh question suggestions
 
+**Given** the user navigates to a different job page
+**When** auto-scan detects the new job
+**Then** chat history is cleared (FR72a — new job = new conversation context)
+**And** new question suggestions generate based on the new job
+
 **Given** an AI response fails
-**When** the API returns an error
+**When** the API returns an error (or SSE `event: error`)
 **Then** an error message shows inline ("Failed to get response. Try again.")
 **And** the user's credit is NOT deducted (NFR24)
 
@@ -1152,13 +1279,16 @@ Content Script (injected per page)
 
 | Endpoint | Method | Purpose | Status |
 |----------|--------|---------|--------|
-| `/v1/ai/chat` | POST | Send message, get AI response | **NEW — must be built** |
+| `/v1/ai/chat` | POST | Send message, get streaming AI response | **NEW — must be built** |
 
 **New endpoint spec:**
 ```
 POST /v1/ai/chat
 Body: { job_id, resume_id, message, conversation_history: [{role, content}] }
-Response: { success: true, data: { message: string, suggestions: string[] } }
+Response: text/event-stream (SSE)
+  event: chunk → {"text": "..."}
+  event: done → {"credits_remaining": N, "suggestions": [...]}
+  event: error → {"code": "...", "message": "..."}
 Credits: 1 per message
 ```
 
@@ -1166,7 +1296,7 @@ Credits: 1 per message
 
 | Item | Description | Priority |
 |------|-------------|----------|
-| **CHAT-01** | Build `POST /v1/ai/chat` endpoint with conversation context | High |
+| **CHAT-01** | Build `POST /v1/ai/chat` endpoint with SSE streaming + conversation context | High |
 | **CHAT-02** | AI prompt template for job-context chat | High |
 | **CHAT-03** | Question suggestion generation (can be client-side templates initially, AI-powered later) | Medium |
 
@@ -1195,7 +1325,7 @@ Credits: 1 per message
 **When** the content script analyzes the page DOM
 **Then** form fields are detected (inputs, textareas, selects, file uploads)
 **And** fields are categorized: Personal (name, email, phone, LinkedIn), Resume (file upload), Questions (custom fields)
-**And** the sidebar state transitions to "Application Page" (unlocks AI Studio + Autofill)
+**And** the sidebar state transitions to "Full Power" (Autofill tab unlocks since form fields are available)
 
 **Given** detected fields are sent to the Side Panel
 **When** the Autofill tab renders
@@ -1294,9 +1424,11 @@ Content Script (autofill.ts)
 **And** CreditBar updates with fresh data
 
 **Given** this story retrofits credit checks into previous stories
-**When** EXT.6 (match), EXT.7 (cover letter/outreach), EXT.8 (chat) are already implemented
-**Then** a shared `checkCredits()` function is called before each AI operation
-**And** the function reads from usage-store and blocks if insufficient
+**When** EXT.6 (match), EXT.7 (cover letter/outreach), EXT.8 (chat), EXT.12 (coach) are already implemented
+**Then** a shared `useCreditGating()` hook is called before each AI operation
+**And** the hook reads from usage-store and blocks if insufficient
+**And** retrofit scope is LIMITED TO: shared Zustand stores + credit components (CreditBar, UpgradePrompt, useCreditGating hook)
+**And** NO modifications to EXT.6-9/EXT.12 component files — those components already accept `isLocked` and credit-related props; EXT.10 wires the props to real data via the shared store
 
 ### Backend Integration
 
@@ -1347,7 +1479,7 @@ Use existing mapper: `mapUsageResponse()` from `@jobswyft/ui`.
 
 **Given** the FeedbackForm component is built
 **When** it renders in Storybook
-**Then** it displays correctly at 400×600 in both dark and light themes
+**Then** it displays correctly at 360×600 in both dark and light themes
 **And** category selection, textarea, and submit button are all functional
 
 ### Backend Integration
@@ -1361,3 +1493,343 @@ Use existing mapper: `mapUsageResponse()` from `@jobswyft/ui`.
 | Item | Description | Priority |
 |------|-------------|----------|
 | **FEEDBACK-01** | Screenshot attachment (FR84a) — requires additional UI for capture/upload. Defer to iteration. | Low |
+
+---
+
+## Story EXT.12: Coach Tab
+
+**As a** job seeker who wants personalized career guidance,
+**I want** to have a conversational AI coaching session tailored to my resume and the current job,
+**So that** I can get strategic advice on application approach, interview preparation, and addressing skill gaps.
+
+**FRs addressed:** FR37a (Coach as standalone sidebar tab), FR37b (coaching personalized to resume + job), FR37c (advise on strategy, interview prep, skill gaps), FR37d (1 credit per message), FR37e (conversation resets on job switch), FR37f (contextual coaching prompts from match analysis)
+
+**Note:** Coach is a **standalone sidebar tab** (4th main tab), separate from AI Studio Chat (EXT.8). Coach provides deeper career coaching context; Chat provides quick Q&A about the job posting.
+
+### Component Inventory
+
+| Status | Component | Directory | Notes |
+|--------|-----------|-----------|-------|
+| Existing | `Coach` | `features/` | Existing chat UI component — refactor to use shared `ChatPanel` from EXT.8 with coach-specific styling |
+| Reuse | `ChatPanel` | `features/` | Shared chat component built in EXT.8 — reuse with `variant="coach"` for coach-accent colors |
+| New | `CoachPrompts` | `blocks/` | Contextual coaching prompt chips generated from match analysis results (FR37f) |
+| New | Zustand `coach-store` | Extension `stores/` | Coach messages (separate from AI Studio chat-store), session per job |
+| Modified | `ExtensionSidebar` | `layout/` | Wire Coach tab content — 4th main tab with `coach-accent` active indicator |
+
+### Acceptance Criteria
+
+**Given** the user is on a page where a job has been detected and has available credits
+**When** they select the Coach tab in the sidebar
+**Then** the Coach component renders with coach-accent color identity (`--coach-accent`)
+**And** contextual coaching prompts are displayed based on match analysis results (FR37f)
+**And** example prompts: "How do I address the [missing skill] gap?", "What should I emphasize from my [matched skill] experience?", "Help me prepare for a [job title] interview"
+
+**Given** coaching prompts are displayed
+**When** the user clicks a prompt chip
+**Then** the prompt text is populated into the message input
+**And** the user can edit before sending
+
+**Given** the user sends a coaching message
+**When** the message is submitted
+**Then** credit check passes (1 credit available, FR37d) → `POST /v1/ai/chat` called with `context_type=coach`
+**And** user message appears as coach-styled bubble (`bg-coach-accent text-coach-accent-foreground rounded-tr-sm`)
+**And** AI coaching response streams in progressively via SSE (NFR6a)
+**And** "Stop generating" cancel button available during streaming
+**And** AI response appears as assistant bubble (`bg-muted`)
+**And** coaching responses are personalized to the user's active resume AND current scanned job (FR37b)
+**And** if credit check fails → "No credits" message shown, message not sent
+
+**Given** the user has match analysis data available
+**When** the Coach tab renders
+**Then** coaching prompts reference specific match results (FR37f)
+**And** e.g., if match shows "Kubernetes" as a gap → prompt: "How do I address the Kubernetes gap in my application?"
+**And** if match shows "Team Leadership" as a strength → prompt: "How should I highlight my leadership experience?"
+
+**Given** a coaching conversation is in progress
+**When** the user navigates to a different job page
+**Then** the coaching conversation resets completely (FR37e — new job = new coaching context)
+**And** new contextual prompts generate based on the new job's match analysis
+**And** previous coaching messages are not recoverable (ephemeral)
+
+**Given** the Coach tab is rendering
+**When** no job has been detected yet
+**Then** the Coach tab shows locked state with message "Scan a job to start coaching"
+**And** a link to the Scan tab is provided
+
+**Given** the user switches tabs (Coach → Scan → Coach)
+**When** they return to the Coach tab
+**Then** the conversation is preserved within the session (FR72d)
+**And** coaching prompts remain available below the conversation
+
+**Given** a coaching response fails
+**When** the API returns an error (or SSE `event: error`)
+**Then** an error message shows inline ("Coaching unavailable. Try again.")
+**And** the user's credit is NOT deducted (NFR24)
+
+### Backend Integration
+
+| Endpoint | Method | Purpose | Status |
+|----------|--------|---------|--------|
+| `/v1/ai/chat` | POST | Send coaching message, get streaming AI response | Built in EXT.8 — add `context_type=coach` parameter |
+
+**Endpoint extension for Coach:**
+```
+POST /v1/ai/chat
+Body: {
+  job_id, resume_id, message, conversation_history: [{role, content}],
+  context_type: "coach"  // distinguishes from AI Studio chat
+}
+Response: text/event-stream (SSE) — same protocol as AI Studio chat
+Credits: 1 per message
+```
+
+The `context_type=coach` parameter triggers a different AI prompt template that emphasizes career coaching, interview preparation, and strategic advice (vs. the factual Q&A focus of AI Studio Chat).
+
+### Tech Debt
+
+| Item | Description | Priority |
+|------|-------------|----------|
+| **COACH-01** | AI prompt template for coaching context (different from chat — more strategic, advisory tone) | High |
+| **COACH-02** | Match-analysis-based prompt generation (FR37f) — needs match data → prompt mapping logic | Medium |
+| **COACH-03** | Shared `ChatPanel` base component — Coach and AI Studio Chat should share the chat UI but with different styling/prompts | Medium |
+
+---
+
+## Epic API: Backend API Enhancements — Story Details
+
+> **Living backlog.** Stories are added here as Epic EXT development discovers backend gaps.
+> Each story references the originating EXT story and tech debt ID.
+> Stories can be implemented in parallel with EXT — frontend mocks the API, backend builds the real endpoint, integration verified when both sides ship.
+
+---
+
+## Story API.1: SSE Streaming Infrastructure
+
+**As a** developer building AI-powered features,
+**I want** a shared SSE streaming foundation in the FastAPI backend,
+**So that** all generative AI endpoints can stream responses consistently without duplicating infrastructure code.
+
+**Source:** NFR6a, tech debt items across EXT.7, EXT.8, EXT.12
+
+### Acceptance Criteria
+
+**Given** the FastAPI backend needs to support SSE streaming
+**When** this story is complete
+**Then** a shared `sse_response()` helper exists in `app/lib/streaming.py` (or similar)
+**And** it wraps any async generator into a `StreamingResponse` with `content-type: text/event-stream`
+**And** it emits standardized events: `event: chunk` → `{"text": "..."}`, `event: done` → `{"credits_remaining": N}`, `event: error` → `{"code": "...", "message": "..."}`
+**And** it handles client disconnect (cancel) gracefully — stops generation, does NOT deduct credits
+**And** it includes `Cache-Control: no-cache` and `Connection: keep-alive` headers
+
+**Given** the SSE helper is built
+**When** a developer creates a new streaming endpoint
+**Then** they can use `return sse_response(my_generator())` as a one-liner
+**And** error handling, event formatting, and disconnect detection are automatic
+
+**Given** the SSE infrastructure needs testing
+**When** unit tests run
+**Then** tests verify: chunk streaming, done event, error event, client disconnect handling, credit non-deduction on cancel
+
+### Technical Notes
+
+- FastAPI `StreamingResponse` with `media_type="text/event-stream"`
+- Async generator pattern: `yield` chunks from AI provider, format as SSE events
+- AI provider abstraction layer should return an async iterator for streaming
+- Consider `asyncio.CancelledError` for disconnect detection
+
+---
+
+## Story API.2: Chat Endpoint (`POST /v1/ai/chat`)
+
+**As a** job seeker using AI Studio Chat or Coach,
+**I want** a backend endpoint that accepts my message and streams an AI response,
+**So that** I can have conversational interactions about job postings and career strategy.
+
+**Source:** CHAT-01, CHAT-02 — unblocks EXT.8 (Chat) and EXT.12 (Coach)
+
+### Acceptance Criteria
+
+**Given** the chat endpoint does not exist yet
+**When** this story is complete
+**Then** `POST /v1/ai/chat` exists and accepts:
+```json
+{
+  "job_id": "uuid",
+  "resume_id": "uuid",
+  "message": "string",
+  "conversation_history": [{"role": "user|assistant", "content": "..."}],
+  "context_type": "chat | coach"
+}
+```
+**And** response is `text/event-stream` (SSE) using API.1 infrastructure
+**And** SSE events follow the standard format: `chunk`, `done` (with `credits_remaining` and optional `suggestions`), `error`
+
+**Given** `context_type=chat`
+**When** the endpoint processes the request
+**Then** the AI prompt template focuses on factual Q&A about the job posting
+**And** the prompt includes: job description, user's resume summary, conversation history
+**And** the tone is informative and direct
+
+**Given** `context_type=coach`
+**When** the endpoint processes the request
+**Then** the AI prompt template focuses on strategic career coaching
+**And** the prompt includes: job description, user's resume summary, match analysis results (if available), conversation history
+**And** the tone is advisory, encouraging, and strategically focused
+**And** the AI is instructed to provide actionable advice on: application strategy, interview preparation, skill gap mitigation
+
+**Given** the user sends a message
+**When** credit check runs
+**Then** 1 AI credit is deducted on successful completion
+**And** credits are NOT deducted if generation fails or is cancelled (NFR24)
+**And** `credits_remaining` is included in the `done` event
+
+**Given** the endpoint receives invalid input
+**When** validation fails
+**Then** standard error envelope is returned: `{"success": false, "error": {"code": "VALIDATION_ERROR", "message": "..."}}`
+
+### Dependencies
+
+- API.1 (SSE infrastructure) must be complete
+
+---
+
+## Story API.3: Match Type Parameter + Daily Rate Limiting
+
+**As a** user getting match analysis,
+**I want** the backend to distinguish between free auto-matches and paid detailed matches,
+**So that** free users get 20 daily auto-matches while detailed analysis costs 1 credit.
+
+**Source:** MATCH-01, MATCH-02 — unblocks EXT.6, EXT.10
+
+### Acceptance Criteria
+
+**Given** `POST /v1/ai/match` exists
+**When** this story is complete
+**Then** the endpoint accepts an additional `match_type` parameter: `"auto"` or `"detailed"`
+
+**Given** `match_type=auto`
+**When** a free-tier user requests a match
+**Then** no AI credits are deducted
+**And** daily counter increments (tracked per user per UTC day)
+**And** if daily count >= 20 → reject with `{"code": "DAILY_LIMIT_REACHED", "message": "Auto-match limit reached (20/day). Upgrade for unlimited."}`
+**And** paid-tier users have unlimited auto-matches (no daily limit)
+
+**Given** `match_type=detailed`
+**When** a user requests a detailed match
+**Then** 1 AI credit is deducted
+**And** comprehensive analysis is returned (strengths, gaps, recommendations)
+**And** if credits = 0 → reject with `{"code": "CREDIT_EXHAUSTED", "message": "..."}`
+
+**Given** rate limiting needs persistence
+**When** daily counts are tracked
+**Then** counts are stored in `usage_events` table (or similar) with UTC date key
+**And** counts reset at midnight UTC automatically
+**And** `GET /v1/usage` response includes `auto_matches_today` and `auto_matches_limit` fields
+
+### Technical Notes
+
+- Add `match_type` enum to the Pydantic request model
+- Daily counter can use existing `usage_events` table with `event_type='auto_match'`
+- Consider Redis for high-frequency rate limiting post-MVP; DB-based is fine for MVP
+
+---
+
+## Story API.4: Coach Prompt Templates
+
+**As a** user receiving AI coaching,
+**I want** the coaching AI to respond with strategic career advice (not just facts),
+**So that** I get differentiated value compared to the standard Chat feature.
+
+**Source:** COACH-01, COACH-02 — unblocks EXT.12
+
+### Acceptance Criteria
+
+**Given** `POST /v1/ai/chat` supports `context_type=coach` (from API.2)
+**When** this story is complete
+**Then** the coach prompt template is tuned for:
+- Strategic application advice ("Here's how to position yourself...")
+- Interview preparation ("For this role, expect questions about...")
+- Skill gap mitigation ("To address the [skill] gap, consider...")
+- Encouraging, advisory tone (not dry/factual like chat)
+
+**Given** match analysis data is available for the job
+**When** `context_type=coach` is used
+**Then** the prompt includes match strengths and gaps as coaching context
+**And** the AI references specific matched/missing skills in its advice
+
+**Given** the user has no match analysis data yet
+**When** `context_type=coach` is used
+**Then** the coach still functions with job description + resume only
+**And** coaching quality is reduced but not broken
+
+**Given** coaching prompt templates need iteration
+**When** templates are stored
+**Then** prompt templates are in a configurable location (`app/prompts/` or `global_config` table)
+**And** they can be updated without code deployment (configurable via DB preferred)
+
+### Dependencies
+
+- API.2 (chat endpoint with `context_type` param) must be complete
+
+---
+
+## Story API.5: Remove `/v1/ai/answer` Endpoint
+
+**As a** developer maintaining the API,
+**I want** the deprecated Answer endpoint removed,
+**So that** the codebase stays clean and doesn't confuse future development.
+
+**Source:** AI-01 — PRD removed "Answer Generation" tool; replaced by Chat (FR31-35)
+
+### Acceptance Criteria
+
+**Given** `/v1/ai/answer` exists in the API
+**When** this story is complete
+**Then** the endpoint is removed from `app/routers/ai.py`
+**And** the Pydantic models for answer request/response are removed
+**And** `specs/openapi.yaml` is updated to remove the `/v1/ai/answer` path
+**And** any tests referencing `/v1/ai/answer` are removed or updated
+**And** the UI mapper `mapAnswerResponse` (if it exists) is removed from `@jobswyft/ui`
+
+**Given** the endpoint is removed
+**When** a client calls `POST /v1/ai/answer`
+**Then** it returns 404
+
+### Technical Notes
+
+- Check for any frontend references before removal (should be none — Answer tab was already removed from AI Studio)
+- Low risk, standalone change
+
+---
+
+## Story API.6: SSE Migration — Cover Letter + Outreach Endpoints
+
+**As a** user generating cover letters and outreach messages,
+**I want** the AI response to stream progressively,
+**So that** I see text appearing in real-time instead of waiting for the full response.
+
+**Source:** NFR6a — unblocks EXT.7
+
+### Acceptance Criteria
+
+**Given** `POST /v1/ai/cover-letter` currently returns JSON
+**When** this story is complete
+**Then** it returns `text/event-stream` (SSE) using API.1 infrastructure
+**And** events follow the standard format: `chunk` → `{"text": "..."}`, `done` → `{"credits_remaining": N}`, `error`
+**And** client disconnect cancels generation and does not deduct credits
+
+**Given** `POST /v1/ai/outreach` currently returns JSON
+**When** this story is complete
+**Then** it also returns `text/event-stream` (SSE) using the same pattern
+
+**Given** `POST /v1/ai/cover-letter/pdf` exists
+**When** PDF export is requested
+**Then** it continues to return a PDF file (binary response, NOT streaming) — no change needed
+
+**Given** existing tests cover these endpoints
+**When** tests are updated
+**Then** tests verify SSE streaming behavior (chunk events, done event, error handling, cancel)
+
+### Dependencies
+
+- API.1 (SSE infrastructure) must be complete
