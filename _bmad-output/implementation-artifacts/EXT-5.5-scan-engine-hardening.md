@@ -35,6 +35,7 @@ Backend: POST /v1/ai/extract-job endpoint added to existing ai.py router with 50
 ## File List
 
 ### New Files
+- `apps/extension/src/features/scanning/frame-aggregator.ts` — Multi-frame result aggregation (DRY helper)
 - `apps/extension/src/features/scanning/extraction-validator.ts` — Confidence scoring & validation
 - `apps/extension/src/features/scanning/extraction-validator.test.ts` — 29 unit tests
 - `apps/extension/src/features/scanning/html-cleaner.ts` — HTML cleaner for AI fallback
@@ -82,3 +83,24 @@ Backend: POST /v1/ai/extract-job endpoint added to existing ai.py router with 50
   - **BUG-4: Description heading prefix (LOW)** — `.jobs-description__content` grabs entire section including "About the job" heading. Fix: Strip common heading prefixes (About the job, Job Description, Description, Overview) before return. File: `scanner.ts`.
   - **NOTE: AI fallback not deployed** — `POST /v1/ai/extract-job` returns 404 on cloud API (`api.jobswyft.com`). Backend changes (extract_job_service.py, ai.py, models/ai.py, prompts.py) are uncommitted on feature branch, never deployed to Railway. AI fallback silently fails (caught in try/catch). Rule-based scanning works without it. Deployment needed before AI fallback is functional.
   - Tests: 132 pass, build: 731.25 KB
+- 2026-02-08: Code review #2 — 12 findings (5H, 4M, 3L). Fixes applied:
+  - H1: Extracted `aggregateFrameResults()` to `frame-aggregator.ts` — DRY'd 30+ duplicated lines
+  - H2: Background sentinel resolves tab by URL match (`chrome.tabs.query({ url })`) instead of blind active tab
+  - H3: Corrected story Component Inventory — `job-detector.ts` marked "Unchanged" (was falsely listed as "Modified")
+  - H4: HTML truncation now cuts at last `>` before 8000 limit to avoid malformed tags
+  - H5: Added 6 service-level unit tests exercising real `_call_provider` + JSON parsing + field filtering + fallback logic
+  - M1: Moved `AUTO_SCAN_STORAGE_KEY`, `SENTINEL_STORAGE_KEY`, `COOLDOWN_STORAGE_KEY` to shared `constants.ts`
+  - M2: Dedup now requires UUID (rejects signals without `request.id` instead of falling back to weak composite key)
+  - M3: `partial_data` typed as `PartialJobData` Pydantic model (was untyped `dict`)
+  - M4: Added error handling to `_record_extraction()` + null check for Claude empty response
+  - L1: Content sentinel clears fallback timeout after MutationObserver triggers (no double-signal)
+  - New file: `apps/extension/src/features/scanning/frame-aggregator.ts`
+  - Tests: 132 pass, build: 730.03 KB
+- 2026-02-08: LinkedIn live-testing #2 — 2 critical bugs + AI fallback fixes:
+  - **BUG-5: Frame aggregator trusts frameId 0 (CRITICAL)** — LinkedIn renders job details in a same-origin sub-frame, NOT in the main frame (frameId 0). The main frame is LinkedIn's navigation shell containing "0 notifications" text. Old aggregator processed frameId 0 first, so "0 notifications" always won over "Staff Backend Engineer" from the sub-frame. Fix: Rewrote `frame-aggregator.ts` to score frames by data quality (title+company=40pts > title-only=10pts) and process best-scoring frame first. File: `frame-aggregator.ts`.
+  - **BUG-6: Scanner accepts "notifications" as valid title (MEDIUM)** — `isValidJobTitle()` didn't reject LinkedIn navigation text like "0 notifications", "Messaging", "My Network". Fix: Added "notification", "notifications", "messaging", "my network" to bad patterns. File: `scanner.ts`.
+  - **AI fallback: Claude timeout (HIGH)** — `timeout=10.0` too tight for 8KB HTML extraction. Claude Sonnet 4 too slow for structured extraction. Fix: Switched to `claude-haiku-4-5-20251001` (10x faster), bumped timeout to 30s. File: `extract_job_service.py`.
+  - **AI fallback: OpenAI truncated JSON (HIGH)** — `max_tokens=1500` too low, GPT response cut mid-JSON. Fix: Bumped to 4000, switched to `gpt-4o-mini`. File: `extract_job_service.py`.
+  - **AI fallback: Client-side abort (MEDIUM)** — Extension `AbortController` killed requests at 5s before backend could respond. Fix: Bumped to 35s. File: `api-client.ts`.
+  - AI fallback deployed and verified working via Railway logs (200 OK)
+  - Tests: 16 API pass, build: 731.08 KB

@@ -18,6 +18,23 @@ export function scrapeJobPage(_board?: string | null) {
   const clean = (str: string | null | undefined): string =>
     str ? str.trim().replace(/\s+/g, " ") : "";
 
+  /** Reject titles that are clearly page/section headings, not job titles */
+  const isValidJobTitle = (t: string): boolean => {
+    if (!t || t.length < 3 || t.length > 200) return false;
+    const lower = t.toLowerCase();
+    const badPatterns = [
+      "top job picks", "job picks for you", "recommended for you",
+      "jobs you might like", "search results", "people also viewed",
+      "similar jobs", "more jobs", "sign in", "join now",
+      "notification", "notifications", "messaging", "my network",
+    ];
+    return !badPatterns.some(p => lower.includes(p));
+  };
+
+  /** Strip leading notification count like "(3) " from titles */
+  const stripNotificationPrefix = (t: string): string =>
+    t.replace(/^\(\d+\)\s*/, "");
+
   const url = window.location.href;
 
   let title = "";
@@ -143,11 +160,19 @@ export function scrapeJobPage(_board?: string | null) {
 
   if (!title) {
     const t = qs([
-      // LinkedIn
+      // LinkedIn (multiple generations of class names)
       ".job-details-jobs-unified-top-card__job-title h1",
+      ".job-details-jobs-unified-top-card__job-title a",
+      ".job-details-jobs-unified-top-card__job-title",
+      ".jobs-unified-top-card__job-title a",
       ".jobs-unified-top-card__job-title",
       ".t-24.job-details-jobs-unified-top-card__job-title",
-      "h1.t-24",
+      '.jobs-details__main-content h1',
+      '.jobs-details-top-card__job-title',
+      // LinkedIn: title inside the detail card — more specific than generic h1
+      '.job-view-layout h1',
+      '.jobs-search__job-details h1',
+      '.jobs-details h1',
       // Indeed
       'h1[data-testid="jobsearch-JobInfoHeader-title"]',
       ".jobsearch-JobInfoHeader-title",
@@ -160,20 +185,28 @@ export function scrapeJobPage(_board?: string | null) {
       // Workday
       '[data-automation-id="jobPostingHeader"]',
     ]);
-    if (t) {
-      title = t;
+    if (t && isValidJobTitle(t)) {
+      title = stripNotificationPrefix(t);
       sources.title = cssSource;
     } else {
+      // Generic h1 fallback — validate it looks like a job title
       const generic = qs(["h1"]);
-      if (generic) { title = generic; sources.title = cssGenericSource; }
+      if (generic && isValidJobTitle(generic)) {
+        title = stripNotificationPrefix(generic);
+        sources.title = cssGenericSource;
+      }
     }
   }
 
   if (!company) {
     const c = qs([
-      // LinkedIn
+      // LinkedIn (multiple generations)
       ".job-details-jobs-unified-top-card__company-name a",
+      ".job-details-jobs-unified-top-card__company-name",
       ".jobs-unified-top-card__company-name a",
+      ".jobs-unified-top-card__company-name",
+      '.jobs-details-top-card__company-info a',
+      '.jobs-details-top-card__company-info',
       // Indeed
       '[data-testid="inlineHeader-companyName"] a',
       '[data-company-name="true"]',
@@ -312,17 +345,19 @@ export function scrapeJobPage(_board?: string | null) {
 
   // ─── Layer 3: OpenGraph Meta Tags ─────────────────────────────────
   if (!title) {
-    const ogTitle = document
+    let ogTitle = document
       .querySelector('meta[property="og:title"]')
       ?.getAttribute("content")
       ?.trim() || "";
-    if (ogTitle) { title = ogTitle; sources.title = "og-meta"; }
+    ogTitle = stripNotificationPrefix(ogTitle);
+    if (ogTitle && isValidJobTitle(ogTitle)) { title = ogTitle; sources.title = "og-meta"; }
   }
 
   // ─── Layer 4: Generic Fallbacks ───────────────────────────────────
   if (!title) {
-    const docTitle = document.title.split(/[|\-–—]/).shift()?.trim() || "";
-    if (docTitle) { title = docTitle; sources.title = cssGenericSource; }
+    let docTitle = document.title.split(/[|\-–—]/).shift()?.trim() || "";
+    docTitle = stripNotificationPrefix(docTitle);
+    if (docTitle && isValidJobTitle(docTitle)) { title = docTitle; sources.title = cssGenericSource; }
   }
   if (!description) {
     const metaDesc = document
@@ -366,7 +401,7 @@ export function scrapeJobPage(_board?: string | null) {
       // Extended generic selectors for remaining missing fields
       if (!title) {
         const t = qs(['[role="heading"]', "h2"]);
-        if (t) { title = t; sources.title = "heuristic"; }
+        if (t && isValidJobTitle(t)) { title = stripNotificationPrefix(t); sources.title = "heuristic"; }
       }
       if (!company) {
         const c = qs(['[class*="brand"]', '[class*="org"]']);

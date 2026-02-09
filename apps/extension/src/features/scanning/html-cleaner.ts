@@ -50,9 +50,13 @@ function cleanPageHtml(): string {
   // Get cleaned HTML
   let html = clone.innerHTML;
 
-  // Truncate to 8000 chars max
+  // Truncate to 8000 chars max — cut at last complete tag to avoid malformed HTML
   if (html.length > 8000) {
     html = html.substring(0, 8000);
+    const lastClose = html.lastIndexOf(">");
+    if (lastClose > 0) {
+      html = html.substring(0, lastClose + 1);
+    }
   }
 
   return html;

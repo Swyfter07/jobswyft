@@ -9,3 +9,12 @@ export const DASHBOARD_URL = "https://dashboard.jobswyft.com";
  */
 export const SIDE_PANEL_CLASSNAME =
   "relative inset-auto h-screen w-full border-l-0 shadow-none z-auto";
+
+/** Storage key for auto-scan signals from background → side panel */
+export const AUTO_SCAN_STORAGE_KEY = "jobswyft-auto-scan-request";
+
+/** Storage key for content sentinel readiness signal */
+export const SENTINEL_STORAGE_KEY = "jobswyft-content-ready";
+
+/** Session storage key for cooldown data (survives SW restart) */
+export const COOLDOWN_STORAGE_KEY = "jobswyft-scan-cooldown";

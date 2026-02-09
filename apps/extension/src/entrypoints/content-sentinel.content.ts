@@ -163,9 +163,12 @@ export default defineContentScript({
     }
 
     // Observe for content appearing
+    let fallbackTimer: ReturnType<typeof setTimeout> | null = null;
+
     const observer = new MutationObserver(() => {
       if (readinessSelector && document.querySelector(readinessSelector)) {
         observer.disconnect();
+        if (fallbackTimer) clearTimeout(fallbackTimer);
         const expanded = expandShowMore();
         if (expanded) {
           setTimeout(signalReady, POST_EXPAND_DELAY_MS);
@@ -181,7 +184,7 @@ export default defineContentScript({
     });
 
     // ─── Fallback Timeout (AC1: 3 second fallback) ───────────────────
-    setTimeout(() => {
+    fallbackTimer = setTimeout(() => {
       observer.disconnect();
       expandShowMore();
       signalReady();

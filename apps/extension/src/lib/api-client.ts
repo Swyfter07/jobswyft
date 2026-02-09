@@ -177,7 +177,7 @@ class ApiClient {
     partialData?: Record<string, string | undefined>
   ): Promise<AiExtractResult> {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 5000);
+    const timeout = setTimeout(() => controller.abort(), 35000);
 
     try {
       return await this.fetch<AiExtractResult>("/v1/ai/extract-job", {

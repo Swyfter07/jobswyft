@@ -17,7 +17,7 @@
 | Status | Component | Directory | Notes |
 |--------|-----------|-----------|-------|
 | Modified | `scanner.ts` | Extension `features/scanning/` | Confidence scoring, `@graph` handling, Show More, heuristic layer |
-| Modified | `job-detector.ts` | Extension `features/scanning/` | Wire `getJobBoard()` into pipeline |
+| Unchanged | `job-detector.ts` | Extension `features/scanning/` | Already exports `getJobBoard()` — no changes needed |
 | Modified | `background/index.ts` | Extension `entrypoints/background/` | 4th trigger, session storage cooldown, sentinel integration |
 | Modified | `authenticated-layout.tsx` | Extension `components/` | Verification re-scan, refining badge, strict validation, AI fallback |
 | Modified | `scan-store.ts` | Extension `stores/` | Confidence state, isRefining, board name |

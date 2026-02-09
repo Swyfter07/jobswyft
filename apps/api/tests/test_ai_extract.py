@@ -1,6 +1,8 @@
 """Tests for AI job extraction endpoint (POST /v1/ai/extract-job)."""
 
-from unittest.mock import patch
+import json
+from types import SimpleNamespace
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from fastapi.testclient import TestClient
@@ -264,3 +266,138 @@ class TestExtractJobValidation:
             )
 
         assert response.status_code == 200
+
+
+class TestExtractJobServiceUnit:
+    """Unit tests for ExtractJobService internals — exercises real service logic."""
+
+    @pytest.mark.asyncio
+    async def test_call_provider_claude_returns_text(self):
+        """_call_provider should extract text from Claude response."""
+        from app.services.ai.claude import ClaudeProvider
+        from app.services.extract_job_service import ExtractJobService
+
+        mock_provider = MagicMock(spec=ClaudeProvider)
+        mock_provider.model = "test-model"
+        mock_response = SimpleNamespace(
+            content=[SimpleNamespace(text='{"title": "Engineer", "company": "Acme"}')]
+        )
+        mock_provider.client = MagicMock()
+        mock_provider.client.messages = MagicMock()
+        mock_provider.client.messages.create = AsyncMock(return_value=mock_response)
+
+        result = await ExtractJobService._call_provider(mock_provider, "test prompt")
+        parsed = json.loads(result)
+        assert parsed["title"] == "Engineer"
+        assert parsed["company"] == "Acme"
+
+    @pytest.mark.asyncio
+    async def test_call_provider_claude_empty_response_raises(self):
+        """_call_provider should raise on empty Claude response."""
+        from app.services.ai.claude import ClaudeProvider
+        from app.services.extract_job_service import ExtractJobService
+
+        mock_provider = MagicMock(spec=ClaudeProvider)
+        mock_provider.model = "test-model"
+        mock_response = SimpleNamespace(content=[])
+        mock_provider.client = MagicMock()
+        mock_provider.client.messages = MagicMock()
+        mock_provider.client.messages.create = AsyncMock(return_value=mock_response)
+
+        with pytest.raises(ValueError, match="empty response"):
+            await ExtractJobService._call_provider(mock_provider, "test prompt")
+
+    @pytest.mark.asyncio
+    async def test_call_provider_openai_returns_text(self):
+        """_call_provider should extract text from OpenAI response."""
+        from app.services.ai.openai import OpenAIProvider
+        from app.services.extract_job_service import ExtractJobService
+
+        mock_provider = MagicMock(spec=OpenAIProvider)
+        mock_provider.model = "test-model"
+        mock_choice = SimpleNamespace(
+            message=SimpleNamespace(content='{"title": "Dev", "company": "Co"}')
+        )
+        mock_response = SimpleNamespace(choices=[mock_choice])
+        mock_provider.client = MagicMock()
+        mock_provider.client.chat = MagicMock()
+        mock_provider.client.chat.completions = MagicMock()
+        mock_provider.client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        result = await ExtractJobService._call_provider(mock_provider, "test prompt")
+        parsed = json.loads(result)
+        assert parsed["title"] == "Dev"
+
+    @pytest.mark.asyncio
+    async def test_call_provider_openai_empty_response_raises(self):
+        """_call_provider should raise on empty OpenAI response."""
+        from app.services.ai.openai import OpenAIProvider
+        from app.services.extract_job_service import ExtractJobService
+
+        mock_provider = MagicMock(spec=OpenAIProvider)
+        mock_provider.model = "test-model"
+        mock_choice = SimpleNamespace(message=SimpleNamespace(content=None))
+        mock_response = SimpleNamespace(choices=[mock_choice])
+        mock_provider.client = MagicMock()
+        mock_provider.client.chat = MagicMock()
+        mock_provider.client.chat.completions = MagicMock()
+        mock_provider.client.chat.completions.create = AsyncMock(return_value=mock_response)
+
+        with pytest.raises(ValueError, match="empty response"):
+            await ExtractJobService._call_provider(mock_provider, "test prompt")
+
+    @pytest.mark.asyncio
+    async def test_extract_job_filters_response_fields(self):
+        """extract_job should only return the 6 expected fields."""
+        from app.services.extract_job_service import ExtractJobService
+
+        service = ExtractJobService.__new__(ExtractJobService)
+        service.admin_client = MagicMock()
+        service._check_daily_limit = AsyncMock()
+        service._record_extraction = AsyncMock()
+
+        llm_response = json.dumps({
+            "title": "Eng", "company": "Co", "description": "Desc",
+            "location": "NY", "salary": "100k", "employment_type": "FT",
+            "hacker_field": "should_not_appear", "ssn": "000-00-0000",
+        })
+
+        with patch.object(
+            ExtractJobService, "_call_provider", new_callable=AsyncMock, return_value=llm_response
+        ), patch("app.services.extract_job_service.AIProviderFactory") as mock_factory:
+            mock_factory.get_claude_provider.return_value = MagicMock(name="claude")
+            mock_factory.get_openai_provider.return_value = None
+            result = await service.extract_job("user-id", "<html>page</html>", "https://x.com")
+
+        assert set(result.keys()) == {"title", "company", "description", "location", "salary", "employment_type"}
+        assert "hacker_field" not in result
+        assert "ssn" not in result
+
+    @pytest.mark.asyncio
+    async def test_extract_job_malformed_json_falls_to_next_provider(self):
+        """Malformed JSON from primary should fallback to secondary provider."""
+        from app.services.extract_job_service import ExtractJobService
+
+        service = ExtractJobService.__new__(ExtractJobService)
+        service.admin_client = MagicMock()
+        service._check_daily_limit = AsyncMock()
+        service._record_extraction = AsyncMock()
+
+        call_count = 0
+
+        async def mock_call(provider, prompt):
+            nonlocal call_count
+            call_count += 1
+            if call_count == 1:
+                return "NOT VALID JSON {{"
+            return '{"title": "Fallback", "company": "Co"}'
+
+        with patch.object(
+            ExtractJobService, "_call_provider", side_effect=mock_call
+        ), patch("app.services.extract_job_service.AIProviderFactory") as mock_factory:
+            mock_factory.get_claude_provider.return_value = MagicMock(name="claude")
+            mock_factory.get_openai_provider.return_value = MagicMock(name="openai")
+            result = await service.extract_job("user-id", "<html>x</html>", "https://x.com")
+
+        assert result["title"] == "Fallback"
+        assert call_count == 2

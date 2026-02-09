@@ -1,13 +1,5 @@
 import { detectJobPage, getJobBoard } from "../../features/scanning/job-detector";
-
-/** Storage key for auto-scan signals to the side panel */
-const STORAGE_KEY = "jobswyft-auto-scan-request";
-
-/** Storage key for content sentinel readiness signal */
-const SENTINEL_KEY = "jobswyft-content-ready";
-
-/** Session storage key for cooldown data (survives SW restart) */
-const COOLDOWN_KEY = "jobswyft-scan-cooldown";
+import { AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY, COOLDOWN_STORAGE_KEY } from "../../lib/constants";
 
 /** Cooldown (ms) to avoid re-scanning the same URL */
 const SCAN_COOLDOWN_MS = 30_000;
@@ -24,8 +16,8 @@ interface CooldownEntry {
 
 async function wasRecentlyScanned(url: string): Promise<boolean> {
   try {
-    const result = await chrome.storage.session.get(COOLDOWN_KEY);
-    const entries: CooldownEntry[] = result[COOLDOWN_KEY] || [];
+    const result = await chrome.storage.session.get(COOLDOWN_STORAGE_KEY);
+    const entries: CooldownEntry[] = result[COOLDOWN_STORAGE_KEY] || [];
     const now = Date.now();
     return entries.some(
       (e) => e.url === url && now - e.timestamp < SCAN_COOLDOWN_MS
@@ -37,13 +29,13 @@ async function wasRecentlyScanned(url: string): Promise<boolean> {
 
 async function markAsScanned(url: string): Promise<void> {
   try {
-    const result = await chrome.storage.session.get(COOLDOWN_KEY);
-    const entries: CooldownEntry[] = result[COOLDOWN_KEY] || [];
+    const result = await chrome.storage.session.get(COOLDOWN_STORAGE_KEY);
+    const entries: CooldownEntry[] = result[COOLDOWN_STORAGE_KEY] || [];
     const now = Date.now();
     // Prune expired + add new
     const pruned = entries.filter((e) => now - e.timestamp < SCAN_COOLDOWN_MS);
     pruned.push({ url, timestamp: now });
-    await chrome.storage.session.set({ [COOLDOWN_KEY]: pruned });
+    await chrome.storage.session.set({ [COOLDOWN_STORAGE_KEY]: pruned });
   } catch {
     // Ignore storage errors
   }
@@ -61,7 +53,7 @@ async function triggerAutoScan(tabId: number, url: string): Promise<void> {
   const board = getJobBoard(url);
 
   await chrome.storage.local.set({
-    [STORAGE_KEY]: { tabId, url, board, timestamp: Date.now(), id: crypto.randomUUID() },
+    [AUTO_SCAN_STORAGE_KEY]: { tabId, url, board, timestamp: Date.now(), id: crypto.randomUUID() },
   });
 }
 
@@ -119,7 +111,7 @@ export default defineBackground(() => {
   // When the content sentinel signals readiness, forward to side panel
   // via the auto-scan signal. This bypasses the fixed delay.
   chrome.storage.session.onChanged.addListener(async (changes) => {
-    const sentinelChange = changes[SENTINEL_KEY];
+    const sentinelChange = changes[SENTINEL_STORAGE_KEY];
     if (!sentinelChange?.newValue) return;
 
     const { url } = sentinelChange.newValue as {
@@ -128,11 +120,18 @@ export default defineBackground(() => {
     };
 
     // Sentinel sends tabId: -1 (content scripts can't access their own tab ID).
-    // Resolve the actual tab ID before forwarding.
+    // Resolve the actual tab ID by matching the sentinel's URL against open tabs.
     try {
-      const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
-      if (tab?.id) {
-        triggerAutoScan(tab.id, url);
+      const tabs = await chrome.tabs.query({ url: url });
+      const matchingTab = tabs.find(t => t.id !== undefined);
+      if (matchingTab?.id) {
+        triggerAutoScan(matchingTab.id, url);
+      } else {
+        // Fallback: use active tab if URL match fails (e.g., URL mismatch due to redirects)
+        const [activeTab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (activeTab?.id) {
+          triggerAutoScan(activeTab.id, url);
+        }
       }
     } catch {
       // Tab query may fail if no active window

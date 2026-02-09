@@ -78,18 +78,21 @@ class ExtractJobService:
         """
         today = datetime.now(timezone.utc).strftime("%Y-%m-%d")
 
-        self.admin_client.table("usage_events").insert(
-            {
-                "user_id": user_id,
-                "operation_type": "extract_job",
-                "ai_provider": ai_provider,
-                "credits_used": 0,
-                "period_type": "daily",
-                "period_key": today,
-            }
-        ).execute()
+        try:
+            self.admin_client.table("usage_events").insert(
+                {
+                    "user_id": user_id,
+                    "operation_type": "extract_job",
+                    "ai_provider": ai_provider,
+                    "credits_used": 0,
+                    "period_type": "daily",
+                    "period_key": today,
+                }
+            ).execute()
 
-        logger.info(f"Recorded extract_job usage: user={user_id[:8]}..., provider={ai_provider}")
+            logger.info(f"Recorded extract_job usage: user={user_id[:8]}..., provider={ai_provider}")
+        except Exception as e:
+            logger.error(f"Failed to record extract_job usage for user={user_id[:8]}...: {e}")
 
     async def extract_job(
         self,
@@ -124,6 +127,11 @@ class ExtractJobService:
         # Try Claude first, then OpenAI
         primary = AIProviderFactory.get_claude_provider()
         fallback = AIProviderFactory.get_openai_provider()
+
+        logger.info(
+            f"Extract job providers: primary={'claude' if primary else 'None'}, "
+            f"fallback={'openai' if fallback else 'None'}"
+        )
 
         errors: list[str] = []
 
@@ -171,21 +179,30 @@ class ExtractJobService:
         Returns:
             Raw response text from the provider.
         """
+        # Use fast/cheap models for extraction (not the expensive ones used for match/cover-letter)
+        CLAUDE_EXTRACT_MODEL = "claude-haiku-4-5-20251001"
+        OPENAI_EXTRACT_MODEL = "gpt-4o-mini"
+        EXTRACT_MAX_TOKENS = 4000
+
         if isinstance(provider, ClaudeProvider):
+            logger.info(f"Calling Claude ({CLAUDE_EXTRACT_MODEL}) with timeout=30s, max_tokens={EXTRACT_MAX_TOKENS}")
             response = await provider.client.messages.create(
-                model=provider.model,
-                max_tokens=1500,
+                model=CLAUDE_EXTRACT_MODEL,
+                max_tokens=EXTRACT_MAX_TOKENS,
                 messages=[{"role": "user", "content": prompt}],
-                timeout=10.0,
+                timeout=30.0,
             )
+            if not response.content:
+                raise ValueError("Claude returned empty response")
             return response.content[0].text
         elif isinstance(provider, OpenAIProvider):
+            logger.info(f"Calling OpenAI ({OPENAI_EXTRACT_MODEL}) with timeout=30s, max_tokens={EXTRACT_MAX_TOKENS}")
             response = await provider.client.chat.completions.create(
-                model=provider.model,
+                model=OPENAI_EXTRACT_MODEL,
                 messages=[{"role": "user", "content": prompt}],
                 response_format={"type": "json_object"},
-                max_tokens=1500,
-                timeout=10.0,
+                max_tokens=EXTRACT_MAX_TOKENS,
+                timeout=30.0,
             )
             text = response.choices[0].message.content
             if not text:

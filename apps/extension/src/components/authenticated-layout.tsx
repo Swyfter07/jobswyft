@@ -16,14 +16,9 @@ import { useScanStore } from "../stores/scan-store";
 import { scrapeJobPage } from "../features/scanning/scanner";
 import { validateExtraction, type ExtractionSource } from "../features/scanning/extraction-validator";
 import { cleanHtmlForAI } from "../features/scanning/html-cleaner";
+import { aggregateFrameResults } from "../features/scanning/frame-aggregator";
 import { apiClient } from "../lib/api-client";
-import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME } from "../lib/constants";
-
-/** Storage key used by background worker to signal auto-scan */
-const AUTO_SCAN_STORAGE_KEY = "jobswyft-auto-scan-request";
-
-/** Storage key for content sentinel readiness */
-const SENTINEL_STORAGE_KEY = "jobswyft-content-ready";
+import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME, AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY } from "../lib/constants";
 
 /** Completeness threshold for triggering AI fallback */
 const AI_FALLBACK_THRESHOLD = 0.7;
@@ -96,24 +91,7 @@ export function AuthenticatedLayout() {
         });
 
         // Aggregate results — main frame (frameId 0) first, sub-frames fill gaps only
-        const best: Record<string, string> = { title: "", company: "", description: "", location: "", salary: "", employmentType: "", sourceUrl: "" };
-        const bestSources: Record<string, string> = {};
-        const mainFrame = (results || []).find(r => r.frameId === 0);
-        const subFrames = (results || []).filter(r => r.frameId !== 0);
-
-        for (const d of [mainFrame?.result, ...subFrames.map(r => r?.result)]) {
-          if (!d) continue;
-          if (d.title && !best.title) { best.title = d.title; if (d.sources?.title) bestSources.title = d.sources.title; }
-          if (d.company && !best.company) { best.company = d.company; if (d.sources?.company) bestSources.company = d.sources.company; }
-          if (d.location && !best.location) { best.location = d.location; if (d.sources?.location) bestSources.location = d.sources.location; }
-          if (d.salary && !best.salary) { best.salary = d.salary; if (d.sources?.salary) bestSources.salary = d.sources.salary; }
-          if (d.employmentType && !best.employmentType) { best.employmentType = d.employmentType; if (d.sources?.employmentType) bestSources.employmentType = d.sources.employmentType; }
-          if (d.sourceUrl && !best.sourceUrl) best.sourceUrl = d.sourceUrl;
-          if (d.description && d.description.length > (best.description?.length || 0)) {
-            best.description = d.description;
-            if (d.sources?.description) bestSources.description = d.sources.description;
-          }
-        }
+        const { data: best, sources: bestSources } = aggregateFrameResults(results);
 
         // ─── Confidence scoring (AC3, AC4) ─────────────────────────────
         let validation = validateExtraction(best, bestSources as Record<string, ExtractionSource>);
@@ -182,23 +160,7 @@ export function AuthenticatedLayout() {
                 });
 
                 // Fresh scan — don't carry forward stale data from initial scan
-                const reBest: Record<string, string> = { title: "", company: "", description: "", location: "", salary: "", employmentType: "", sourceUrl: "" };
-                const reSources: Record<string, string> = {};
-                const reMainFrame = (reResults || []).find(r => r.frameId === 0);
-                const reSubFrames = (reResults || []).filter(r => r.frameId !== 0);
-                for (const d of [reMainFrame?.result, ...reSubFrames.map(r => r?.result)]) {
-                  if (!d) continue;
-                  if (d.title && !reBest.title) { reBest.title = d.title; if (d.sources?.title) reSources.title = d.sources.title; }
-                  if (d.company && !reBest.company) { reBest.company = d.company; if (d.sources?.company) reSources.company = d.sources.company; }
-                  if (d.location && !reBest.location) { reBest.location = d.location; if (d.sources?.location) reSources.location = d.sources.location; }
-                  if (d.salary && !reBest.salary) { reBest.salary = d.salary; if (d.sources?.salary) reSources.salary = d.sources.salary; }
-                  if (d.employmentType && !reBest.employmentType) { reBest.employmentType = d.employmentType; if (d.sources?.employmentType) reSources.employmentType = d.sources.employmentType; }
-                  if (d.sourceUrl && !reBest.sourceUrl) reBest.sourceUrl = d.sourceUrl;
-                  if (d.description && d.description.length > (reBest.description?.length || 0)) {
-                    reBest.description = d.description;
-                    if (d.sources?.description) reSources.description = d.sources.description;
-                  }
-                }
+                const { data: reBest, sources: reSources } = aggregateFrameResults(reResults);
 
                 // Backfill secondary fields from initial scan if fresh scan missed them
                 if (!reBest.location && best.location) { reBest.location = best.location; reSources.location = bestSources.location; }
@@ -264,8 +226,8 @@ export function AuthenticatedLayout() {
       if (!request?.tabId) return;
 
       // Deduplicate using unique ID (AC: 5.6 — crypto.randomUUID per signal)
-      const requestId = request.id ?? `${request.tabId}-${request.timestamp}`;
-      if (requestId === lastProcessedId.current) return;
+      const requestId = request.id;
+      if (!requestId || requestId === lastProcessedId.current) return;
       lastProcessedId.current = requestId;
 
       performScan(request.tabId, { board: request.board ?? null });

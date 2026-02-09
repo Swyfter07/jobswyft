@@ -365,7 +365,7 @@ async def extract_job(
         user_id=user_id,
         html_content=request.html_content,
         source_url=request.source_url,
-        partial_data=request.partial_data,
+        partial_data=request.partial_data.model_dump(exclude_none=True) if request.partial_data else None,
     )
 
     response_data = ExtractJobResponse(**result)

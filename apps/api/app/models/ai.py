@@ -117,12 +117,23 @@ class OutreachResponse(BaseModel):
     tokens_used: int = Field(..., description="Approximate tokens used in generation")
 
 
+class PartialJobData(BaseModel):
+    """Typed partial job data for extraction context."""
+
+    title: Optional[str] = Field(default=None, max_length=500)
+    company: Optional[str] = Field(default=None, max_length=500)
+    description: Optional[str] = Field(default=None, max_length=10000)
+    location: Optional[str] = Field(default=None, max_length=500)
+    salary: Optional[str] = Field(default=None, max_length=200)
+    employment_type: Optional[str] = Field(default=None, max_length=100)
+
+
 class ExtractJobRequest(BaseModel):
     """Request model for POST /v1/ai/extract-job."""
 
     html_content: str = Field(..., min_length=1, max_length=8000)
     source_url: str = Field(..., min_length=1, max_length=2048)
-    partial_data: Optional[dict] = Field(default=None)
+    partial_data: Optional[PartialJobData] = Field(default=None)
 
 
 class ExtractJobResponse(BaseModel):
