@@ -117,6 +117,33 @@ class OutreachResponse(BaseModel):
     tokens_used: int = Field(..., description="Approximate tokens used in generation")
 
 
+class ChatRequest(BaseModel):
+    """Request model for POST /v1/ai/chat."""
+
+    message: str = Field(..., min_length=1, max_length=5000)
+    job_context: Optional[dict] = Field(
+        default=None,
+        description="Job context: {title, company, description}",
+    )
+    resume_context: Optional[str] = Field(
+        default=None,
+        max_length=5000,
+        description="Resume summary text for context",
+    )
+    history: Optional[list[dict]] = Field(
+        default=None,
+        description='Chat history: [{role: "user"|"assistant", content: str}]',
+    )
+
+
+class ChatResponse(BaseModel):
+    """Response model for coach chat result."""
+
+    message: str = Field(..., description="Assistant response message")
+    ai_provider_used: str = Field(..., description="AI provider that generated the response")
+    tokens_used: Optional[int] = Field(None, description="Approximate tokens used")
+
+
 class PartialJobData(BaseModel):
     """Typed partial job data for extraction context."""
 

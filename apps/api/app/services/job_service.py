@@ -4,7 +4,7 @@ import logging
 from typing import Any, Dict, Optional
 
 from app.core.exceptions import DatabaseError
-from app.db.client import get_supabase_client
+from app.db.client import get_supabase_admin_client
 
 logger = logging.getLogger(__name__)
 
@@ -17,7 +17,7 @@ class JobService:
 
     def __init__(self):
         """Initialize job service."""
-        self.client = get_supabase_client()
+        self.client = get_supabase_admin_client()
 
     async def create_job(self, user_id: str, job_data: Dict[str, Any]) -> Dict[str, Any]:
         """Create a new job record.
@@ -42,7 +42,7 @@ class JobService:
                 "salary_range": job_data.get("salary_range"),
                 "employment_type": job_data.get("employment_type"),
                 "source_url": job_data.get("source_url"),
-                "status": job_data.get("status", "saved"),  # Default to "saved" if not provided
+                "status": job_data.get("status") or "saved",  # Default to "saved" if not provided or None
             }
 
             response = self.client.table("jobs").insert(insert_data).execute()

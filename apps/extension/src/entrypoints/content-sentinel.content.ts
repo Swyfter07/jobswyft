@@ -189,5 +189,179 @@ export default defineContentScript({
       expandShowMore();
       signalReady();
     }, FALLBACK_TIMEOUT_MS);
+
+    // ─── Form Detection & Filling Handlers ─────────────────────────
+
+    function detectJobBoard(): string {
+      const url = window.location.href;
+      if (url.includes("ashbyhq.com")) return "ashby";
+      if (url.includes("myworkdayjobs.com") || url.includes("myworkdaysite.com")) return "workday";
+      if (url.includes("greenhouse.io")) return "greenhouse";
+      if (url.includes("lever.co")) return "lever";
+      if (url.includes("linkedin.com")) return "linkedin";
+      if (url.includes("indeed.com")) return "indeed";
+      return "unknown";
+    }
+
+    function getEEOFieldType(label: string): string | null {
+      const l = label.toLowerCase();
+      if (/veteran/i.test(l)) return "veteranStatus";
+      if (/disability|disabilit/i.test(l)) return "disabilityStatus";
+      if (/race|ethnic/i.test(l)) return "raceEthnicity";
+      if (/gender|sex\b/i.test(l)) return "gender";
+      if (/sponsor/i.test(l)) return "sponsorshipRequired";
+      if (/authorized|authorization|work.*auth/i.test(l)) return "authorizedToWork";
+      return null;
+    }
+
+    function getFieldLabel(el: HTMLElement): string {
+      // 1. Associated <label> via for/id
+      if (el.id) {
+        const label = document.querySelector<HTMLLabelElement>(`label[for="${el.id}"]`);
+        if (label?.textContent?.trim()) return label.textContent.trim();
+      }
+      // 2. Parent <label>
+      const parentLabel = el.closest("label");
+      if (parentLabel?.textContent?.trim()) return parentLabel.textContent.trim();
+      // 3. Ashby-specific
+      const ashbyLabel = el.closest("[data-ui]")?.querySelector("label");
+      if (ashbyLabel?.textContent?.trim()) return ashbyLabel.textContent.trim();
+      // 4. Workday-specific
+      const workdayLabel = el.closest("[data-automation-id]")?.querySelector("label");
+      if (workdayLabel?.textContent?.trim()) return workdayLabel.textContent.trim();
+      // 5. aria-label
+      const ariaLabel = el.getAttribute("aria-label");
+      if (ariaLabel?.trim()) return ariaLabel.trim();
+      // 6. placeholder
+      const placeholder = el.getAttribute("placeholder");
+      if (placeholder?.trim()) return placeholder.trim();
+      // 7. name attribute
+      const name = el.getAttribute("name");
+      if (name) return name.replace(/[-_]/g, " ").trim();
+      return "Unknown field";
+    }
+
+    function generateSelector(el: HTMLElement): string {
+      if (el.id) return `#${CSS.escape(el.id)}`;
+      const name = el.getAttribute("name");
+      if (name) return `[name="${CSS.escape(name)}"]`;
+      const tag = el.tagName.toLowerCase();
+      const parent = el.parentElement;
+      if (parent) {
+        const siblings = Array.from(parent.querySelectorAll(tag));
+        const idx = siblings.indexOf(el);
+        return `${tag}:nth-of-type(${idx + 1})`;
+      }
+      return tag;
+    }
+
+    function categorizeField(label: string, type: string): string {
+      const l = label.toLowerCase();
+      // Resume/file upload
+      if (type === "file") return "resume";
+      // Personal info
+      if (/^(first|last|full)?\s*name$|^name$/i.test(l)) return "personal";
+      if (/email/i.test(l)) return "personal";
+      if (/phone|mobile|tel/i.test(l)) return "personal";
+      if (/linkedin/i.test(l)) return "personal";
+      if (/website|portfolio|url/i.test(l)) return "personal";
+      if (/address|city|state|zip|country|location/i.test(l)) return "personal";
+      // EEO
+      if (getEEOFieldType(l)) return "eeo";
+      // Default to questions
+      return "questions";
+    }
+
+    function setNativeValue(el: HTMLElement, value: string): void {
+      if (el instanceof HTMLSelectElement) {
+        const option = Array.from(el.options).find(
+          (o) => o.value === value || o.textContent?.trim().toLowerCase() === value.toLowerCase()
+        );
+        if (option) {
+          el.value = option.value;
+        }
+      } else if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        const nativeInputValueSetter =
+          Object.getOwnPropertyDescriptor(
+            el instanceof HTMLTextAreaElement
+              ? HTMLTextAreaElement.prototype
+              : HTMLInputElement.prototype,
+            "value"
+          )?.set;
+        if (nativeInputValueSetter) {
+          nativeInputValueSetter.call(el, value);
+        } else {
+          el.value = value;
+        }
+      }
+      el.dispatchEvent(new Event("input", { bubbles: true }));
+      el.dispatchEvent(new Event("change", { bubbles: true }));
+      el.dispatchEvent(new Event("blur", { bubbles: true }));
+    }
+
+    // Message listener for form detection/filling from side panel
+    chrome.runtime.onMessage.addListener((message, _sender, sendResponse) => {
+      if (message.action === "DETECT_FORM_FIELDS") {
+        try {
+          const selector =
+            'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]):not([type="image"]), textarea, select, input[type="file"]';
+          const elements = document.querySelectorAll<HTMLElement>(selector);
+          const board = detectJobBoard();
+
+          const fields = Array.from(elements)
+            .filter((el) => !(el as HTMLInputElement).disabled)
+            .map((el) => {
+              const label = getFieldLabel(el);
+              const type = el.getAttribute("type") ?? el.tagName.toLowerCase();
+              const category = categorizeField(label, type);
+              const eeoType = category === "eeo" ? getEEOFieldType(label) : null;
+              return {
+                id: el.id || null,
+                selector: generateSelector(el),
+                label,
+                type,
+                currentValue: (el as HTMLInputElement).value || "",
+                category,
+                eeoType,
+                jobBoard: board,
+              };
+            });
+
+          sendResponse({ success: true, fields });
+        } catch (err) {
+          sendResponse({ success: false, error: String(err) });
+        }
+        return true;
+      }
+
+      if (message.action === "FILL_FORM_FIELDS") {
+        try {
+          const fieldValues: Array<{ selector: string; value: string }> = message.fieldValues || [];
+          let filled = 0;
+          const errors: string[] = [];
+
+          for (const { selector, value } of fieldValues) {
+            try {
+              const el = document.querySelector<HTMLElement>(selector);
+              if (el) {
+                setNativeValue(el, value);
+                filled++;
+              } else {
+                errors.push(`Element not found: ${selector}`);
+              }
+            } catch (e) {
+              errors.push(`Failed to fill ${selector}: ${String(e)}`);
+            }
+          }
+
+          sendResponse({ success: true, filled, errors });
+        } catch (err) {
+          sendResponse({ success: false, error: String(err) });
+        }
+        return true;
+      }
+
+      return false;
+    });
   },
 });

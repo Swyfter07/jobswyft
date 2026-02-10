@@ -15,6 +15,7 @@ interface ScanState {
   confidence: ExtractionConfidence | null;
   isRefining: boolean;
   board: string | null;
+  savedJobId: string | null;
 
   startScan: () => void;
   setScanResult: (data: Partial<JobData>, confidence?: ExtractionConfidence | null, board?: string | null) => void;
@@ -40,6 +41,7 @@ export const useScanStore = create<ScanState>()(
       confidence: null,
       isRefining: false,
       board: null,
+      savedJobId: null,
 
       startScan: () => {
         set({
@@ -99,11 +101,18 @@ export const useScanStore = create<ScanState>()(
       saveJob: async (token) => {
         const { editedJobData, jobData, isEditing } = get();
         const data = isEditing ? editedJobData : jobData;
-        if (!data?.title || !data?.company || !data?.description) return;
+        if (!data?.title || !data?.company || !data?.description) {
+          console.warn("[scan-store] saveJob skipped — missing required fields:", {
+            title: !!data?.title,
+            company: !!data?.company,
+            description: !!data?.description,
+          });
+          return;
+        }
 
         set({ isSaving: true, error: null });
         try {
-          await apiClient.saveJob(token, {
+          const response = await apiClient.saveJob(token, {
             title: data.title,
             company: data.company,
             description: data.description,
@@ -112,6 +121,10 @@ export const useScanStore = create<ScanState>()(
             employmentType: data.employmentType,
             sourceUrl: data.sourceUrl,
           });
+
+          // Store the server-generated job ID for AI API calls
+          const savedJobId = response?.id ?? null;
+          console.log("[scan-store] Job saved, savedJobId:", savedJobId);
 
           // If editing, commit edited data as the new jobData
           if (isEditing && editedJobData) {
@@ -127,7 +140,7 @@ export const useScanStore = create<ScanState>()(
             });
           }
 
-          set({ isSaving: false, scanStatus: "success" });
+          set({ isSaving: false, scanStatus: "success", savedJobId });
         } catch (err) {
           set({
             isSaving: false,
@@ -147,6 +160,7 @@ export const useScanStore = create<ScanState>()(
           confidence: null,
           isRefining: false,
           board: null,
+          savedJobId: null,
         });
       },
 
@@ -166,8 +180,10 @@ export const useScanStore = create<ScanState>()(
       name: "jobswyft-scan",
       storage: createJSONStorage(() => chromeStorageAdapter),
       partialize: (state) => ({
+        scanStatus: state.scanStatus,
         jobData: state.jobData,
         isRefining: state.isRefining,
+        savedJobId: state.savedJobId,
       }),
     }
   )

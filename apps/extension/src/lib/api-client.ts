@@ -25,6 +25,69 @@ export interface AiExtractResult {
   employment_type?: string;
 }
 
+// ─── AI endpoint types ───────────────────────────────────────────
+
+export interface MatchAnalysisResult {
+  match_score: number;
+  strengths: string[];
+  gaps: string[];
+  recommendations: string[];
+  ai_provider_used: string;
+}
+
+export interface AIContentResult {
+  content: string;
+  ai_provider_used: string;
+  tokens_used: number;
+}
+
+export interface ChatResult {
+  message: string;
+  ai_provider_used: string;
+  tokens_used: number | null;
+}
+
+export interface UsageResult {
+  credits_used: number;
+  credits_remaining: number;
+  max_credits: number;
+}
+
+export interface CoverLetterParams {
+  tone?: "confident" | "friendly" | "enthusiastic" | "professional" | "executive";
+  custom_instructions?: string;
+  feedback?: string;
+  previous_content?: string;
+  resume_id?: string;
+}
+
+export interface AnswerParams {
+  max_length?: 150 | 300 | 500 | 1000;
+  feedback?: string;
+  previous_content?: string;
+  resume_id?: string;
+}
+
+export interface OutreachParams {
+  recipient_type: "recruiter" | "hiring_manager" | "referral";
+  platform: "linkedin" | "email" | "twitter";
+  recipient_name?: string;
+  feedback?: string;
+  previous_content?: string;
+  resume_id?: string;
+}
+
+export interface ChatMessage {
+  role: "user" | "assistant";
+  content: string;
+}
+
+export interface JobContext {
+  title: string;
+  company: string;
+  description?: string;
+}
+
 class ApiClient {
   private baseUrl: string;
 
@@ -193,6 +256,96 @@ class ApiClient {
     } finally {
       clearTimeout(timeout);
     }
+  }
+
+  // ─── Job endpoints ────────────────────────────────────────────────
+
+  // ─── AI endpoints ──────────────────────────────────────────────────
+
+  /** POST /v1/ai/match — Analyze resume-job match. */
+  async analyzeMatch(token: string, jobId: string, resumeId?: string): Promise<MatchAnalysisResult> {
+    return this.fetch<MatchAnalysisResult>("/v1/ai/match", {
+      method: "POST",
+      body: JSON.stringify({
+        job_id: jobId,
+        ...(resumeId && { resume_id: resumeId }),
+      }),
+      token,
+    });
+  }
+
+  /** POST /v1/ai/cover-letter — Generate cover letter. */
+  async generateCoverLetter(token: string, jobId: string, params: CoverLetterParams = {}): Promise<AIContentResult> {
+    return this.fetch<AIContentResult>("/v1/ai/cover-letter", {
+      method: "POST",
+      body: JSON.stringify({
+        job_id: jobId,
+        tone: params.tone ?? "professional",
+        custom_instructions: params.custom_instructions ?? null,
+        feedback: params.feedback ?? null,
+        previous_content: params.previous_content ?? null,
+        ...(params.resume_id && { resume_id: params.resume_id }),
+      }),
+      token,
+    });
+  }
+
+  /** POST /v1/ai/answer — Answer an application question. */
+  async answerQuestion(token: string, jobId: string, question: string, params: AnswerParams = {}): Promise<AIContentResult> {
+    return this.fetch<AIContentResult>("/v1/ai/answer", {
+      method: "POST",
+      body: JSON.stringify({
+        job_id: jobId,
+        question,
+        max_length: params.max_length ?? 500,
+        feedback: params.feedback ?? null,
+        previous_content: params.previous_content ?? null,
+        ...(params.resume_id && { resume_id: params.resume_id }),
+      }),
+      token,
+    });
+  }
+
+  /** POST /v1/ai/outreach — Generate outreach message. */
+  async generateOutreach(token: string, jobId: string, params: OutreachParams): Promise<AIContentResult> {
+    return this.fetch<AIContentResult>("/v1/ai/outreach", {
+      method: "POST",
+      body: JSON.stringify({
+        job_id: jobId,
+        recipient_type: params.recipient_type,
+        platform: params.platform,
+        recipient_name: params.recipient_name ?? null,
+        feedback: params.feedback ?? null,
+        previous_content: params.previous_content ?? null,
+        ...(params.resume_id && { resume_id: params.resume_id }),
+      }),
+      token,
+    });
+  }
+
+  /** POST /v1/ai/chat — Send message to career coach. */
+  async sendCoachMessage(
+    token: string,
+    message: string,
+    jobContext?: JobContext,
+    resumeContext?: string,
+    history?: ChatMessage[]
+  ): Promise<ChatResult> {
+    return this.fetch<ChatResult>("/v1/ai/chat", {
+      method: "POST",
+      body: JSON.stringify({
+        message,
+        job_context: jobContext ?? null,
+        resume_context: resumeContext ?? null,
+        history: history ?? null,
+      }),
+      token,
+    });
+  }
+
+  /** GET /v1/usage — Get credit usage info. */
+  async getUsage(token: string): Promise<UsageResult> {
+    return this.fetch<UsageResult>("/v1/usage", { token });
   }
 
   // ─── Job endpoints ────────────────────────────────────────────────

@@ -1,7 +1,7 @@
 """Abstract AI provider base class."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 
 class AIProvider(ABC):
@@ -138,5 +138,25 @@ class AIProvider(ABC):
 
         Raises:
             ValueError: If AI call fails or response is invalid.
+        """
+        pass
+
+    @abstractmethod
+    async def generate_chat(
+        self,
+        system_prompt: str,
+        messages: List[Dict[str, str]],
+    ) -> Tuple[str, int]:
+        """Generate a conversational chat response.
+
+        Args:
+            system_prompt: System prompt with context.
+            messages: List of message dicts with role and content.
+
+        Returns:
+            Tuple of (response_text, tokens_used).
+
+        Raises:
+            ValueError: If AI call fails.
         """
         pass

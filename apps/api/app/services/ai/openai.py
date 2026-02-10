@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from openai import AsyncOpenAI
 
@@ -340,3 +340,45 @@ class OpenAIProvider(AIProvider):
 
         logger.info(f"Successfully generated outreach with OpenAI, tokens: {tokens_used}")
         return content, tokens_used
+
+    async def generate_chat(
+        self,
+        system_prompt: str,
+        messages: List[Dict[str, str]],
+    ) -> Tuple[str, int]:
+        """Generate conversational chat response using GPT.
+
+        Args:
+            system_prompt: System prompt with context.
+            messages: List of message dicts with role and content.
+
+        Returns:
+            Tuple of (response_text, tokens_used).
+
+        Raises:
+            ValueError: If AI call fails.
+        """
+        logger.info(f"Generating chat response with OpenAI ({self.model})")
+
+        # OpenAI uses system message in the messages array
+        full_messages = [{"role": "system", "content": system_prompt}] + messages
+
+        try:
+            response = await self.client.chat.completions.create(
+                model=self.model,
+                messages=full_messages,
+                max_tokens=1500,
+                timeout=15.0,
+            )
+        except Exception as e:
+            logger.error(f"OpenAI API error during chat: {e}")
+            raise ValueError(f"OpenAI API error: {e}") from e
+
+        response_text = response.choices[0].message.content
+        if not response_text:
+            raise ValueError("OpenAI returned empty response")
+
+        tokens_used = response.usage.completion_tokens if response.usage else len(response_text) // 4
+
+        logger.info(f"Successfully generated chat response with OpenAI, tokens: {tokens_used}")
+        return response_text, tokens_used

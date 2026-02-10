@@ -338,6 +338,81 @@ Do not include any text outside the JSON object.
 - For email platform, include "Subject: " line at the beginning of content"""
 
 
+COACH_CHAT_SYSTEM_PROMPT = """You are a career coach assistant for Jobswyft, an AI-powered job application tool. You help job seekers with career advice, interview preparation, application strategy, and professional development.
+
+Your personality:
+- Supportive and encouraging, but honest
+- Practical and actionable advice
+- Concise responses (2-4 paragraphs max)
+- Use the job and resume context when available to give personalized advice
+
+{job_context_section}
+
+{resume_context_section}
+
+Guidelines:
+- If the user asks about a specific job, reference the job context
+- If the user asks about their qualifications, reference the resume context
+- Give specific, actionable advice rather than generic platitudes
+- If you don't have enough context, ask clarifying questions
+- Keep responses focused and practical"""
+
+
+def format_coach_chat_prompt(
+    message: str,
+    job_context: dict | None = None,
+    resume_context: str | None = None,
+    history: list[dict] | None = None,
+) -> tuple[str, list[dict]]:
+    """Format the coach chat prompt with context.
+
+    Args:
+        message: User's message.
+        job_context: Optional job context dict with title, company, description.
+        resume_context: Optional resume summary text.
+        history: Optional chat history list of {role, content} dicts.
+
+    Returns:
+        Tuple of (system_prompt, messages_list).
+    """
+    # Build job context section
+    if job_context:
+        title = job_context.get("title", "Unknown")
+        company = job_context.get("company", "Unknown")
+        description = job_context.get("description", "")[:2000]
+        job_context_section = f"""Current Job Context:
+- Title: {title}
+- Company: {company}
+- Description: {description}"""
+    else:
+        job_context_section = "No job context available."
+
+    # Build resume context section
+    if resume_context:
+        resume_context_section = f"Resume Summary:\n{resume_context[:2000]}"
+    else:
+        resume_context_section = "No resume context available."
+
+    system_prompt = COACH_CHAT_SYSTEM_PROMPT.format(
+        job_context_section=job_context_section,
+        resume_context_section=resume_context_section,
+    )
+
+    # Build messages list from history
+    messages: list[dict] = []
+    if history:
+        for entry in history[-10:]:  # Last 10 messages
+            role = entry.get("role", "user")
+            content = entry.get("content", "")
+            if role in ("user", "assistant") and content:
+                messages.append({"role": role, "content": content})
+
+    # Add current user message
+    messages.append({"role": "user", "content": message})
+
+    return system_prompt, messages
+
+
 JOB_EXTRACT_PROMPT = """You are a job posting data extractor. Extract structured job information from the following HTML content.
 
 Return ONLY valid JSON with this exact structure (use null for missing fields):

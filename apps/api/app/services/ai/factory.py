@@ -1,7 +1,7 @@
 """AI provider factory with fallback support."""
 
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from app.core.config import settings
 from app.services.ai.claude import ClaudeProvider
@@ -409,4 +409,64 @@ class AIProviderFactory:
         # Both failed
         error_msg = "; ".join(errors)
         logger.error(f"All AI providers failed for outreach generation: {error_msg}")
+        raise ValueError(f"All AI providers failed: {error_msg}")
+
+    @staticmethod
+    async def chat_with_fallback(
+        system_prompt: str,
+        messages: List[Dict[str, str]],
+        preferred_provider: Optional[str] = None,
+        user_preference: Optional[str] = None,
+    ) -> Tuple[str, int, str]:
+        """Generate chat response with fallback support.
+
+        Args:
+            system_prompt: System prompt with context.
+            messages: List of message dicts with role and content.
+            preferred_provider: Provider override from request (highest priority).
+            user_preference: User's preferred provider from profile.
+
+        Returns:
+            Tuple of (response_text, tokens_used, provider_name).
+
+        Raises:
+            ValueError: If both providers fail.
+        """
+        resolved_provider = preferred_provider or user_preference or "claude"
+
+        if resolved_provider == "gpt":
+            primary = AIProviderFactory.get_openai_provider()
+            fallback = AIProviderFactory.get_claude_provider()
+        else:
+            primary = AIProviderFactory.get_claude_provider()
+            fallback = AIProviderFactory.get_openai_provider()
+
+        errors: list[str] = []
+
+        if primary:
+            try:
+                logger.info(f"Attempting chat with {primary.name} (primary)")
+                text, tokens = await primary.generate_chat(system_prompt, messages)
+                return text, tokens, primary.name
+            except Exception as e:
+                logger.warning(f"{primary.name} failed: {e}")
+                errors.append(f"{primary.name}: {e}")
+        else:
+            provider_name = "OpenAI" if resolved_provider == "gpt" else "Claude"
+            errors.append(f"{provider_name}: Not configured")
+
+        if fallback:
+            try:
+                logger.info(f"Attempting chat with {fallback.name} (fallback)")
+                text, tokens = await fallback.generate_chat(system_prompt, messages)
+                return text, tokens, fallback.name
+            except Exception as e:
+                logger.warning(f"{fallback.name} failed: {e}")
+                errors.append(f"{fallback.name}: {e}")
+        else:
+            fallback_name = "Claude" if resolved_provider == "gpt" else "OpenAI"
+            errors.append(f"{fallback_name}: Not configured")
+
+        error_msg = "; ".join(errors)
+        logger.error(f"All AI providers failed for chat: {error_msg}")
         raise ValueError(f"All AI providers failed: {error_msg}")

@@ -9,6 +9,8 @@ from app.core.deps import CurrentUser
 from app.models.ai import (
     AnswerRequest,
     AnswerResponse,
+    ChatRequest,
+    ChatResponse,
     CoverLetterPDFRequest,
     CoverLetterRequest,
     CoverLetterResponse,
@@ -21,6 +23,7 @@ from app.models.ai import (
 )
 from app.models.base import ok
 from app.services.answer_service import AnswerService
+from app.services.coach_service import CoachService
 from app.services.cover_letter_service import CoverLetterService
 from app.services.match_service import MatchService
 from app.services.extract_job_service import ExtractJobService
@@ -55,6 +58,11 @@ def get_answer_service() -> AnswerService:
 def get_outreach_service() -> OutreachService:
     """Dependency to get outreach service instance."""
     return OutreachService()
+
+
+def get_coach_service() -> CoachService:
+    """Dependency to get coach service instance."""
+    return CoachService()
 
 
 def get_extract_job_service() -> ExtractJobService:
@@ -331,6 +339,44 @@ async def generate_outreach(
     # Validate response with Pydantic model
     response_data = OutreachResponse(**outreach)
 
+    return ok(response_data.model_dump())
+
+
+@router.post("/chat")
+async def send_chat_message(
+    request: ChatRequest,
+    user: CurrentUser,
+    coach_service: CoachService = Depends(get_coach_service),
+) -> dict:
+    """Send a message to the AI career coach.
+
+    Provides contextual career advice using optional job and resume context.
+    Supports conversation history for multi-turn chat.
+
+    Args:
+        request: Chat request with message and optional context/history.
+        user: Authenticated user from dependency.
+        coach_service: Coach service instance.
+
+    Returns:
+        Coach response message, AI provider used, and token count.
+
+    Raises:
+        AUTH_REQUIRED (401): No authentication token.
+        CREDIT_EXHAUSTED (422): User has no remaining credits.
+        AI_PROVIDER_UNAVAILABLE (503): Both AI providers failed.
+    """
+    user_id = user["id"]
+
+    result = await coach_service.send_message(
+        user_id=user_id,
+        message=request.message,
+        job_context=request.job_context,
+        resume_context=request.resume_context,
+        history=request.history,
+    )
+
+    response_data = ChatResponse(**result)
     return ok(response_data.model_dump())
 
 

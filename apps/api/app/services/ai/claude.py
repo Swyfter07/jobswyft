@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any, Dict, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 from anthropic import AsyncAnthropic
 
@@ -320,3 +320,40 @@ class ClaudeProvider(AIProvider):
 
         logger.info(f"Successfully generated outreach with Claude, tokens: {tokens_used}")
         return content, tokens_used
+
+    async def generate_chat(
+        self,
+        system_prompt: str,
+        messages: List[Dict[str, str]],
+    ) -> Tuple[str, int]:
+        """Generate conversational chat response using Claude.
+
+        Args:
+            system_prompt: System prompt with context.
+            messages: List of message dicts with role and content.
+
+        Returns:
+            Tuple of (response_text, tokens_used).
+
+        Raises:
+            ValueError: If AI call fails.
+        """
+        logger.info(f"Generating chat response with Claude ({self.model})")
+
+        try:
+            response = await self.client.messages.create(
+                model=self.model,
+                max_tokens=1500,
+                system=system_prompt,
+                messages=messages,
+                timeout=15.0,
+            )
+        except Exception as e:
+            logger.error(f"Claude API error during chat: {e}")
+            raise ValueError(f"Claude API error: {e}") from e
+
+        response_text = response.content[0].text
+        tokens_used = response.usage.output_tokens if response.usage else len(response_text) // 4
+
+        logger.info(f"Successfully generated chat response with Claude, tokens: {tokens_used}")
+        return response_text, tokens_used
