@@ -541,3 +541,82 @@ export const ColorVariants: Story = {
     </div>
   ),
 }
+
+/** Resume parsing in progress - shows animated indeterminate progress bar. */
+export const ParsingInProgress: Story = {
+  render: () => (
+    <div className="w-[400px]">
+      <ResumeCard
+        resumes={mockResumes}
+        activeResumeId="resume-1"
+        resumeData={null}
+        isParsing={true}
+        onUpload={() => console.log("Upload clicked")}
+        onReparse={(id) => console.log("Reparse clicked:", id)}
+      />
+    </div>
+  ),
+}
+
+/** Resume parsing with progress percentage - shows determinate progress bar. */
+export const ParsingWithProgress: Story = {
+  render: () => (
+    <div className="w-[400px]">
+      <ResumeCard
+        resumes={mockResumes}
+        activeResumeId="resume-1"
+        resumeData={null}
+        isParsing={true}
+        parseProgress={65}
+        onUpload={() => console.log("Upload clicked")}
+        onReparse={(id) => console.log("Reparse clicked:", id)}
+      />
+    </div>
+  ),
+}
+
+/** Newly uploaded resume being processed. */
+export const UploadingResume: Story = {
+  render: () => (
+    <div className="w-[400px]">
+      <ResumeCard
+        resumes={[...mockResumes, { id: "resume-new", fileName: "New_Resume_2026.pdf" }]}
+        activeResumeId="resume-new"
+        resumeData={null}
+        isParsing={true}
+        parseProgress={25}
+        onUpload={() => console.log("Upload clicked")}
+      />
+    </div>
+  ),
+}
+
+/** Parse failed - shows error state with retry button. */
+export const ParseError: Story = {
+  render: () => (
+    <div className="w-[400px]">
+      <ResumeCard
+        resumes={mockResumes}
+        activeResumeId="resume-1"
+        resumeData={null}
+        parseError="Unable to parse resume. The PDF may be corrupted or password-protected."
+        onUpload={() => console.log("Upload clicked")}
+        onReparse={(id) => console.log("Reparse clicked:", id)}
+      />
+    </div>
+  ),
+}
+
+/** Resume with many experience entries — demonstrates scrollable experience block when expanded. */
+export const ScrollableExperience: Story = {
+  render: () => (
+    <div className="w-[400px]">
+      <ResumeCard
+        resumes={mockResumes}
+        activeResumeId="resume-maxed"
+        resumeData={maxedResumeData}
+        maxHeight="500px"
+      />
+    </div>
+  ),
+}

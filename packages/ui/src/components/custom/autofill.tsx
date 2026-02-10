@@ -5,12 +5,14 @@ import {
     AlertCircle,
     Circle,
     Zap,
-    RotateCcw
+    RotateCcw,
+    RefreshCw,
+    Sparkles,
+    Loader2
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Badge } from "@/components/ui/badge"
 import { Separator } from "@/components/ui/separator"
 
@@ -25,10 +27,16 @@ export interface AutofillField {
 export interface AutofillProps {
     fields?: AutofillField[]
     isFilling?: boolean
+    isScanning?: boolean
+    isSmartMapping?: boolean
     showUndoPrompt?: boolean
+    generatingFieldId?: string // Field currently being AI-generated
     onFill?: () => void
     onUndo?: () => void
     onUndoDismiss?: () => void
+    onScan?: () => void
+    onSmartMap?: () => void
+    onFieldClick?: (field: AutofillField) => void // Click handler for question chips
     className?: string
 }
 
@@ -58,10 +66,16 @@ function StatusIcon({ status }: { status: AutofillField["status"] }) {
 export function Autofill({
     fields = DEFAULT_FIELDS,
     isFilling = false,
+    isScanning = false,
+    isSmartMapping = false,
     showUndoPrompt = false,
     onFill,
     onUndo,
     onUndoDismiss,
+    onScan,
+    onSmartMap,
+    onFieldClick,
+    generatingFieldId,
     className
 }: AutofillProps) {
     const personalFields = fields.filter(f => f.category === "personal")
@@ -79,29 +93,45 @@ export function Autofill({
             <div className="space-y-2">
                 <h4 className="text-xs font-semibold uppercase text-muted-foreground px-1">{title}</h4>
                 <div className="flex flex-wrap gap-2">
-                    {items.map((field) => (
-                        <div
-                            key={field.id}
-                            className={cn(
-                                "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border transition-colors cursor-default",
-                                field.status === "missing"
-                                    ? "bg-destructive/10 border-destructive/20 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive-foreground"
-                                    : "bg-card border-border text-foreground hover:border-muted-foreground/50",
-                                field.status === "filled" && "bg-muted text-muted-foreground border-transparent"
-                            )}
-                            title={field.value}
-                        >
-                            <StatusIcon status={field.status} />
-                            <span className="truncate max-w-[120px]">{field.label}</span>
-                        </div>
-                    ))}
+                    {items.map((field) => {
+                        const isGenerating = generatingFieldId === field.id
+                        const isQuestion = field.category === "questions"
+                        const isClickable = isQuestion && field.status === "missing" && onFieldClick && !isGenerating
+
+                        return (
+                            <div
+                                key={field.id}
+                                className={cn(
+                                    "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border",
+                                    "transition-all duration-300 ease-in-out",
+                                    isClickable ? "cursor-pointer hover:scale-105 hover:shadow-md" : "cursor-default",
+                                    isGenerating
+                                        ? "bg-blue-50 border-blue-300 text-blue-700 dark:bg-blue-950 dark:border-blue-700 dark:text-blue-300"
+                                        : field.status === "missing"
+                                            ? "bg-destructive/10 border-destructive/20 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive-foreground"
+                                            : field.status === "filled"
+                                                ? "bg-emerald-100 border-emerald-300 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300 animate-pulse-once"
+                                                : "bg-card border-border text-foreground hover:border-muted-foreground/50"
+                                )}
+                                title={isClickable ? "Click to fill with AI" : field.value}
+                                onClick={() => isClickable && onFieldClick?.(field)}
+                            >
+                                {isGenerating ? (
+                                    <Loader2 className="size-4 animate-spin text-blue-600 dark:text-blue-400" />
+                                ) : (
+                                    <StatusIcon status={field.status} />
+                                )}
+                                <span>{isGenerating ? "Generating..." : field.label}</span>
+                            </div>
+                        )
+                    })}
                 </div>
             </div>
         )
     }
 
     return (
-        <Card className={cn("flex flex-col h-full overflow-hidden dark:bg-card p-0 gap-0 shadow-xl", className)}>
+        <Card className={cn("flex flex-col overflow-hidden dark:bg-card p-0 gap-0 shadow-xl", className)}>
             <CardHeader className="border-b px-4 py-3 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900 flex-shrink-0">
                 <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -117,27 +147,34 @@ export function Autofill({
                             </p>
                         </div>
                     </div>
-                    {/* Undo Action if needed */}
-                    <Button variant="ghost" size="icon" className="h-7 w-7" onClick={onUndo} title="Undo last fill">
-                        <RotateCcw className="size-3.5 text-muted-foreground" />
-                    </Button>
+                    <div className="flex items-center gap-1">
+                        {/* Scan Page Button */}
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 group"
+                            onClick={onScan}
+                            disabled={isScanning}
+                            title="Scan page for fields"
+                        >
+                            {isScanning ? (
+                                <Loader2 className="size-3.5 text-muted-foreground animate-spin" />
+                            ) : (
+                                <RefreshCw className="size-3.5 text-muted-foreground transition-transform group-hover:rotate-180 duration-300" />
+                            )}
+                        </Button>
+                        {/* Undo Action */}
+                        <Button variant="ghost" size="icon" className="h-7 w-7 group" onClick={onUndo} title="Undo last fill">
+                            <RotateCcw className="size-3.5 text-muted-foreground transition-transform group-hover:-rotate-45 duration-200" />
+                        </Button>
+                    </div>
                 </div>
             </CardHeader>
 
-            <CardContent className="flex-1 overflow-hidden p-0 relative">
-                <ScrollArea className="h-full">
-                    <div className="p-4 space-y-6 pb-20">
-                        <FieldGroup title="Personal Info" items={personalFields} />
-                        {resumeFields.length > 0 && <Separator />}
-                        <FieldGroup title="Resume & Documents" items={resumeFields} />
-                        {questionFields.length > 0 && <Separator />}
-                        <FieldGroup title="Questions" items={questionFields} />
-                    </div>
-                </ScrollArea>
-
+            <CardContent className="p-0 relative">
                 {/* Undo Success Banner - shows after fill completes */}
                 {showUndoPrompt && (
-                    <div className="absolute top-0 left-0 right-0 p-3 bg-green-50 border-b border-green-200 dark:bg-green-950 dark:border-green-800 animate-tab-content">
+                    <div className="p-3 bg-green-50 border-b border-green-200 dark:bg-green-950 dark:border-green-800 animate-tab-content">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                                 <CheckCircle2 className="size-4 text-green-600 dark:text-green-400" />
@@ -164,8 +201,38 @@ export function Autofill({
                     </div>
                 )}
 
+                <div className="p-4 space-y-6 pb-40">
+                    <FieldGroup title="Personal Info" items={personalFields} />
+                    {resumeFields.length > 0 && <Separator />}
+                    <FieldGroup title="Resume & Documents" items={resumeFields} />
+                    {questionFields.length > 0 && <Separator />}
+                    <FieldGroup title="Questions" items={questionFields} />
+                </div>
+
                 {/* Floating Action Bar */}
-                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pt-8">
+                <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-background via-background to-transparent pt-8 space-y-2">
+                    {/* Smart Map Button - On Demand AI Mapping */}
+                    {onSmartMap && (
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className="w-full text-xs"
+                            onClick={onSmartMap}
+                            disabled={isSmartMapping || fields.length === 0}
+                        >
+                            {isSmartMapping ? (
+                                <>
+                                    <Loader2 className="mr-2 size-3 animate-spin" />
+                                    Mapping with AI...
+                                </>
+                            ) : (
+                                <>
+                                    <Sparkles className="mr-2 size-3" />
+                                    Smart Map Fields
+                                </>
+                            )}
+                        </Button>
+                    )}
                     <Button
                         size="lg"
                         className={cn(

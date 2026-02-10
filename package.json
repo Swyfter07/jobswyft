@@ -5,9 +5,9 @@
   "description": "AI-powered job application assistant",
   "scripts": {
     "dev:web": "pnpm --filter @jobswyft/web dev",
-    "dev:extension": "pnpm --filter @jobswyft/extension dev",
+    "dev:extension": "pnpm --filter @jobswyft/extension-v3 dev",
     "build:web": "pnpm --filter @jobswyft/web build",
-    "build:extension": "pnpm --filter @jobswyft/extension build",
+    "build:extension": "pnpm --filter @jobswyft/extension-v3 build",
     "build:ui": "pnpm --filter @jobswyft/ui build",
     "lint": "pnpm -r lint",
     "test": "pnpm -r test"

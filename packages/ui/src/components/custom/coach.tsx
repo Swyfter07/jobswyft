@@ -1,11 +1,23 @@
+
 import React, { useState, useRef, useEffect } from "react"
-import { Bot, Send, User } from "lucide-react"
+import { Bot, Send, Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { JobData } from "./job-card"
+// import { ResumeData } from "~/lib/hooks/use-resumes"
+
+export interface ResumeData {
+    id: string
+    fileName: string
+    personalInfo: any
+    skills: string[]
+    experience: any[]
+    education: any[]
+    projects?: any[]
+}
 
 export interface Message {
     id: string
@@ -16,18 +28,23 @@ export interface Message {
 
 export interface CoachProps {
     className?: string
-    initialMessages?: Message[]
+    messages?: Message[]
     onSendMessage?: (message: string) => void
     isLocked?: boolean
+    isTyping?: boolean
+    job?: JobData | null
+    resume?: ResumeData | null
 }
 
 export function Coach({
     className,
-    initialMessages = [],
+    messages = [],
     onSendMessage,
     isLocked = false,
+    isTyping = false,
+    job,
+    resume
 }: CoachProps) {
-    const [messages, setMessages] = useState<Message[]>(initialMessages)
     const [inputValue, setInputValue] = useState("")
     const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -36,34 +53,13 @@ export function Coach({
         if (scrollRef.current) {
             scrollRef.current.scrollIntoView({ behavior: "smooth" })
         }
-    }, [messages])
+    }, [messages, isTyping])
 
     const handleSend = () => {
-        if (!inputValue.trim()) return
+        if (!inputValue.trim() || isTyping) return
 
-        const newMessage: Message = {
-            id: Date.now().toString(),
-            role: "user",
-            content: inputValue,
-            timestamp: new Date(),
-        }
-
-        setMessages((prev) => [...prev, newMessage])
-        setInputValue("")
         onSendMessage?.(inputValue)
-
-        // Mock AI response for demo purposes if not provided
-        if (!onSendMessage) {
-            setTimeout(() => {
-                const aiResponse: Message = {
-                    id: (Date.now() + 1).toString(),
-                    role: "assistant",
-                    content: "I'm a simulated AI coach. In the real app, I'll connect to the backend to answer your questions!",
-                    timestamp: new Date(),
-                }
-                setMessages((prev) => [...prev, aiResponse])
-            }, 1000)
-        }
+        setInputValue("")
     }
 
     const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -106,7 +102,7 @@ export function Coach({
                 <ScrollArea className="flex-1 p-4">
                     <div className="space-y-4">
                         {messages.length === 0 ? (
-                            <div className="flex flex-col items-center justify-center h-[200px] text-center text-muted-foreground space-y-2 opacity-80">
+                            <div className="flex flex-col items-center justify-center py-8 text-center text-muted-foreground space-y-2 opacity-80">
                                 <Bot className="size-8 mb-2 opacity-50" />
                                 <p className="text-sm font-medium">No messages yet</p>
                                 <p className="text-xs max-w-[200px]">
@@ -134,6 +130,12 @@ export function Coach({
                                 </div>
                             ))
                         )}
+                        {isTyping && (
+                            <div className="flex items-center gap-2 text-xs text-muted-foreground self-start pl-2">
+                                <Loader2 className="size-3 animate-spin" />
+                                <span>Coach is typing...</span>
+                            </div>
+                        )}
                         <div ref={scrollRef} />
                     </div>
                 </ScrollArea>
@@ -150,14 +152,14 @@ export function Coach({
                             placeholder={isLocked ? "Locked..." : "Ask a question..."}
                             value={inputValue}
                             onChange={(e) => setInputValue(e.target.value)}
-                            disabled={isLocked}
+                            disabled={isLocked || isTyping}
                             className="flex-1 min-h-[40px] border-border focus-visible:ring-ring"
                             autoComplete="off"
                         />
                         <Button
                             type="submit"
                             size="icon"
-                            disabled={!inputValue.trim() || isLocked}
+                            disabled={!inputValue.trim() || isLocked || isTyping}
                             className="bg-gradient-to-br from-orange-600 via-orange-500 to-orange-400 hover:from-orange-700 hover:via-orange-600 hover:to-orange-500 text-white shadow-sm shrink-0 border-t border-white/20 hover:shadow-lg hover:shadow-orange-500/40 transition-all duration-300"
                         >
                             <Send className="size-4" />

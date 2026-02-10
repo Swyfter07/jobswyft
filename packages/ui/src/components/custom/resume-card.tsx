@@ -2,30 +2,54 @@
 
 import * as React from "react"
 import {
-  ChevronDown,
-  ChevronUp,
-  Copy,
-  Check,
-  Upload,
-  Trash2,
   User,
-  Wrench,
-  Briefcase,
-  GraduationCap,
-  Award,
-  FolderOpen,
   Mail,
   Phone,
   MapPin,
   Globe,
   ExternalLink,
+  ChevronDown,
+  ChevronUp,
   FileText,
+  Briefcase,
+  GraduationCap,
+  Award,
+  Code2,
+  AlertCircle,
+  Check,
+  Ban,
+  UploadCloud,
+  Loader2,
+  FileIcon,
+  XIcon,
+  Copy,
+  Trash2,
+  Wrench,
+  FolderOpen,
   Layers,
+  RotateCcw,
+  Upload,
+  X,
 } from "lucide-react"
 
 import { cn } from "@/lib/utils"
+// UI Components
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { Progress } from "@/components/ui/progress"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Card,
   CardContent,
@@ -38,18 +62,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { Separator } from "@/components/ui/separator"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Dialog,
   DialogContent,
@@ -137,6 +150,7 @@ interface ResumeEducationEntry {
   startDate: string
   endDate: string
   gpa?: string
+  description?: string
   highlights?: string[]
 }
 
@@ -184,6 +198,14 @@ interface ResumeCardProps {
   onUpload?: () => void
   /** Called when user confirms delete */
   onDelete?: (id: string) => void
+  /** Called when user clicks reparse */
+  onReparse?: (id: string) => void
+  /** Whether parsing is in progress */
+  isParsing?: boolean
+  /** Parsing progress 0-100, shows indeterminate if undefined */
+  parseProgress?: number
+  /** Error message from parsing failure */
+  parseError?: string
   /** Max height for the scrollable content area */
   maxHeight?: string
   /** Compact mode - collapses sections when job is detected */
@@ -194,6 +216,10 @@ interface ResumeCardProps {
   isOpen?: boolean
   /** Callback for when open state changes (manual or controlled) */
   onOpenChange?: (open: boolean) => void
+  /** If true, hides the default "Resume Blocks" accordion section */
+  hideBlocks?: boolean
+  /** Custom content to render (e.g., buttons) below the header or instead of blocks */
+  customContent?: React.ReactNode
   className?: string
 }
 
@@ -227,7 +253,7 @@ function CopyButton({
           }}
         >
           {copied ? (
-            <Check className="size-3 text-primary" />
+            <Check className="size-3 text-green-600 dark:text-green-500" />
           ) : (
             <Copy className="size-3" />
           )}
@@ -265,12 +291,12 @@ function CopyChip({
             "bg-transparent px-2 py-0.5 text-xs font-medium text-foreground", // Transparent bg, tighter padding
             "transition-all hover:bg-accent hover:text-accent-foreground", // Standard shadcn hover with all transitions
             "active:scale-[0.97] cursor-pointer select-none",
-            copied && "border-primary/50 bg-primary/10 text-primary scale-105 animate-pulse", // Enhanced feedback
+            copied && "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400 scale-105 shadow-sm ring-1 ring-green-500/20", // Enhanced high-contrast feedback
             className
           )}
         >
           {copied ? (
-            <Check className="size-3 shrink-0 text-primary" />
+            <Check className="size-3 shrink-0 text-green-600 dark:text-green-500" />
           ) : icon ? (
             <span className="shrink-0 text-muted-foreground [&>svg]:size-3">
               {icon}
@@ -373,7 +399,7 @@ function ResumeSection({
       </CollapsibleTrigger>
       <CollapsibleContent className="overflow-hidden data-[state=open]:animate-accordion-down data-[state=closed]:animate-accordion-up">
         {/* Expanded content wrapper animation */}
-        <div className="px-2 py-0.5 animate-in fade-in-0 slide-in-from-top-2">
+        <div className="px-2 py-0.5">
           {children}
         </div>
       </CollapsibleContent>
@@ -383,9 +409,62 @@ function ResumeSection({
 
 // ─── Personal Info Content ──────────────────────────────────────────
 
-function PersonalInfoContent({ data }: { data: ResumePersonalInfo }) {
+export function PersonalInfoContent({ data, isEditing, onChange }: {
+  data: ResumePersonalInfo
+  isEditing?: boolean
+  onChange?: (data: ResumePersonalInfo) => void
+}) {
   const { variant } = useResumeCardContext()
   const styles = getVariantStyles(variant)
+
+  const handleChange = (field: keyof ResumePersonalInfo, value: string) => {
+    onChange?.({ ...data, [field]: value })
+  }
+
+  if (isEditing) {
+    return (
+      <div className="grid grid-cols-1 gap-2 p-1">
+        <Input
+          value={data.fullName}
+          onChange={(e) => handleChange('fullName', e.target.value)}
+          placeholder="Full Name"
+          className="h-8 text-sm"
+        />
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            value={data.email}
+            onChange={(e) => handleChange('email', e.target.value)}
+            placeholder="Email"
+            className="h-8 text-xs"
+          />
+          <Input
+            value={data.phone}
+            onChange={(e) => handleChange('phone', e.target.value)}
+            placeholder="Phone"
+            className="h-8 text-xs"
+          />
+        </div>
+        <Input
+          value={data.location}
+          onChange={(e) => handleChange('location', e.target.value)}
+          placeholder="Location"
+          className="h-8 text-xs"
+        />
+        <Input
+          value={data.linkedin}
+          onChange={(e) => handleChange('linkedin', e.target.value)}
+          placeholder="LinkedIn URL"
+          className="h-8 text-xs"
+        />
+        <Input
+          value={data.website}
+          onChange={(e) => handleChange('website', e.target.value)}
+          placeholder="Website URL"
+          className="h-8 text-xs"
+        />
+      </div>
+    )
+  }
 
   const items = [
     { icon: <User />, value: data.fullName, label: data.fullName },
@@ -428,75 +507,97 @@ function PersonalInfoContent({ data }: { data: ResumePersonalInfo }) {
 
 // ─── Skills Content ─────────────────────────────────────────────────
 
-function SkillsContent({ skills }: { skills: string[] }) {
-  const [showAll, setShowAll] = React.useState(false)
-  const VISIBLE_LIMIT = 6
-  const hasMore = skills.length > VISIBLE_LIMIT
-  const visibleSkills = showAll ? skills : skills.slice(0, VISIBLE_LIMIT)
-  const hiddenCount = skills.length - VISIBLE_LIMIT
+export function SkillsContent({ skills, isEditing, onChange }: {
+  skills: string[]
+  isEditing?: boolean
+  onChange?: (skills: string[]) => void
+}) {
+  if (isEditing) {
+    return (
+      <Textarea
+        value={skills.join(", ")}
+        onChange={(e) => onChange?.(e.target.value.split(",").map(s => s.trim()).filter(Boolean))}
+        placeholder="Enter skills separated by commas..."
+        className="min-h-[100px] text-xs"
+      />
+    )
+  }
 
   return (
-    <div className="space-y-2">
-      <div className="flex flex-wrap gap-2">
-        {visibleSkills.map((skill) => (
-          <CopyChip key={skill} value={skill} />
-        ))}
-      </div>
-      {hasMore && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="text-xs text-muted-foreground hover:text-primary transition-colors flex items-center gap-1"
-        >
-          {showAll ? (
-            <>Show less</>
-          ) : (
-            <>
-              <span className="text-primary">+{hiddenCount}</span> more skills
-            </>
-          )}
-        </button>
-      )}
+    <div className="flex flex-wrap gap-2">
+      {skills.map((skill) => (
+        <CopyChip key={skill} value={skill} />
+      ))}
     </div>
   )
 }
 
 // ─── Experience Content ─────────────────────────────────────────────
 
-function ExperienceContent({
+export function ExperienceContent({
   entries,
+  isEditing,
+  onChange
 }: {
   entries: ResumeExperienceEntry[]
+  isEditing?: boolean
+  onChange?: (entries: ResumeExperienceEntry[]) => void
 }) {
   const [expandedIndex, setExpandedIndex] = React.useState<number | null>(0)
-  const [showAll, setShowAll] = React.useState(false)
-  const VISIBLE_LIMIT = 2
-  const hasMore = entries.length > VISIBLE_LIMIT
-  const visibleEntries = showAll ? entries : entries.slice(0, VISIBLE_LIMIT)
-  const hiddenCount = entries.length - VISIBLE_LIMIT
+
+  const handleEntryChange = (index: number, newEntry: ResumeExperienceEntry) => {
+    const newEntries = [...entries]
+    newEntries[index] = newEntry
+    onChange?.(newEntries)
+  }
+
+  const handleAddObject = () => {
+    onChange?.([
+      ...entries,
+      {
+        company: "New Company",
+        title: "Position",
+        startDate: "",
+        endDate: "",
+        description: "",
+        highlights: []
+      }
+    ])
+  }
+
+  const handleDelete = (index: number) => {
+    const newEntries = [...entries]
+    newEntries.splice(index, 1)
+    onChange?.(newEntries)
+  }
 
   return (
     <div className="space-y-2">
-      {visibleEntries.map((entry, idx) => (
-        <ExperienceEntryCard
-          key={`${entry.company}-${idx}`}
-          entry={entry}
-          isOpen={expandedIndex === idx}
-          onOpenChange={(isOpen) => setExpandedIndex(isOpen ? idx : null)}
-        />
-      ))}
-      {hasMore && (
-        <button
-          onClick={() => setShowAll(!showAll)}
-          className="w-full text-xs text-muted-foreground hover:text-primary transition-colors flex items-center justify-center gap-1 py-2 border border-dashed border-muted-foreground/30 rounded-lg hover:border-primary/50"
-        >
-          {showAll ? (
-            <>Show less</>
-          ) : (
-            <>
-              View all <span className="text-primary font-medium">{entries.length}</span> positions
-            </>
+      {entries.map((entry, idx) => (
+        <div key={`${entry.company}-${idx}`} className="relative group">
+          <ExperienceEntryCard
+            entry={entry}
+            isOpen={isEditing ? true : expandedIndex === idx}
+            onOpenChange={(isOpen) => setExpandedIndex(isOpen ? idx : null)}
+            isEditing={isEditing}
+            onChange={(updated) => handleEntryChange(idx, updated)}
+          />
+          {isEditing && (
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              onClick={() => handleDelete(idx)}
+            >
+              <Trash2 className="size-3" />
+            </Button>
           )}
-        </button>
+        </div>
+      ))}
+      {isEditing && (
+        <Button onClick={handleAddObject} variant="outline" size="sm" className="w-full border-dashed text-xs h-8">
+          + Add Position
+        </Button>
       )}
     </div>
   )
@@ -506,10 +607,14 @@ function ExperienceEntryCard({
   entry,
   isOpen,
   onOpenChange,
+  isEditing,
+  onChange
 }: {
   entry: ResumeExperienceEntry
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  isEditing?: boolean
+  onChange?: (entry: ResumeExperienceEntry) => void
 }) {
   const copyText = [
     `${entry.title} at ${entry.company}`,
@@ -517,6 +622,90 @@ function ExperienceEntryCard({
     entry.description,
     ...entry.highlights.map((h) => `- ${h}`),
   ].join("\n")
+
+  const handleChange = (field: keyof ResumeExperienceEntry, value: any) => {
+    onChange?.({ ...entry, [field]: value })
+  }
+
+  const handleHighlightChange = (idx: number, val: string) => {
+    const newHighlights = [...entry.highlights]
+    newHighlights[idx] = val
+    handleChange('highlights', newHighlights)
+  }
+
+  if (isEditing) {
+    return (
+      <div className="p-3 border rounded-lg bg-card space-y-3 relative">
+        <Input
+          value={entry.title}
+          onChange={(e) => handleChange('title', e.target.value)}
+          className="font-bold h-8 text-xs pr-8"
+          placeholder="Job Title"
+        />
+        <Input
+          value={entry.company}
+          onChange={(e) => handleChange('company', e.target.value)}
+          placeholder="Company"
+          className="h-8 text-xs"
+        />
+        <div className="flex gap-2">
+          <Input
+            value={entry.startDate}
+            onChange={(e) => handleChange('startDate', e.target.value)}
+            placeholder="Start"
+            className="h-8 text-xs"
+          />
+          <Input
+            value={entry.endDate}
+            onChange={(e) => handleChange('endDate', e.target.value)}
+            placeholder="End"
+            className="h-8 text-xs"
+          />
+        </div>
+        <Textarea
+          value={entry.description}
+          onChange={(e) => handleChange('description', e.target.value)}
+          placeholder="Description"
+          className="min-h-[60px] text-xs"
+        />
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <span className="text-[10px] font-semibold text-muted-foreground uppercase">Highlights</span>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-5 text-[10px] px-2"
+              onClick={() => handleChange('highlights', [...entry.highlights, ""])}
+            >
+              Add Bullet
+            </Button>
+          </div>
+          {entry.highlights.map((h, i) => (
+            <div key={i} className="flex gap-2 items-start">
+              <div className="mt-2 h-1 w-1 rounded-full bg-primary shrink-0" />
+              <Textarea
+                value={h}
+                onChange={(e) => handleHighlightChange(i, e.target.value)}
+                className="min-h-[40px] text-xs flex-1"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={() => {
+                  const newH = [...entry.highlights];
+                  newH.splice(i, 1);
+                  handleChange('highlights', newH);
+                }}
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
@@ -580,35 +769,90 @@ function ExperienceEntryCard({
 
 // ─── Education Content ──────────────────────────────────────────────
 
-function EducationContent({
+export function EducationContent({
   entries,
+  isEditing,
+  onChange
 }: {
   entries: ResumeEducationEntry[]
+  isEditing?: boolean
+  onChange?: (entries: ResumeEducationEntry[]) => void
 }) {
   const [expandedIndex, setExpandedIndex] = React.useState<number | null>(0)
+
+  const handleEntryChange = (index: number, newEntry: ResumeEducationEntry) => {
+    const newEntries = [...entries]
+    newEntries[index] = newEntry
+    onChange?.(newEntries)
+  }
+
+  const handleAddObject = () => {
+    onChange?.([
+      ...entries,
+      {
+        school: "University",
+        degree: "Degree",
+        startDate: "",
+        endDate: "",
+        gpa: "",
+        description: "",
+        highlights: []
+      }
+    ])
+  }
+
+
+  const handleDelete = (index: number) => {
+    const newEntries = [...entries]
+    newEntries.splice(index, 1)
+    onChange?.(newEntries)
+  }
+
 
   return (
     <div className="space-y-2">
       {entries.map((entry, idx) => (
-        <EducationEntryCard
-          key={`${entry.school}-${idx}`}
-          entry={entry}
-          isOpen={expandedIndex === idx}
-          onOpenChange={(isOpen) => setExpandedIndex(isOpen ? idx : null)}
-        />
+        <div key={`${entry.school}-${idx}`} className="relative group">
+          <EducationEntryCard
+            entry={entry}
+            isOpen={expandedIndex === idx}
+            onOpenChange={(isOpen) => setExpandedIndex(isOpen ? idx : null)}
+            isEditing={isEditing}
+            onChange={(updated) => handleEntryChange(idx, updated)}
+          />
+          {isEditing && (
+            <Button
+              variant="destructive"
+              size="icon"
+              className="absolute top-2 right-2 h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity z-10"
+              onClick={() => handleDelete(idx)}
+            >
+              <Trash2 className="size-3" />
+            </Button>
+          )}
+        </div>
       ))}
+      {isEditing && (
+        <Button onClick={handleAddObject} variant="outline" size="sm" className="w-full border-dashed text-xs h-8">
+          + Add Education
+        </Button>
+      )}
     </div>
   )
 }
 
-function EducationEntryCard({
+export function EducationEntryCard({
   entry,
   isOpen,
   onOpenChange,
+  isEditing,
+  onChange
 }: {
   entry: ResumeEducationEntry
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  isEditing?: boolean
+  onChange?: (entry: ResumeEducationEntry) => void
 }) {
   const copyText = [
     `${entry.degree} — ${entry.school}`,
@@ -618,6 +862,71 @@ function EducationEntryCard({
   ]
     .filter(Boolean)
     .join("\n")
+
+  const handleChange = (field: keyof ResumeEducationEntry, value: any) => {
+    onChange?.({ ...entry, [field]: value })
+  }
+
+  if (isEditing) {
+    return (
+      <Card className="p-3 bg-muted/30 relative">
+        <div className="space-y-3">
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-muted-foreground uppercase">School</label>
+              <Input
+                value={entry.school}
+                onChange={(e) => handleChange('school', e.target.value)}
+                className="h-8 text-xs bg-background"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-muted-foreground uppercase">Degree</label>
+              <Input
+                value={entry.degree}
+                onChange={(e) => handleChange('degree', e.target.value)}
+                className="h-8 text-xs bg-background"
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-muted-foreground uppercase">Start Date</label>
+              <Input
+                value={entry.startDate}
+                onChange={(e) => handleChange('startDate', e.target.value)}
+                className="h-8 text-xs bg-background"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="text-[10px] font-medium text-muted-foreground uppercase">End Date</label>
+              <Input
+                value={entry.endDate}
+                onChange={(e) => handleChange('endDate', e.target.value)}
+                className="h-8 text-xs bg-background"
+              />
+            </div>
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-medium text-muted-foreground uppercase">GPA</label>
+            <Input
+              value={entry.gpa}
+              onChange={(e) => handleChange('gpa', e.target.value)}
+              className="h-8 text-xs bg-background"
+            />
+          </div>
+          <div className="space-y-1">
+            <label className="text-[10px] font-medium text-muted-foreground uppercase">Description</label>
+            <Textarea
+              value={entry.description}
+              onChange={(e) => handleChange('description', e.target.value)}
+              className="min-h-[60px] text-xs bg-background"
+            />
+          </div>
+        </div>
+      </Card>
+    )
+  }
 
   return (
     <Collapsible open={isOpen} onOpenChange={onOpenChange}>
@@ -767,7 +1076,7 @@ function ProjectEntryCard({
                 )}
               </div>
               <div className="flex flex-wrap gap-1 mt-1">
-                {entry.techStack.slice(0, 3).map((tech) => (
+                {entry.techStack.map((tech) => (
                   <Badge
                     key={tech}
                     variant="secondary"
@@ -776,14 +1085,6 @@ function ProjectEntryCard({
                     {tech}
                   </Badge>
                 ))}
-                {entry.techStack.length > 3 && (
-                  <Badge
-                    variant="outline"
-                    className="h-4 px-1.5 text-[10px] font-normal"
-                  >
-                    +{entry.techStack.length - 3}
-                  </Badge>
-                )}
               </div>
             </div>
           </button>
@@ -842,11 +1143,17 @@ function ResumeCard({
   onResumeSelect,
   onUpload,
   onDelete,
+  onReparse,
+  isParsing = false,
+  parseProgress,
+  parseError,
   maxHeight = "600px",
   isCompact = false,
   isCollapsible = false,
   isOpen: controlledIsOpen,
   onOpenChange,
+  hideBlocks = false,
+  customContent,
   className,
 }: ResumeCardProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
@@ -862,8 +1169,17 @@ function ResumeCard({
     onOpenChange?.(open)
   }
   // In compact mode, collapse all sections by default; otherwise expand personal-info
-  const [expandedSection, setExpandedSection] = React.useState<string | null>(isCompact ? null : "personal-info")
+  const [expandedSection, setExpandedSection] = React.useState<string | null>(null)
+  const [isBlocksOpen, setIsBlocksOpen] = React.useState(false)  // Resume Blocks controlled state
   const styles = getVariantStyles(variant)
+
+  // Reset blocks state when the outer card collapses
+  React.useEffect(() => {
+    if (!isOpen) {
+      setIsBlocksOpen(false)
+      setExpandedSection(null)
+    }
+  }, [isOpen])
 
   const handleAccordionChange = (sectionId: string) => (isOpen: boolean) => {
     if (isOpen) {
@@ -902,7 +1218,7 @@ function ResumeCard({
 
   const content = (
     <>
-      <CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b px-2 py-1">
+      <CardHeader className={cn("flex flex-row items-center gap-2 space-y-0 px-2 py-1", !hideBlocks && "border-b")}>
         <Select
           value={activeResumeId}
           onValueChange={(val) => onResumeSelect?.(val)}
@@ -960,115 +1276,184 @@ function ResumeCard({
               <TooltipContent>Delete Resume</TooltipContent>
             </Tooltip>
           )}
+
+          {activeResumeId && onReparse && (
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className={cn("h-8 w-8 text-muted-foreground", isParsing && "animate-spin")}
+                  onClick={() => onReparse(activeResumeId)}
+                  disabled={isParsing}
+                >
+                  <Wrench className="size-4" />
+                  <span className="sr-only">Reparse</span>
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>Reparse with AI</TooltipContent>
+            </Tooltip>
+          )}
         </div>
       </CardHeader>
 
       <CardContent className="p-0">
-        {!resumeData ? (
+        {isParsing ? (
+          <div className="p-6 space-y-4">
+            <div className="flex items-center gap-3">
+              <Loader2 className="size-5 text-primary animate-spin" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-foreground">Parsing Resume...</p>
+                <p className="text-xs text-muted-foreground">Extracting skills, experience, and education</p>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                {parseProgress !== undefined ? (
+                  <div
+                    className="h-full bg-primary transition-all duration-300 rounded-full"
+                    style={{ width: `${parseProgress}%` }}
+                  />
+                ) : (
+                  <div className="h-full w-1/3 bg-primary rounded-full animate-[slidingBar_1.5s_ease-in-out_infinite]" />
+                )}
+              </div>
+              {parseProgress !== undefined && (
+                <p className="text-xs text-muted-foreground text-right">{parseProgress}%</p>
+              )}
+            </div>
+          </div>
+        ) : parseError ? (
+          <div className="p-6 space-y-4 text-center">
+            <div className="flex size-12 items-center justify-center rounded-full bg-destructive/10 mx-auto">
+              <AlertCircle className="size-6 text-destructive" />
+            </div>
+            <div className="space-y-1">
+              <p className="text-sm font-semibold text-foreground">Parse Failed</p>
+              <p className="text-sm text-muted-foreground">{parseError}</p>
+            </div>
+            {activeResumeId && onReparse && (
+              <Button variant="outline" size="sm" onClick={() => onReparse(activeResumeId)}>
+                <RotateCcw className="size-4 mr-2" />
+                Try Again
+              </Button>
+            )}
+          </div>
+        ) : !resumeData ? (
           <ResumeEmptyState onUpload={onUpload} />
         ) : (
-          <ScrollArea style={{ maxHeight }}>
-            <div className="px-2 pb-2">
-              <ResumeSection
-                icon={<Layers />}
-                title="Resume Blocks"
-                count={totalSections}
-                defaultOpen={!isCompact}
-              >
-                <div className="space-y-1">
+          <>
+            {!hideBlocks && (
+              <ScrollArea style={{ maxHeight }}>
+                <div className="px-2 pb-2">
                   <ResumeSection
-                    icon={<User />}
-                    title="Personal Info"
-                    count={
-                      Object.values(resumeData.personalInfo).filter(Boolean)
-                        .length
-                    }
-                    copyAllValue={personalInfoCopyAll}
-                    open={expandedSection === "personal-info"}
-                    onOpenChange={handleAccordionChange("personal-info")}
+                    icon={<Layers />}
+                    title="Resume Blocks"
+                    count={totalSections}
+                    open={isBlocksOpen}
+                    onOpenChange={setIsBlocksOpen}
                   >
-                    <PersonalInfoContent data={resumeData.personalInfo} />
-                  </ResumeSection>
-
-                  <Separator className="my-0.5" />
-
-                  <ResumeSection
-                    icon={<Wrench />}
-                    title="Skills"
-                    count={resumeData.skills.length}
-                    copyAllValue={skillsCopyAll}
-                    open={expandedSection === "skills"}
-                    onOpenChange={handleAccordionChange("skills")}
-                  >
-                    <SkillsContent skills={resumeData.skills} />
-                  </ResumeSection>
-
-                  {resumeData.experience.length > 0 && (
-                    <>
-                      <Separator className="my-0.5 opacity-50" />
+                    <div className="space-y-1">
                       <ResumeSection
-                        icon={<Briefcase />}
-                        title="Experience"
-                        count={resumeData.experience.length}
-                        open={expandedSection === "experience"}
-                        onOpenChange={handleAccordionChange("experience")}
+                        icon={<User />}
+                        title="Personal Info"
+                        count={
+                          Object.values(resumeData.personalInfo).filter(Boolean)
+                            .length
+                        }
+                        copyAllValue={personalInfoCopyAll}
+                        open={expandedSection === "personal-info"}
+                        onOpenChange={handleAccordionChange("personal-info")}
                       >
-                        <ExperienceContent entries={resumeData.experience} />
+                        <PersonalInfoContent data={resumeData.personalInfo} />
                       </ResumeSection>
-                    </>
-                  )}
 
-                  {resumeData.education.length > 0 && (
-                    <>
                       <Separator className="my-0.5" />
-                      <ResumeSection
-                        icon={<GraduationCap />}
-                        title="Education"
-                        count={resumeData.education.length}
-                        open={expandedSection === "education"}
-                        onOpenChange={handleAccordionChange("education")}
-                      >
-                        <EducationContent entries={resumeData.education} />
-                      </ResumeSection>
-                    </>
-                  )}
 
-                  {resumeData.certifications &&
-                    resumeData.certifications.length > 0 && (
-                      <>
-                        <Separator className="my-0.5" />
-                        <ResumeSection
-                          icon={<Award />}
-                          title="Certifications"
-                          count={resumeData.certifications.length}
-                          open={expandedSection === "certifications"}
-                          onOpenChange={handleAccordionChange("certifications")}
-                        >
-                          <CertificationsContent
-                            entries={resumeData.certifications}
-                          />
-                        </ResumeSection>
-                      </>
-                    )}
-
-                  {resumeData.projects && resumeData.projects.length > 0 && (
-                    <>
-                      <Separator className="my-0.5" />
                       <ResumeSection
-                        icon={<FolderOpen />}
-                        title="Projects"
-                        count={resumeData.projects.length}
-                        open={expandedSection === "projects"}
-                        onOpenChange={handleAccordionChange("projects")}
+                        icon={<Wrench />}
+                        title="Skills"
+                        count={resumeData.skills.length}
+                        copyAllValue={skillsCopyAll}
+                        open={expandedSection === "skills"}
+                        onOpenChange={handleAccordionChange("skills")}
                       >
-                        <ProjectsContent entries={resumeData.projects} />
+                        <SkillsContent skills={resumeData.skills} />
                       </ResumeSection>
-                    </>
-                  )}
+
+                      {resumeData.experience.length > 0 && (
+                        <>
+                          <Separator className="my-0.5 opacity-50" />
+                          <ResumeSection
+                            icon={<Briefcase />}
+                            title="Experience"
+                            count={resumeData.experience.length}
+                            open={expandedSection === "experience"}
+                            onOpenChange={handleAccordionChange("experience")}
+                          >
+                            <ExperienceContent entries={resumeData.experience} />
+                          </ResumeSection>
+                        </>
+                      )}
+
+                      {resumeData.education.length > 0 && (
+                        <>
+                          <Separator className="my-0.5" />
+                          <ResumeSection
+                            icon={<GraduationCap />}
+                            title="Education"
+                            count={resumeData.education.length}
+                            open={expandedSection === "education"}
+                            onOpenChange={handleAccordionChange("education")}
+                          >
+                            <EducationContent entries={resumeData.education} />
+                          </ResumeSection>
+                        </>
+                      )}
+
+                      {resumeData.certifications &&
+                        resumeData.certifications.length > 0 && (
+                          <>
+                            <Separator className="my-0.5" />
+                            <ResumeSection
+                              icon={<Award />}
+                              title="Certifications"
+                              count={resumeData.certifications.length}
+                              open={expandedSection === "certifications"}
+                              onOpenChange={handleAccordionChange("certifications")}
+                            >
+                              <CertificationsContent
+                                entries={resumeData.certifications}
+                              />
+                            </ResumeSection>
+                          </>
+                        )}
+
+                      {resumeData.projects && resumeData.projects.length > 0 && (
+                        <>
+                          <Separator className="my-0.5" />
+                          <ResumeSection
+                            icon={<FolderOpen />}
+                            title="Projects"
+                            count={resumeData.projects.length}
+                            open={expandedSection === "projects"}
+                            onOpenChange={handleAccordionChange("projects")}
+                          >
+                            <ProjectsContent entries={resumeData.projects} />
+                          </ResumeSection>
+                        </>
+                      )}
+                    </div>
+                  </ResumeSection>
                 </div>
-              </ResumeSection>
-            </div>
-          </ScrollArea>
+              </ScrollArea>
+            )}
+            {customContent && (
+              <div className="px-2 pb-2">
+                {customContent}
+              </div>
+            )}
+          </>
         )}
       </CardContent>
     </>
@@ -1088,6 +1473,7 @@ function ResumeCard({
           isCollapsible={isCollapsible}
           isOpen={isOpen}
           onOpenChange={setIsOpen}
+          className={hideBlocks ? "border-t-0" : undefined}
         >
           {content}
         </ResumeCardCollapsibleWrapper>
@@ -1154,11 +1540,13 @@ function ResumeCardCollapsibleWrapper({
   isOpen,
   onOpenChange,
   children,
+  className,
 }: {
   isCollapsible: boolean
   isOpen: boolean
   onOpenChange: (open: boolean) => void
   children: React.ReactNode
+  className?: string
 }) {
   if (!isCollapsible) return <>{children}</>
 
@@ -1181,7 +1569,8 @@ function ResumeCardCollapsibleWrapper({
             // Unexpanded state overrides
             "group-data-[state=closed]/collapsible:bg-secondary/40",
             "group-data-[state=closed]/collapsible:hover:bg-secondary/60",
-            "group-data-[state=closed]/collapsible:text-secondary-foreground"
+            "group-data-[state=closed]/collapsible:text-secondary-foreground",
+            className
           )}
         >
           <div className="flex items-center gap-1.5 text-muted-foreground/70 group-hover/toggle:text-primary transition-colors">

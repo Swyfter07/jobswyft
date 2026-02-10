@@ -21,6 +21,7 @@ import { Building, MapPin, Clock, Brain, Sparkles, Pencil, X, ChevronDown, Bookm
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
 export interface JobData {
+    id?: string
     title: string
     company: string
     location: string
@@ -28,6 +29,10 @@ export interface JobData {
     postedAt?: string
     description?: string
     logo?: string
+    type?: string
+    workspaceType?: string
+    url?: string
+    status?: 'saved' | 'applied' | 'interviewing' | 'offer' | 'rejected'
 }
 
 export interface MatchData {
@@ -46,20 +51,42 @@ interface JobCardProps extends React.HTMLAttributes<HTMLDivElement> {
     onAnalyze?: (data: Partial<JobData>) => void
     onSave?: () => void
     isSaved?: boolean
+    isScanning?: boolean
+    onScan?: () => void
+    isAnalyzing?: boolean
+    isAutoScanEnabled?: boolean
+    onToggleAutoScan?: () => void
 }
 
 // ─── Sub-Components ─────────────────────────────────────────────────────────
 
-function MatchIndicator({ score }: { score: number }) {
+function MatchIndicator({ score, isLoading }: { score?: number, isLoading?: boolean }) {
+    if (isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center gap-1.5 animate-tab-content min-w-[60px]">
+                {/* Loading state ring */}
+                <div className="p-1 rounded-full bg-muted/20 shadow-lg">
+                    <div className="flex size-12 shrink-0 items-center justify-center rounded-full bg-muted/10 shadow-inner">
+                        <div className="h-5 w-5 border-2 border-primary/30 border-t-primary rounded-full animate-spin" />
+                    </div>
+                </div>
+                <span className="text-[10px] font-medium text-muted-foreground uppercase tracking-tight leading-none text-center whitespace-nowrap animate-pulse">
+                    Analyzing
+                </span>
+            </div>
+        )
+    }
+
+    const safeScore = score ?? 0
     let colorClass = "text-red-600 dark:text-red-400"
     let ringGradient = "from-red-200 via-red-100 to-red-200 dark:from-red-800 dark:via-red-900 dark:to-red-800"
     let bgGradient = "from-red-50 to-red-100 dark:from-red-950 dark:to-red-900"
 
-    if (score >= 80) {
+    if (safeScore >= 80) {
         colorClass = "text-green-600 dark:text-green-400"
         ringGradient = "from-green-200 via-green-100 to-green-200 dark:from-green-800 dark:via-green-900 dark:to-green-800"
         bgGradient = "from-green-50 to-green-100 dark:from-green-950 dark:to-green-900"
-    } else if (score >= 50) {
+    } else if (safeScore >= 50) {
         colorClass = "text-yellow-600 dark:text-yellow-400"
         ringGradient = "from-yellow-200 via-yellow-100 to-yellow-200 dark:from-yellow-800 dark:via-yellow-900 dark:to-yellow-800"
         bgGradient = "from-yellow-50 to-yellow-100 dark:from-yellow-950 dark:to-yellow-900"
@@ -75,11 +102,11 @@ function MatchIndicator({ score }: { score: number }) {
                     colorClass,
                     bgGradient
                 )}>
-                    {score}%
+                    {safeScore}%
                 </div>
             </div>
             <span className="text-[11px] font-bold text-muted-foreground uppercase tracking-tight leading-none text-center whitespace-nowrap">
-                {score >= 80 ? "Strong fit" : score >= 50 ? "Good fit" : "Weak fit"}
+                {safeScore >= 80 ? "Strong fit" : safeScore >= 50 ? "Good fit" : "Weak fit"}
             </span>
         </div>
     )
@@ -103,6 +130,11 @@ export function JobCard({
     onAnalyze,
     onSave,
     isSaved = false,
+    isScanning = false,
+    onScan,
+    isAnalyzing = false,
+    isAutoScanEnabled = true,
+    onToggleAutoScan,
     ...props
 }: JobCardProps) {
     // Local state for edit mode
@@ -112,8 +144,25 @@ export function JobCard({
     const [description, setDescription] = React.useState(job.description)
     const [showDescription, setShowDescription] = React.useState(false)
 
+    // Sync props to state if job changes
+    React.useEffect(() => {
+        setTitle(job.title)
+        setCompany(job.company)
+        setDescription(job.description)
+    }, [job])
+
+    // Sync isEditing state with prop
+    React.useEffect(() => {
+        setIsEditing(initialIsEditing)
+    }, [initialIsEditing])
+
     return (
-        <Card className={cn("w-full overflow-hidden dark:bg-card p-0 gap-0 shadow-xl", className)} {...props}>
+        <Card className={cn("w-full overflow-hidden dark:bg-card p-0 gap-0 shadow-xl relative", className)} {...props}>
+            {isScanning && (
+                <div className="absolute inset-0 bg-background/50 backdrop-blur-[1px] z-50 flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </div>
+            )}
             <CardHeader className="border-b px-4 py-3 bg-emerald-50/50 dark:bg-emerald-950/20 border-emerald-100 dark:border-emerald-900 flex-shrink-0">
                 {/* Top Row: Header & Match */}
                 {/* Top Row: Header & Match */}
@@ -152,21 +201,81 @@ export function JobCard({
                                             <CardTitle className="text-xl font-bold tracking-tight text-blue-700 dark:text-blue-400">
                                                 {job.title}
                                             </CardTitle>
-                                            <Button
-                                                variant="ghost"
-                                                size="icon"
-                                                className="size-6 shrink-0 text-muted-foreground/50 hover:text-foreground"
-                                                onClick={() => setIsEditing(true)}
-                                                title="Edit Job Details"
-                                            >
-                                                <Pencil className="size-3" />
-                                            </Button>
+                                            <div className="flex items-center">
+                                                <Button
+                                                    variant="ghost"
+                                                    size="icon"
+                                                    className="size-6 shrink-0 text-muted-foreground/50 hover:text-foreground"
+                                                    onClick={() => setIsEditing(true)}
+                                                    title="Edit Job Details"
+                                                >
+                                                    <Pencil className="size-3" />
+                                                </Button>
+                                                {onScan && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className="size-6 shrink-0 text-muted-foreground/50 hover:text-foreground ml-1"
+                                                        onClick={onScan}
+                                                        title="Re-scan Job"
+                                                        disabled={isScanning}
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className={cn("lucide lucide-refresh-cw", isScanning && "animate-spin")}
+                                                        >
+                                                            <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8" />
+                                                            <path d="M21 3v5h-5" />
+                                                            <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16" />
+                                                            <path d="M8 16H3v5" />
+                                                        </svg>
+                                                    </Button>
+                                                )}
+                                                {/* Auto-Scan Toggle */}
+                                                {onToggleAutoScan && (
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        className={cn(
+                                                            "size-6 shrink-0 ml-1 transition-colors",
+                                                            isAutoScanEnabled
+                                                                ? "text-primary hover:text-primary/80"
+                                                                : "text-muted-foreground/30 hover:text-muted-foreground"
+                                                        )}
+                                                        onClick={onToggleAutoScan}
+                                                        title={isAutoScanEnabled ? "Auto-scan enabled" : "Auto-scan disabled"}
+                                                    >
+                                                        <svg
+                                                            xmlns="http://www.w3.org/2000/svg"
+                                                            width="12"
+                                                            height="12"
+                                                            viewBox="0 0 24 24"
+                                                            fill="none"
+                                                            stroke="currentColor"
+                                                            strokeWidth="2"
+                                                            strokeLinecap="round"
+                                                            strokeLinejoin="round"
+                                                            className="lucide lucide-zap"
+                                                        >
+                                                            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                                                        </svg>
+                                                    </Button>
+                                                )}
+                                            </div>
                                         </div>
                                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                                             <span className="font-medium">{job.company}</span>
                                         </div>
                                     </div>
-                                    {match && <MatchIndicator score={match.score} />}
+                                    {(match || isAnalyzing) && <MatchIndicator score={match?.score} isLoading={isAnalyzing} />}
                                 </div>
                             </>
                         )}
@@ -238,7 +347,28 @@ export function JobCard({
                             <CollapsibleContent className="overflow-hidden data-[state=closed]:animate-collapsible-up data-[state=open]:animate-collapsible-down">
                                 <div className="space-y-4 pt-2">
                                     {/* Match Details */}
-                                    {match && (
+                                    {isAnalyzing ? (
+                                        <div className="space-y-4 animate-pulse">
+                                            <div className="space-y-2">
+                                                <div className="flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                                                    <div className="size-4 bg-muted rounded-full" />
+                                                    <div className="h-4 w-24 bg-muted rounded" />
+                                                </div>
+                                                <div className="space-y-2">
+                                                    <div className="h-3 w-full bg-muted/60 rounded" />
+                                                    <div className="h-3 w-3/4 bg-muted/60 rounded" />
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2">
+                                                <div className="h-3 w-20 bg-muted rounded" />
+                                                <div className="flex gap-2">
+                                                    <div className="h-5 w-16 bg-muted/40 rounded-full" />
+                                                    <div className="h-5 w-20 bg-muted/40 rounded-full" />
+                                                    <div className="h-5 w-14 bg-muted/40 rounded-full" />
+                                                </div>
+                                            </div>
+                                        </div>
+                                    ) : match && (
                                         <div className="space-y-3">
                                             <div className="flex items-center gap-2 text-sm font-semibold text-foreground">
                                                 <Brain className="size-4 text-blue-600 dark:text-blue-400" />

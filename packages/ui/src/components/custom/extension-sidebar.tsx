@@ -1,11 +1,23 @@
 import React from "react"
-import { Search, Sparkles, FormInput, Bot, ChevronUp } from "lucide-react"
+import { Search, Sparkles, FormInput, Bot, ChevronUp, Settings } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent } from "@/components/ui/tabs"
 import { CreditBar, CreditBarProps } from "./credit-bar"
 import { SidebarTabs } from "./sidebar-tabs"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "@/components/ui/dialog"
 
 export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivElement> {
+    /** Mode: 'sidepanel' for Chrome sidepanel, 'overlay' for injected overlay */
+    mode?: 'sidepanel' | 'overlay'
     header: React.ReactNode
     contextContent?: React.ReactNode // Persistent top section (e.g. Resume)
     scanContent?: React.ReactNode
@@ -22,6 +34,8 @@ export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivEleme
         maxCredits?: number
         onBuyMore?: () => void
     }
+    apiKey?: string
+    onApiKeyChange?: (key: string) => void
 }
 
 function TabIcon({ locked, children }: { locked?: boolean; children: React.ReactNode }) {
@@ -33,6 +47,7 @@ function TabIcon({ locked, children }: { locked?: boolean; children: React.React
 }
 
 export function ExtensionSidebar({
+    mode = 'overlay',
     header,
     contextContent,
     scanContent,
@@ -43,16 +58,59 @@ export function ExtensionSidebar({
     defaultTab = "scan",
     creditBar,
     className,
+    apiKey,
+    onApiKeyChange,
+    activeTab,
+    onTabChange,
     ...props
 }: ExtensionSidebarProps) {
     const [internalTab, setInternalTab] = React.useState(defaultTab)
     const [isContextExpanded, setIsContextExpanded] = React.useState(true)
-    const currentTab = props.activeTab ?? internalTab
+    const [sidebarWidth, setSidebarWidth] = React.useState(400)
+    const [isResizingWidth, setIsResizingWidth] = React.useState(false)
+
+    const sidebarRef = React.useRef<HTMLDivElement>(null)
+
+    const currentTab = activeTab ?? internalTab
     const handleTabChange = (val: string) => {
         setInternalTab(val)
-        setIsContextExpanded(false) // Automatically collapse context when switching tabs
-        props.onTabChange?.(val)
+        setIsContextExpanded(false)
+        onTabChange?.(val)
     }
+
+    // Horizontal Resizing (Width)
+    const startWidthResize = React.useCallback((e: React.MouseEvent) => {
+        setIsResizingWidth(true)
+        e.preventDefault()
+    }, [])
+
+
+    React.useEffect(() => {
+        const handleMouseMove = (e: MouseEvent) => {
+            if (isResizingWidth) {
+                const newWidth = window.innerWidth - e.clientX
+                if (newWidth >= 300 && newWidth <= 800) {
+                    setSidebarWidth(newWidth)
+                }
+            }
+        }
+
+        const handleMouseUp = () => {
+            setIsResizingWidth(false)
+        }
+
+        if (isResizingWidth) {
+            window.addEventListener("mousemove", handleMouseMove)
+            window.addEventListener("mouseup", handleMouseUp)
+            document.body.style.cursor = "ew-resize"
+        }
+
+        return () => {
+            window.removeEventListener("mousemove", handleMouseMove)
+            window.removeEventListener("mouseup", handleMouseUp)
+            document.body.style.cursor = "default"
+        }
+    }, [isResizingWidth])
 
     // Auto-collapse logic: Collapse context section when main content is scrolled
     const handleMainScroll = (e: React.UIEvent<HTMLDivElement>) => {
@@ -72,23 +130,41 @@ export function ExtensionSidebar({
 
     return (
         <aside
+            ref={sidebarRef}
+            style={mode === 'overlay' ? { width: `${sidebarWidth}px` } : undefined}
             className={cn(
-                "fixed right-0 top-0 h-screen w-[400px] bg-background flex flex-col z-50 border-l shadow-2xl",
+                "bg-background flex flex-col z-50 transition-shadow",
+                mode === 'overlay' && "fixed right-0 top-0 h-screen border-l shadow-2xl",
+                mode === 'sidepanel' && "w-full h-full",
                 className
             )}
             {...props}
         >
+            {/* Horizontal Resize Handle - only in overlay mode */}
+            {mode === 'overlay' && (
+                <div
+                    onMouseDown={startWidthResize}
+                    className="absolute left-0 top-0 w-1.5 h-full cursor-ew-resize hover:bg-blue-500/30 transition-colors z-50"
+                />
+            )}
+
             {/* Header Section */}
             {!props.children && (
-                <div className="p-2 bg-background z-10">
-                    {header}
+                <div className="p-2 bg-background z-10 flex items-center justify-between relative">
+                    <div className="flex-1">{header}</div>
                 </div>
             )}
 
-            {/* Context Section (e.g. Resume) - Independent Scroll Area (Option 1) */}
+            {/* Context Section (e.g. Resume) - Collapsible */}
             {!props.children && contextContent && (
-                <div className="relative z-20 bg-background">
-                    <div className="max-h-[40vh] overflow-y-auto overflow-x-hidden p-3 transition-all duration-300">
+                <div
+                    className={cn(
+                        "relative z-20 bg-background flex flex-col overflow-hidden",
+                        !isContextExpanded && "h-auto"
+                    )}
+                    style={isContextExpanded ? { maxHeight: "400px" } : {}}
+                >
+                    <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 custom-scrollbar">
                         {enhancedContext}
                     </div>
                 </div>
@@ -116,7 +192,7 @@ export function ExtensionSidebar({
                         <TabsContent value="ai-studio" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
                             {studioContent}
                         </TabsContent>
-                        <TabsContent value="autofill" className="h-full mt-0 p-3 space-y-3 animate-tab-content">
+                        <TabsContent value="autofill" className="mt-0 p-3 pb-0 animate-tab-content">
                             {autofillContent}
                         </TabsContent>
                         <TabsContent value="coach" className="h-full mt-0 p-3 space-y-3 animate-tab-content">

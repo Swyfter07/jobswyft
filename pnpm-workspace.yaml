@@ -1,4 +1,8 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  - 'V2 Code - AntiGrav'
+  - 'V2 Code'
+  - 'V3 Code'
+  - 'V4 Code'
   - '!apps/api'  # Python project managed by uv, not pnpm
