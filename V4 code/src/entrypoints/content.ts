@@ -87,7 +87,7 @@ function stopInspection() {
 function handleInspectionHover(e: MouseEvent) {
     if (!isInspecting || !inspectionOverlay) return;
     const target = e.target as HTMLElement;
-    
+
     // Only highlight inputs, textareas, selects
     if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
         const rect = target.getBoundingClientRect();
@@ -119,11 +119,11 @@ function handleInspectionClick(e: MouseEvent) {
             type: (target as HTMLInputElement).type || target.tagName.toLowerCase()
         };
 
-        chrome.runtime.sendMessage({ 
-            action: 'FIELD_SELECTED', 
-            field: fieldData 
+        chrome.runtime.sendMessage({
+            action: 'FIELD_SELECTED',
+            field: fieldData
         });
-        
+
         stopInspection();
     }
 }
@@ -238,6 +238,13 @@ function detectFormFields(): DetectedField[] {
         } else {
             // No heuristic match -> Treat as a generic "Question"
             // We want to capture these so the user can manually fill or map them
+
+            // NEW: Only detect generic questions if they are text box inputs
+            if (!isTextBoxInput(input)) {
+                processedElements.add(input);
+                return;
+            }
+
             const selector = getCssSelector(input);
             const id = input.id || (input as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`;
 
@@ -268,6 +275,28 @@ function detectFormFields(): DetectedField[] {
     });
 
     return fields;
+}
+
+/**
+ * Helper to determine if an element is a "text box" input
+ */
+function isTextBoxInput(el: HTMLElement): boolean {
+    const tagName = el.tagName.toLowerCase();
+    if (tagName === 'textarea') return true;
+    if (tagName === 'input') {
+        const type = (el as HTMLInputElement).type.toLowerCase();
+        // Standard text-based types
+        return [
+            'text',
+            'email',
+            'tel',
+            'url',
+            'number',
+            'password',
+            'search'
+        ].includes(type) || !type; // Treat missing type as text
+    }
+    return false;
 }
 
 // Helper to map new granular categories to the legacy categories used by AutofillTab
