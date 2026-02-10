@@ -51,5 +51,6 @@ export const STORAGE_KEYS = {
     DARK_MODE: 'job_jet_dark_mode',
     AUTO_ANALYSIS_ENABLED: 'job_jet_auto_analysis_enabled',
     EEO_PREFERENCES: 'job_jet_eeo_preferences',
+    CUSTOM_MAPPINGS: 'job_jet_custom_mappings',
 } as const;
 

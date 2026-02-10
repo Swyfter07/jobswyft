@@ -38,7 +38,7 @@ export function ToastProvider({ children }: ToastProviderProps) {
     return (
         <ToastContext.Provider value={{ toast, dismiss }}>
             {children}
-            <ToastContainer className="bottom-4 right-4">
+            <ToastContainer className="top-4 right-4 z-[100]">
                 {toasts.map((t) => (
                     <Toast
                         key={t.id}

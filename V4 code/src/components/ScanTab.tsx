@@ -50,32 +50,60 @@ export const ScanTab = ({ jobData, onJobUpdate, resumeContent, autoAnalysis = tr
         setIsScanning(true);
         setMatchData(null); // Clear previous match
         try {
-            // Get current tab and send message to content script
+            // Get current tab
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
             if (!tab?.id) {
                 console.error('No active tab found');
                 return;
             }
 
-            // Send message to content script to scrape the page
-            const scrapedData = await chrome.tabs.sendMessage(tab.id, { action: 'SCAN_PAGE' });
+            // Get all frames in the tab
+            const frames = await chrome.webNavigation.getAllFrames({ tabId: tab.id });
+            if (!frames) return;
 
-            if (scrapedData && scrapedData.title) {
+            const scanResults: any[] = [];
+
+            // Query each frame for job data
+            await Promise.all(frames.map(async (frame) => {
+                try {
+                    const scrapedData = await chrome.tabs.sendMessage(
+                        tab.id!,
+                        { action: 'SCAN_PAGE' },
+                        { frameId: frame.frameId }
+                    );
+
+                    if (scrapedData && scrapedData.title) {
+                        scanResults.push({
+                            ...scrapedData,
+                            frameId: frame.frameId,
+                            // Ensure title/desc exist for sorting
+                            descLength: (scrapedData.description || '').length
+                        });
+                    }
+                } catch (e) {
+                    // Ignore errors for frames without content scripts
+                }
+            }));
+
+            // Consolidation Strategy: Pick the one with the longest description (usually the main job content)
+            const bestResult = scanResults.sort((a, b) => b.descLength - a.descLength)[0];
+
+            if (bestResult) {
                 const newJobData = {
-                    title: scrapedData.title || 'Unknown Title',
-                    company: scrapedData.company || 'Unknown Company',
-                    location: scrapedData.location || '',
-                    description: scrapedData.description || '',
+                    title: bestResult.title || 'Unknown Title',
+                    company: bestResult.company || 'Unknown Company',
+                    location: bestResult.location || '',
+                    description: bestResult.description || '',
                     url: url,
                     status: 'saved' as const,
-                    postDate: scrapedData.postedDate || new Date().toISOString(),
-                    salary: scrapedData.salary,
-                    employmentType: scrapedData.employmentType,
+                    postDate: bestResult.postedDate || new Date().toISOString(),
+                    salary: bestResult.salary,
+                    employmentType: bestResult.employmentType,
                 };
 
                 onJobUpdate(newJobData);
             } else {
-                console.warn('No job data scraped from page');
+                console.warn('No job data scraped from any frame');
                 onJobUpdate(null);
             }
         } catch (error) {

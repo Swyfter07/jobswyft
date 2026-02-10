@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
     Autofill,
     AutofillField,
@@ -6,12 +6,29 @@ import {
     SelectContent,
     SelectItem,
     SelectTrigger,
-    SelectValue
+    SelectValue,
+    Button,
+    Card,
+    CardHeader,
+    CardTitle,
+    CardContent,
+    cn
 } from '@jobswyft/ui';
 import { ResumeData, JobData, EEOPreferences, Resume } from '@/types';
-import { openAIService } from '@/services/openai';
+
 import { storageService } from '@/services/storage';
+import { openAIService } from '@/services/openai';
 import { useToast } from './ToastContext';
+import {
+    Loader2,
+    RotateCcw,
+    Zap,
+    RefreshCw,
+    MousePointer2
+} from "lucide-react";
+
+// Fallback for missing currentUrl
+const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
 interface DetectedField {
     id: string;
@@ -23,6 +40,7 @@ interface DetectedField {
     eeoType?: 'veteran' | 'disability' | 'race' | 'gender' | 'sponsorship' | 'authorization';
     jobBoard: string;
     frameId?: number;
+    confidence?: 'high' | 'medium' | 'low';
 }
 
 interface AutofillTabProps {
@@ -34,16 +52,15 @@ interface AutofillTabProps {
 
 export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 }: AutofillTabProps) {
     const { toast } = useToast();
-    const [fields, setFields] = useState<AutofillField[]>([]);
     const [detectedFields, setDetectedFields] = useState<DetectedField[]>([]);
     const [isFilling, setIsFilling] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
-    const [isSmartMapping, setIsSmartMapping] = useState(false);
-    const [showUndoPrompt, setShowUndoPrompt] = useState(false);
+    const [statusMessage, setStatusMessage] = useState<{ title: string; text?: string; type: 'success' | 'info' | 'error' } | null>(null);
+    const [ignoredFieldIds, setIgnoredFieldIds] = useState<Set<string>>(new Set());
     const [previousValues, setPreviousValues] = useState<Array<{ selector: string; value: string }>>([]);
-    const [generatingFieldId, setGeneratingFieldId] = useState<string | null>(null);
     const [eeoPreferences, setEeoPreferences] = useState<EEOPreferences>({});
     const [resumeFieldOverrideId, setResumeFieldOverrideId] = useState<string | null>(null);
+    const lastFillTimestamp = React.useRef<number>(0);
 
     // Derived state for available file inputs
     const availableFileFields = detectedFields.filter(f => f.type === 'file');
@@ -55,7 +72,7 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
 
     // Detect fields when tab becomes active or refreshKey changes
     useEffect(() => {
-        detectFields();
+        detectFields(false);
     }, [refreshKey]);
 
     // Map resume data to field values (Tier 1: Resume Data)
@@ -107,7 +124,7 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
         }
     };
 
-    const detectFields = async () => {
+    const detectFields = async (skipAI = false) => {
         setIsScanning(true);
         try {
             const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -122,6 +139,11 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
 
             const allFields: DetectedField[] = [];
 
+            // Get custom mappings for this domain
+            const url = new URL(tab.url || currentUrl);
+            const domain = url.hostname;
+            const customMaps = await storageService.getCustomMappings(domain);
+
             // Query each frame
             await Promise.all(frames.map(async (frame) => {
                 try {
@@ -133,12 +155,16 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
 
                     if (response?.success && response.fields) {
                         // Tag fields with frameId
-                        const frameFields = response.fields.map((f: DetectedField) => ({
-                            ...f,
-                            frameId: frame.frameId,
-                            // Ensure ID is unique across frames
-                            id: `${f.id}_frame${frame.frameId}`
-                        }));
+                        const frameFields = response.fields.map((f: DetectedField) => {
+                            // Apply custom mapping if exists
+                            const customCat = customMaps[f.selector];
+                            return {
+                                ...f,
+                                frameId: frame.frameId,
+                                id: `${f.id}_frame${frame.frameId}`,
+                                ...(customCat ? { category: customCat as any, confidence: 'high' } : {})
+                            };
+                        });
                         allFields.push(...frameFields);
                     }
                 } catch (e) {
@@ -146,8 +172,18 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                 }
             }));
 
-            if (allFields.length > 0) {
-                setDetectedFields(allFields);
+            // Filter out fields that were explicitly ignored in previous AI segmentation
+            const filteredFields = allFields.filter(f => !ignoredFieldIds.has(f.id));
+
+            if (filteredFields.length > 0) {
+                // Then refine with AI if needed
+                const candidates = filteredFields.filter(f => f.category === 'questions' || f.confidence === 'low');
+                if (candidates.length > 0 && !skipAI) {
+                    await runAISegmentation(filteredFields);
+                } else {
+                    // Only set fields here if we are NOT running AI, OR after AI is done
+                    setDetectedFields(filteredFields);
+                }
 
                 // If we don't have an override yet, check if there's an auto-detected resume field
                 if (!resumeFieldOverrideId) {
@@ -166,14 +202,145 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
         }
     };
 
-    // Update fields whenever dependencies change
+    const [isSegmenting, setIsSegmenting] = useState(false);
+    const [isInspecting, setIsInspecting] = useState(false);
+    const [mappingTarget, setMappingTarget] = useState<any | null>(null);
+
+    /**
+     * Listen for manual field selection from content script
+     */
     useEffect(() => {
-        if (detectedFields.length === 0) {
-            setFields([]);
+        const listener = (message: any) => {
+            if (message.action === 'FIELD_SELECTED') {
+                setMappingTarget(message.field);
+                setIsInspecting(false);
+            }
+        };
+        chrome.runtime.onMessage.addListener(listener);
+        return () => chrome.runtime.onMessage.removeListener(listener);
+    }, []);
+
+    const toggleInspection = async () => {
+        const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+        if (!tab?.id) return;
+
+        if (isInspecting) {
+            await chrome.tabs.sendMessage(tab.id, { action: 'STOP_INSPECTION' });
+            setIsInspecting(false);
+        } else {
+            await chrome.tabs.sendMessage(tab.id, { action: 'START_INSPECTION' });
+            setIsInspecting(true);
+            setStatusMessage({
+                title: "Inspection Mode Active",
+                text: "Click an input field on the page to map it.",
+                type: 'info'
+            });
+        }
+    };
+
+    const handleManualMap = async (category: string) => {
+        if (!mappingTarget) return;
+
+        const newField: DetectedField = {
+            ...mappingTarget,
+            category: category as any,
+            confidence: 'high'
+        };
+
+        // Save to local persistence (Domain-based)
+        const url = new URL(currentUrl);
+        const domain = url.hostname;
+        const currentMaps = await storageService.getCustomMappings(domain);
+
+        await storageService.saveCustomMapping(domain, {
+            ...currentMaps,
+            [mappingTarget.selector]: category
+        });
+
+        // Add to detected fields
+        setDetectedFields(prev => [...prev, newField]);
+        setMappingTarget(null);
+        setStatusMessage({
+            title: "Field Mapped",
+            text: `Saved mapping for ${mappingTarget.label || 'field'}`,
+            type: 'success'
+        });
+        setTimeout(() => setStatusMessage(null), 3000);
+    };
+
+    /**
+     * Run AI Segmentation on unknown/low-confidence fields
+     */
+    const runAISegmentation = async (currentFields: DetectedField[]) => {
+        // Failsafe: Don't run if we just filled (within 3 seconds)
+        if (Date.now() - lastFillTimestamp.current < 3000) {
+            setDetectedFields(currentFields);
             return;
         }
 
-        const autofillFields: AutofillField[] = detectedFields.map((field) => {
+        try {
+            const hasKey = await storageService.getOpenAIKey();
+            if (!hasKey) return;
+
+            // Only analyze 'questions' or low confidence fields to save tokens
+            const candidates = currentFields.filter(f => f.category === 'questions' || f.confidence === 'low');
+            if (candidates.length === 0) return;
+
+            setIsSegmenting(true);
+            setStatusMessage({ title: "Refining Fields", text: "AI is analyzing form fields...", type: 'info' });
+
+            const segmentation = await openAIService.segmentFields(candidates);
+
+            // Apply updates
+            const updatedFields = currentFields.reduce((acc, field) => {
+                const newCat = segmentation[field.id];
+
+
+                // If AI says 'ignore', track it and skip
+                if (newCat === 'ignore') {
+                    setIgnoredFieldIds(prev => new Set([...prev, field.id]));
+                    return acc;
+                }
+
+                // Aggressive Filter: If the label is still just "Question" or "Attach", it's likely a trash field
+                // BUT: Exempt file fields as they are often labeled simple "Attach"
+                if (field.type !== 'file' && (field.label === 'Question' || field.label === 'Attach') && (!newCat || newCat === 'question')) {
+                    return acc;
+                }
+
+                if (newCat) {
+                    let mappedCat: any = newCat;
+                    // Normalize categories to match our state
+                    if (newCat === 'cover_letter') mappedCat = 'resume'; // Group cover letter with resume
+                    if (newCat === 'question') mappedCat = 'questions';
+
+                    acc.push({ ...field, category: mappedCat, confidence: 'high' });
+                } else {
+                    acc.push(field);
+                }
+                return acc;
+            }, [] as DetectedField[]);
+
+            setDetectedFields(updatedFields);
+            setStatusMessage({
+                title: "Form Optimized",
+                text: `Removed ${currentFields.length - updatedFields.length} irrelevant fields.`,
+                type: 'success'
+            });
+            setTimeout(() => setStatusMessage(null), 5000);
+        } catch (e) {
+            console.error('[AutofillTab] Segmentation error:', e);
+        } finally {
+            setIsSegmenting(false);
+        }
+    };
+
+
+    // Derived fields for the UI component (useMemo to prevent rendering lag)
+    const fields = useMemo(() => {
+        if (detectedFields.length === 0) return [];
+
+        return detectedFields.map((field) => {
             // Respect detected category, but allow override
             let category = field.category;
             if (field.type === 'file') {
@@ -208,12 +375,11 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                 id: field.id,
                 label: field.label,
                 value: value || field.currentValue || undefined,
+                selector: field.selector,
                 status,
-                category
-            };
+                category: (category === 'questions' || category === 'eeo') ? 'questions' : category as any
+            } as AutofillField;
         });
-
-        setFields(autofillFields);
     }, [detectedFields, resumeFieldOverrideId, resumeData, eeoPreferences]);
 
     const handleFill = async () => {
@@ -419,9 +585,14 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                 });
             }
 
-            setShowUndoPrompt(true);
-            setTimeout(() => setShowUndoPrompt(false), 10000);
-            await detectFields();
+            setStatusMessage({
+                title: "Application filled!",
+                text: "Checking fields...",
+                type: 'success'
+            });
+            setTimeout(() => setStatusMessage(null), 10000);
+            lastFillTimestamp.current = Date.now();
+            await detectFields(true);
         } catch (error) {
             console.error('[AutofillTab] Error filling fields:', error);
         } finally {
@@ -443,146 +614,181 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
         } catch (error) {
             console.error('[AutofillTab] Error undoing fill:', error);
         } finally {
-            setShowUndoPrompt(false);
+            setStatusMessage(null);
         }
     };
 
-    // Smart Map handler - On-demand AI field mapping
-    const handleSmartMap = async () => {
-        if (!resumeData || detectedFields.length === 0) return;
-
-        setIsSmartMapping(true);
-        try {
-            // TODO: Implement AI field mapping service
-            // For now, simulate a delay and refresh the field detection
-            console.log('[AutofillTab] Smart Map triggered - AI mapping coming soon');
-            await new Promise(resolve => setTimeout(resolve, 1500)); // Show loading state
-            await detectFields();
-        } catch (error) {
-            console.error('[AutofillTab] Error in smart mapping:', error);
-        } finally {
-            setIsSmartMapping(false);
-        }
-    };
-
-    // Handle clicking on a question chip to generate AI answer
+    // Manual Map handler placeholder
     const handleFieldClick = async (field: AutofillField) => {
-        console.log('[AutofillTab] Chip clicked:', field.id, field.label, field.category);
-
-        if (!resumeData) {
-            console.warn('[AutofillTab] No resume selected');
-            toast({
-                title: "Resume missing",
-                description: "Please select a resume first to generate answers.",
-                variant: "error"
-            });
+        // If it's a file field or common personal info, we don't generate text answers
+        if (field.category === 'resume' || field.category === 'personal') {
             return;
         }
 
-        if (field.category !== 'questions') {
-            console.log('[AutofillTab] Field is not a question, skipping AI generation');
-            return;
-        }
+        // Generate AI Answer for questions
+        if (field.category === 'questions') {
+            // Check for job context
+            if (!jobData?.description) {
+                setStatusMessage({
+                    title: "Job Context Missing",
+                    text: "Please scan the job description first to help AI answer correctly.",
+                    type: 'error'
+                });
+                return;
+            }
 
-        const detectedField = detectedFields.find(f => f.id === field.id);
-        if (!detectedField) {
-            console.error('[AutofillTab] Detected field not found for ID:', field.id);
-            return;
-        }
+            try {
+                setStatusMessage({
+                    title: "Generating Answer",
+                    text: "AI is crafting a response...",
+                    type: 'info'
+                });
 
-        if (!jobData?.description) {
-            console.warn('[AutofillTab] No job description available');
-            toast({
-                title: "Job context missing",
-                description: "Values are more accurate when you scan the job post first.",
-                variant: "error"
-            });
-            // return; // Don't block if they really want to try without JD, but user said "job data needs to present or else ai answer autofill should now work"
-            // The user explicitly said: "job data needs to present or else ai answer autofill should now work" (typo: ensure NOT work)
-            return;
-        }
+                // Build rich resume context (Restore V3 logic)
+                const resumeSummary = [
+                    resumeData?.summary || '',
+                    resumeData?.skills?.join(', ') || '',
+                    resumeData?.experience?.slice(0, 2).map((e: any) =>
+                        `${e.title} at ${e.company}: ${e.highlights?.slice(0, 2).join('; ') || e.description || ''}`
+                    ).join('\n') || ''
+                ].filter(Boolean).join('\n\n');
 
-        setGeneratingFieldId(field.id);
-        try {
-            // Build resume summary for context
-            const resumeSummary = [
-                resumeData.summary || '',
-                resumeData.skills?.join(', ') || '',
-                resumeData.experience?.slice(0, 2).map((e: { title: string; company: string; highlights?: string[]; description?: string }) =>
-                    `${e.title} at ${e.company}: ${e.highlights?.slice(0, 2).join('; ') || e.description || ''}`
-                ).join('\n') || ''
-            ].filter(Boolean).join('\n\n');
+                const answer = await openAIService.answerQuestion(
+                    field.label,
+                    resumeSummary,
+                    jobData?.title || '',
+                    jobData?.company || '',
+                    jobData?.description || ''
+                );
 
-            // Generate AI answer
-            const answer = await openAIService.answerQuestion(
-                detectedField.label,
-                resumeSummary,
-                jobData.title || '',
-                jobData.company || '',
-                jobData.description,
-                'medium',
-                'professional'
-            );
+                setStatusMessage(null);
 
-            if (answer) {
-                // Send to content script to fill the field
+                const fieldSelector = field.selector;
+                if (!fieldSelector) {
+                    console.error('[AutofillTab] No selector found for field:', field.id);
+                    return;
+                }
+
+                // Update the detected fields so it persists in the list
+                setDetectedFields(prev => prev.map(f =>
+                    f.id === field.id ? { ...f, currentValue: answer } : f
+                ));
+
+                // TRIGGER FILL ON PAGE IMMEDIATELY
                 const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
                 if (tab?.id) {
                     await chrome.tabs.sendMessage(tab.id, {
                         action: 'FILL_FORM_FIELDS',
-                        fieldValues: [{ selector: detectedField.selector, value: answer }]
+                        fieldValues: [{ selector: fieldSelector, value: answer }]
                     });
-
-                    // Refresh field detection to update status
-                    await detectFields();
                 }
+            } catch (error) {
+                console.error('[AutofillTab] AI Answer error:', error);
+                setStatusMessage({
+                    title: "Generation Failed",
+                    text: "Could not generate an answer. Please try again.",
+                    type: 'error'
+                });
             }
-        } catch (error) {
-            console.error('[AutofillTab] Error generating AI answer:', error);
-        } finally {
-            setGeneratingFieldId(null);
         }
     };
 
     return (
         <div className="flex flex-col flex-1 min-h-0 h-full">
-            {availableFileFields.length > 0 && (
-                <div className="px-4 py-2 bg-emerald-50/50 border-b border-emerald-100 dark:bg-emerald-950/10 dark:border-emerald-900/50">
-                    <label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5 block">
-                        Resume Upload Field
-                    </label>
-                    <Select
-                        value={resumeFieldOverrideId || undefined}
-                        onValueChange={setResumeFieldOverrideId}
-                    >
-                        <SelectTrigger className="h-8 text-xs w-full bg-white dark:bg-black/20">
-                            <SelectValue placeholder="Select upload field..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                            {availableFileFields.map(f => (
-                                <SelectItem key={f.id} value={f.id} className="text-xs">
-                                    {f.label || "Unnamed File Input"}
-                                </SelectItem>
-                            ))}
-                        </SelectContent>
-                    </Select>
-                </div>
-            )}
+            <div className="px-4 py-2 bg-emerald-50/50 border-b border-emerald-100 dark:bg-emerald-950/10 dark:border-emerald-900/50 flex items-center justify-between gap-2 overflow-x-auto no-scrollbar">
+                <Button
+                    variant={isInspecting ? "default" : "outline"}
+                    size="sm"
+                    className={cn(
+                        "h-8 text-[10px] font-bold uppercase tracking-wider shrink-0",
+                        isInspecting && "bg-emerald-600 hover:bg-emerald-700"
+                    )}
+                    onClick={toggleInspection}
+                >
+                    <MousePointer2 className="mr-1.5 size-3" />
+                    {isInspecting ? "Stop Selecting" : "Manual Map"}
+                </Button>
+
+                {availableFileFields.length > 0 && (
+                    <div className="flex items-center gap-2 shrink-0">
+                        <label className="text-[10px] font-semibold text-muted-foreground uppercase whitespace-nowrap">
+                            Resume:
+                        </label>
+                        <Select
+                            value={resumeFieldOverrideId || undefined}
+                            onValueChange={setResumeFieldOverrideId}
+                        >
+                            <SelectTrigger className="h-8 text-xs w-full bg-white dark:bg-black/20">
+                                <SelectValue placeholder="Select upload field..." />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {availableFileFields.map(f => (
+                                    <SelectItem key={f.id} value={f.id} className="text-xs">
+                                        {f.label || "Unnamed File Input"}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                )}
+            </div>
             <Autofill
                 fields={fields}
                 isFilling={isFilling}
                 isScanning={isScanning}
-                isSmartMapping={isSmartMapping}
-                showUndoPrompt={showUndoPrompt}
-                generatingFieldId={generatingFieldId || undefined}
-                onFill={handleFill}
+                isSegmenting={isSegmenting}
+                isInspecting={isInspecting}
+                statusMessage={statusMessage || undefined}
                 onUndo={handleUndo}
-                onUndoDismiss={() => setShowUndoPrompt(false)}
-                onScan={detectFields}
-                onSmartMap={handleSmartMap}
+                onUndoDismiss={() => setStatusMessage(null)}
+                onScan={() => detectFields(false)}
+                onManualMap={toggleInspection}
+                onFill={handleFill}
                 onFieldClick={handleFieldClick}
                 className="h-full"
             />
+
+            {/* Manual Mapping Modal / Selector */}
+            {mappingTarget && (
+                <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <Card className="w-full max-w-xs shadow-2xl border-emerald-500/20">
+                        <CardHeader className="pb-3">
+                            <CardTitle className="text-sm font-bold">Map Field</CardTitle>
+                            <p className="text-[10px] text-muted-foreground">Select a category for: {mappingTarget.label || mappingTarget.id}</p>
+                        </CardHeader>
+                        <CardContent className="space-y-2 pb-4">
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start text-xs h-8"
+                                onClick={() => handleManualMap('personal')}
+                            >
+                                Personal Info
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start text-xs h-8"
+                                onClick={() => handleManualMap('questions')}
+                            >
+                                Application Question
+                            </Button>
+                            <Button
+                                variant="outline"
+                                className="w-full justify-start text-xs h-8"
+                                onClick={() => handleManualMap('resume')}
+                            >
+                                Resume / Document
+                            </Button>
+                            <Button
+                                variant="ghost"
+                                className="w-full text-xs h-8 text-muted-foreground mt-2"
+                                onClick={() => setMappingTarget(null)}
+                            >
+                                Cancel
+                            </Button>
+                        </CardContent>
+                    </Card>
+                </div>
+            )}
         </div>
     );
 }

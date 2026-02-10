@@ -2,6 +2,8 @@
 // This script is injected into job sites to extract job details and fill forms
 
 import { defineContentScript } from 'wxt/utils/define-content-script';
+import { ScoringEngine, FieldCategory } from '../services/autofill/scoring-engine';
+import { AdapterManager } from '../services/autofill/site-adapters';
 
 export default defineContentScript({
     matches: ['<all_urls>'],
@@ -10,17 +12,27 @@ export default defineContentScript({
         console.log('[JobSwyft] Content script loaded');
 
         // Listen for messages from the sidepanel
-        chrome.runtime.onMessage.addListener((request, _sender, sendResponse) => {
+        chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             if (request.action === 'SCAN_PAGE') {
                 console.log('[JobSwyft] Received SCAN_PAGE request');
                 const data = scrapePageDetails();
                 console.log('[JobSwyft] Scraped data:', data);
-                sendResponse(data);
+                if (data && data.title && data.description) {
+                    sendResponse(data);
+                } else {
+                    sendResponse(null);
+                }
             } else if (request.action === 'DETECT_FORM_FIELDS') {
                 console.log('[JobSwyft] Detecting form fields');
                 const fields = detectFormFields();
                 console.log('[JobSwyft] Detected fields:', fields);
                 sendResponse({ success: true, fields });
+            } else if (request.action === 'START_INSPECTION') {
+                startInspection();
+                sendResponse({ success: true });
+            } else if (request.action === 'STOP_INSPECTION') {
+                stopInspection();
+                sendResponse({ success: true });
             } else if (request.action === 'FILL_FORM_FIELDS') {
                 console.log('[JobSwyft] Filling form fields:', request.fieldValues);
                 const result = fillFormFields(request.fieldValues);
@@ -30,6 +42,91 @@ export default defineContentScript({
         });
     },
 });
+
+let isInspecting = false;
+let inspectionOverlay: HTMLDivElement | null = null;
+let lastHoveredElement: HTMLElement | null = null;
+
+function createInspectionOverlay() {
+    if (inspectionOverlay) return;
+    inspectionOverlay = document.createElement('div');
+    inspectionOverlay.id = 'jobswyft-inspection-overlay';
+    Object.assign(inspectionOverlay.style, {
+        position: 'fixed',
+        pointerEvents: 'none',
+        zIndex: '999999',
+        border: '2px solid #10b981',
+        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+        borderRadius: '4px',
+        transition: 'all 0.1s ease-out',
+        display: 'none'
+    });
+    document.body.appendChild(inspectionOverlay);
+}
+
+function startInspection() {
+    isInspecting = true;
+    createInspectionOverlay();
+    document.body.style.cursor = 'crosshair';
+    document.addEventListener('mouseover', handleInspectionHover, true);
+    document.addEventListener('click', handleInspectionClick, true);
+    console.log('[JobSwyft] Inspection mode started');
+}
+
+function stopInspection() {
+    isInspecting = false;
+    document.body.style.cursor = '';
+    document.removeEventListener('mouseover', handleInspectionHover, true);
+    document.removeEventListener('click', handleInspectionClick, true);
+    if (inspectionOverlay) {
+        inspectionOverlay.style.display = 'none';
+    }
+    console.log('[JobSwyft] Inspection mode stopped');
+}
+
+function handleInspectionHover(e: MouseEvent) {
+    if (!isInspecting || !inspectionOverlay) return;
+    const target = e.target as HTMLElement;
+    
+    // Only highlight inputs, textareas, selects
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        const rect = target.getBoundingClientRect();
+        Object.assign(inspectionOverlay.style, {
+            top: `${rect.top + window.scrollY}px`,
+            left: `${rect.left + window.scrollX}px`,
+            width: `${rect.width}px`,
+            height: `${rect.height}px`,
+            display: 'block'
+        });
+        lastHoveredElement = target;
+    } else {
+        inspectionOverlay.style.display = 'none';
+    }
+}
+
+function handleInspectionClick(e: MouseEvent) {
+    if (!isInspecting) return;
+    e.preventDefault();
+    e.stopPropagation();
+
+    const target = e.target as HTMLElement;
+    if (['INPUT', 'TEXTAREA', 'SELECT'].includes(target.tagName)) {
+        const selector = getCssSelector(target);
+        const fieldData = {
+            id: target.id || (target as any).name || `field_${btoa(selector).substring(0, 12)}`,
+            selector,
+            label: (target as any).name || (target as any).placeholder || "Selected Field",
+            type: (target as HTMLInputElement).type || target.tagName.toLowerCase()
+        };
+
+        chrome.runtime.sendMessage({ 
+            action: 'FIELD_SELECTED', 
+            field: fieldData 
+        });
+        
+        stopInspection();
+    }
+}
 
 /**
  * Detect which job board we're on based on URL/DOM
@@ -62,130 +159,142 @@ function getEEOFieldType(label: string): 'veteran' | 'disability' | 'race' | 'ge
 /**
  * Detect fillable form fields on the page
  */
-function detectFormFields() {
-    const fields: Array<{
-        id: string;
-        selector: string;
-        label: string;
-        type: string;
-        currentValue: string;
-        category: 'personal' | 'resume' | 'questions' | 'eeo';
-        eeoType?: 'veteran' | 'disability' | 'race' | 'gender' | 'sponsorship' | 'authorization';
-        jobBoard: string;
-    }> = [];
+/**
+ * Detect fillable form fields on the page using Site Adapters and Scoring Engine
+ */
+function detectFormFields(): DetectedField[] {
+    const fields: DetectedField[] = [];
+    const processedElements = new Set<HTMLElement>();
+    const adapter = AdapterManager.getAdapterForUrl(window.location.href);
+    const jobBoard = adapter ? adapter.name : 'Unknown';
 
-    const jobBoard = detectJobBoard();
-    console.log(`[JobSwyft] Detected job board: ${jobBoard}`);
+    // 1. Try Site Adapters first (The "Driver" approach)
+    if (adapter) {
+        console.log(`[JobSwyft] Using site adapter: ${adapter.name}`);
+        for (const [categoryString, selector] of Object.entries(adapter.selectors)) {
+            const category = categoryString as FieldCategory;
+            if (!selector) continue;
 
-    // Find all input, textarea, and select elements
-    const inputs = document.querySelectorAll<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>(
-        'input:not([type="hidden"]):not([type="submit"]):not([type="button"]):not([type="checkbox"]):not([type="radio"]), textarea, select'
-    );
+            const element = document.querySelector(selector) as HTMLElement;
+            if (element && !processedElements.has(element)) {
+                // Ensure stable, unique ID
+                // 1. DOM ID
+                // 2. Name attribute
+                // 3. Deterministic path/selector hash (V4 Improvement)
+                const id = element.id || (element as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`;
 
-    inputs.forEach((input, index) => {
-        // Skip disabled fields
-        if (input.disabled) return;
+                // Try to get a human-readable label
+                let label = '';
+                if (element.id) {
+                    const labelEl = document.querySelector(`label[for="${element.id}"]`);
+                    if (labelEl) label = labelEl.textContent?.trim() || '';
+                }
+                if (!label) label = (element as any).placeholder || element.getAttribute('aria-label') || '';
+                if (!label) {
+                    // Fallback to prettified category name (e.g. personal.firstName -> First Name)
+                    label = category.split('.').pop()?.replace(/([A-Z])/g, ' $1').trim() || category;
+                    label = label.charAt(0).toUpperCase() + label.slice(1);
+                }
 
-        // Skip hidden fields ONLY if they are not file inputs
-        // Most modern file inputs are "display: none" or hidden, so we must include them
-        const isHidden = input.hidden || getComputedStyle(input).display === 'none' || input.type === 'hidden';
-        if (isHidden && input.type !== 'file') {
-            return;
-        }
-
-        // Get label text using multiple strategies
-        let label = '';
-
-        // Method 1: Associated label element
-        if (input.id) {
-            const labelEl = document.querySelector<HTMLLabelElement>(`label[for="${input.id}"]`);
-            if (labelEl) label = labelEl.textContent?.trim() || '';
-        }
-
-        // Method 2: Parent label
-        if (!label) {
-            const parentLabel = input.closest('label');
-            if (parentLabel) label = parentLabel.textContent?.trim() || '';
-        }
-
-        // Method 3: Ashby-specific question title
-        if (!label && jobBoard === 'ashby') {
-            const container = input.closest('[class*="question"], [class*="field"]');
-            const titleEl = container?.querySelector('[class*="question-title"], [class*="label"]');
-            if (titleEl) label = titleEl.textContent?.trim() || '';
-        }
-
-        // Method 4: Workday-specific labels
-        if (!label && jobBoard === 'workday') {
-            const container = input.closest('[data-automation-id]');
-            const labelEl = container?.querySelector('label, [data-automation-id*="label"]');
-            if (labelEl) label = labelEl.textContent?.trim() || '';
-        }
-
-        // Method 5: aria-label
-        if (!label) label = input.getAttribute('aria-label') || '';
-
-        // Method 6: placeholder
-        if (!label && 'placeholder' in input) label = input.placeholder || '';
-
-        // Method 7: name attribute (fallback)
-        if (!label) label = input.name || '';
-
-        if (!label) return; // Skip fields with no identifiable label
-
-        // Determine category based on field type/name/label
-        const lowerLabel = label.toLowerCase();
-        const lowerName = (input.name || '').toLowerCase();
-        let category: 'personal' | 'resume' | 'questions' | 'eeo' = 'questions';
-        let eeoType = getEEOFieldType(label);
-
-        if (eeoType) {
-            category = 'eeo';
-        } else if (/name|email|phone|tel|address|city|state|zip|linkedin|website|url|portfolio/i.test(lowerLabel + lowerName)) {
-            category = 'personal';
-        } else if (/resume|cv|cover/i.test(lowerLabel + lowerName)) {
-            category = 'resume';
-        }
-
-        if (input.type === 'file' && category === 'questions') {
-            const isAutofill = /autofill/i.test(lowerLabel) || /autofill/i.test(lowerName);
-            if (!isAutofill && (/resume|cv|curriculum|attach/i.test(lowerLabel) || /resume|cv/i.test(lowerName))) {
-                category = 'resume';
+                fields.push({
+                    id,
+                    selector,
+                    label, // Use human-readable label
+                    type: (element as HTMLInputElement).type || element.tagName.toLowerCase(),
+                    currentValue: (element as HTMLInputElement).value || '',
+                    category: mapToLegacyCategory(category),
+                    confidence: 'high',
+                    jobBoard
+                });
+                processedElements.add(element);
             }
-        }
-
-        // Create unique selector
-        const selector = input.id
-            ? `#${CSS.escape(input.id)}`
-            : input.name
-                ? `[name="${CSS.escape(input.name)}"]`
-                : `input:nth-of-type(${index + 1})`;
-
-        fields.push({
-            id: `field_${index}`,
-            selector,
-            label: label.substring(0, 150), // Allow longer labels for questions
-            type: input.type || input.tagName.toLowerCase(),
-            currentValue: input.value || '',
-            category,
-            ...(eeoType && { eeoType }),
-            jobBoard
-        });
-    });
-
-
-
-    // Fallback: If no resume field detected, but we found a file input, use the first one
-    const hasResumeField = fields.some(f => f.category === 'resume');
-    if (!hasResumeField) {
-        const firstFileInput = fields.find(f => f.type === 'file' && f.category === 'questions');
-        if (firstFileInput) {
-            console.log('[JobSwyft] No specific resume field found. Fallback: Promoting first file input to resume category.');
-            firstFileInput.category = 'resume';
         }
     }
 
+    // 2. Fallback to Scoring Engine for remaining fields
+    const inputs = document.querySelectorAll('input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select');
+    inputs.forEach((input: any) => {
+        if (processedElements.has(input)) return;
+        if (input.type === 'hidden' || input.style.display === 'none') {
+            // Skip hidden unless it's a file input, which we might need to score as resume upload
+            if (input.type !== 'file') return;
+        }
+
+        const score = ScoringEngine.scoreField(input as HTMLElement);
+
+        if (score) {
+            // High/Medium confidence match
+            const selector = getCssSelector(input);
+            fields.push({
+                id: input.id || (input as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`,
+                selector,
+                label: score.labelText || (input as any).name || (input as any).placeholder || "Field",
+                type: input.type || input.tagName.toLowerCase(),
+                currentValue: input.value || '',
+                category: mapToLegacyCategory(score.category as FieldCategory),
+                confidence: score.confidence,
+                jobBoard
+            });
+        } else {
+            // No heuristic match -> Treat as a generic "Question"
+            // We want to capture these so the user can manually fill or map them
+            const selector = getCssSelector(input);
+            const id = input.id || (input as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`;
+
+            // Try to extract a label for this unknown field
+            let label = '';
+            if (input.id) {
+                const labelEl = document.querySelector(`label[for="${CSS.escape(input.id)}"]`);
+                if (labelEl) label = labelEl.textContent?.trim() || '';
+            }
+            if (!label) {
+                const parentLabel = input.closest('label');
+                if (parentLabel) label = parentLabel.textContent?.trim() || '';
+            }
+            if (!label) label = (input as any).placeholder || input.getAttribute('aria-label') || (input as any).name || "Question";
+
+            fields.push({
+                id,
+                selector,
+                label,
+                type: input.type || input.tagName.toLowerCase(),
+                currentValue: input.value || '',
+                category: "questions", // Explicitly categorize as question
+                confidence: 'low',
+                jobBoard
+            });
+        }
+        processedElements.add(input);
+    });
+
     return fields;
+}
+
+// Helper to map new granular categories to the legacy categories used by AutofillTab
+function mapToLegacyCategory(newCategory: FieldCategory): 'personal' | 'resume' | 'questions' | 'eeo' {
+    if (newCategory.startsWith('personal')) return 'personal';
+    if (newCategory.startsWith('resume') || newCategory.startsWith('coverLetter')) return 'resume';
+    if (newCategory.startsWith('eeo')) return 'eeo';
+    return 'questions';
+}
+
+// Helper to generate a unique selector
+const getCssSelector = (el: HTMLElement): string => {
+    if (el.id) return `#${CSS.escape(el.id)}`;
+    if ((el as any).name) return `[name="${CSS.escape((el as any).name)}"]`;
+    return el.tagName.toLowerCase();
+};
+
+// Define DetectedField type locally if not imported, or match existing
+interface DetectedField {
+    id: string;
+    selector: string;
+    label: string;
+    type: string;
+    currentValue: string;
+    category: 'personal' | 'resume' | 'questions' | 'eeo';
+    confidence: 'high' | 'medium' | 'low';
+    jobBoard: string;
 }
 
 /**

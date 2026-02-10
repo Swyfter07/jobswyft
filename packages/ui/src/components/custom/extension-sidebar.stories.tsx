@@ -677,3 +677,25 @@ export const LayeredSidebar: Story = {
         ...JobDetected.args,
     }
 }
+
+export const AutofillScanning: Story = {
+    decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
+    args: {
+        ...JobDetected.args,
+        // @ts-ignore
+        defaultTab: "autofill",
+        autofillContent: <Autofill isScanning={true} className="h-full" />
+    }
+}
+
+export const AutofillAnalyzing: Story = {
+    decorators: [CenteredLayout],
+    render: (args) => <ExtensionSidebarWithState {...args} />,
+    args: {
+        ...JobDetected.args,
+        // @ts-ignore
+        defaultTab: "autofill",
+        autofillContent: <Autofill isSegmenting={true} className="h-full" />
+    }
+}

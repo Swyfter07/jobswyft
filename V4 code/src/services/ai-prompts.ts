@@ -292,6 +292,33 @@ export const AI_PROMPTS = {
         }
     },
 
+
+    // Field Segmentation Prompt (Low Token Usage)
+    field_segmentation: {
+        system: "You are a form field classifier. Classify fields into: 'personal', 'resume', 'cover_letter', 'question', 'ignore'. Return ONLY JSON object mapping field_id -> category.",
+        user: (fieldsJson: string) => `
+          Classify these fields based on their attributes (id, name, label, type, placeholder).
+
+          Categories:
+          - personal: Name, email, phone, location, links (LinkedIn/Portfolio), simple demographics.
+          - resume: Resume/CV upload or text area.
+          - cover_letter: Cover letter upload or text area.
+          - question: Custom questions, diversity, logic, detailed inputs.
+          - ignore: Search bars, navigation, login fields, hidden fields, filters, recurring/redundant fields not part of the application. Also ignore fields with generic labels like "Question" or "Attach" if they seem to be duplicates of other fields.
+
+          Input:
+          ${fieldsJson}
+
+          Output Format:
+          {
+            "field_id_1": "category",
+            "field_id_2": "category"
+          }
+
+          Output ONLY valid JSON. No markdown.
+        `
+    },
+
     // Career Coach Chat Prompt
     coach_chat: {
         system: (jobTitle: string, companyName: string) => `You are a helpful, knowledgeable career coach. You're having a conversation with a job seeker about their application to ${companyName || 'a company'} for the ${jobTitle || 'position'} role.

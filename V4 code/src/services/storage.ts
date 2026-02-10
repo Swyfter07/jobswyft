@@ -84,6 +84,15 @@ export const storageService = {
 
     async setEEOPreferences(preferences: EEOPreferences): Promise<void> {
         await chrome.storage.local.set({ [STORAGE_KEYS.EEO_PREFERENCES]: preferences });
+    },
+
+    async getCustomMappings(domain: string): Promise<Record<string, string>> {
+        const result = await chrome.storage.local.get(`${STORAGE_KEYS.CUSTOM_MAPPINGS}_${domain}`);
+        return result[`${STORAGE_KEYS.CUSTOM_MAPPINGS}_${domain}`] || {};
+    },
+
+    async saveCustomMapping(domain: string, mappings: Record<string, string>): Promise<void> {
+        await chrome.storage.local.set({ [`${STORAGE_KEYS.CUSTOM_MAPPINGS}_${domain}`]: mappings });
     }
 };
 

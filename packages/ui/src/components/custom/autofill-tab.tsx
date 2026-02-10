@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card"
 export interface AutofillTabProps {
     fields: any[] // Replace with proper type
     isFilling: boolean
-    showUndoPrompt: boolean
+    statusMessage?: { title: string; text?: string; type: 'success' | 'info' | 'error' }
     onFill: () => void
     onUndoDismiss: () => void
     onInjectResume: () => void
@@ -19,7 +19,7 @@ export interface AutofillTabProps {
 export function AutofillTab({
     fields,
     isFilling,
-    showUndoPrompt,
+    statusMessage,
     onFill,
     onUndoDismiss,
     onInjectResume,
@@ -34,7 +34,7 @@ export function AutofillTab({
             <Autofill
                 fields={fields}
                 isFilling={isFilling}
-                showUndoPrompt={showUndoPrompt}
+                statusMessage={statusMessage}
                 onFill={onFill}
                 onUndoDismiss={onUndoDismiss}
             />

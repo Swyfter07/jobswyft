@@ -128,6 +128,36 @@ export const openAIService = {
             tone
         );
 
+
         return await this.complete(userPrompt, systemPrompt, 0.7);
+    },
+
+
+    /**
+     * Segment form fields using AI (Low Token)
+     */
+    async segmentFields(fields: any[]): Promise<Record<string, string>> {
+        // Minimal payload to save tokens
+        const simplified = fields.map(f => ({
+            id: f.id,
+            // If the content script defaulted to "Question" or "Attach", clear it so AI isn't biased
+            label: (f.label === 'Question' || f.label === 'Attach') ? '' : (f.label || '').substring(0, 50),
+            placeholder: (f.placeholder || '').substring(0, 30),
+            name: (f.name || '').substring(0, 30),
+            type: f.type
+        }));
+
+        const systemPrompt = AI_PROMPTS.field_segmentation.system;
+        const userPrompt = AI_PROMPTS.field_segmentation.user(JSON.stringify(simplified));
+
+        try {
+            const rawResponse = await this.complete(userPrompt, systemPrompt, 0.3); // Low temp for classification
+            const cleanJson = rawResponse.replace(/```json?\n?/g, '').replace(/```\n?/g, '').trim();
+            return JSON.parse(cleanJson);
+        } catch (e) {
+            console.error('[JobSwyft] AI Segmentation failed:', e);
+            return {};
+        }
     }
 };
+
