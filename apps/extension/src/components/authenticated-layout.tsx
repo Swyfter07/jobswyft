@@ -13,12 +13,21 @@ import { useThemeStore } from "../stores/theme-store";
 import { useSidebarStore } from "../stores/sidebar-store";
 import { useResumeStore } from "../stores/resume-store";
 import { useScanStore } from "../stores/scan-store";
+import { useCreditsStore } from "../stores/credits-store";
+import { useSettingsStore } from "../stores/settings-store";
 import { scrapeJobPage } from "../features/scanning/scanner";
 import { validateExtraction, type ExtractionSource } from "../features/scanning/extraction-validator";
 import { cleanHtmlForAI } from "../features/scanning/html-cleaner";
 import { aggregateFrameResults } from "../features/scanning/frame-aggregator";
 import { apiClient } from "../lib/api-client";
 import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME, AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY } from "../lib/constants";
+import { AIStudioTab } from "./ai-studio-tab";
+import { AutofillTab } from "./autofill-tab";
+import { CoachTab } from "./coach-tab";
+import { ResumeDetailView } from "./resume-detail-view";
+import { SettingsDialog } from "./settings-dialog";
+import { ErrorBoundary } from "./error-boundary";
+import { ToastProvider } from "./toast-context";
 
 /** Completeness threshold for triggering AI fallback */
 const AI_FALLBACK_THRESHOLD = 0.7;
@@ -38,6 +47,8 @@ export function AuthenticatedLayout() {
     setJobData,
     onUrlChange,
     resetJob,
+    activeTab,
+    setActiveTab,
   } = useSidebarStore();
   const {
     resumes,
@@ -53,12 +64,15 @@ export function AuthenticatedLayout() {
     clearError: clearResumeError,
   } = useResumeStore();
   const scanStore = useScanStore();
+  const fetchCredits = useCreditsStore((s) => s.fetchCredits);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isDark = theme === "dark";
-  const [isContextExpanded, setIsContextExpanded] = useState(true);
   const lastProcessedId = useRef("");
   const verificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [viewLayer, setViewLayer] = useState<"main" | "resume_detail">("main");
 
   // Fetch resumes on mount when authenticated
   useEffect(() => {
@@ -66,6 +80,20 @@ export function AuthenticatedLayout() {
       fetchResumes(accessToken);
     }
   }, [accessToken, resumes.length, fetchResumes]);
+
+  // Re-fetch active resume detail if ID is persisted but data was lost (not persisted)
+  useEffect(() => {
+    if (accessToken && activeResumeId && !activeResumeData && !resumeLoading) {
+      useResumeStore.getState().fetchResumeDetail(accessToken, activeResumeId);
+    }
+  }, [accessToken, activeResumeId, activeResumeData, resumeLoading]);
+
+  // Fetch credits on mount
+  useEffect(() => {
+    if (accessToken) {
+      fetchCredits(accessToken);
+    }
+  }, [accessToken, fetchCredits]);
 
   // Cleanup verification timer on unmount
   useEffect(() => {
@@ -146,6 +174,13 @@ export function AuthenticatedLayout() {
           if (board) scanStore.setBoard(board);
           setSidebarState("job-detected");
 
+          // Auto-save job to get savedJobId for AI API calls
+          if (accessToken && best.description) {
+            scanStore.saveJob(accessToken).catch(() => {
+              // Non-critical: user can manually save later
+            });
+          }
+
           // ─── Delayed verification (AC7) ────────────────────────────
           if (!skipAI && validation.completeness < VERIFICATION_THRESHOLD) {
             scanStore.setRefining(true);
@@ -205,13 +240,28 @@ export function AuthenticatedLayout() {
   );
 
   // ─── Scan on mount: scan the active tab when side panel opens ──────
+  // Wait for store hydration, then skip if we already have a persisted job
   useEffect(() => {
-    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-      const tab = tabs[0];
-      if (tab?.id) {
-        performScan(tab.id);
-      }
-    });
+    const doScan = () => {
+      const { scanStatus: persisted } = useScanStore.getState();
+      if (persisted === "success") return; // Already have a job from persistence
+
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        const tab = tabs[0];
+        if (tab?.id) {
+          performScan(tab.id);
+        }
+      });
+    };
+
+    if (useScanStore.persist.hasHydrated()) {
+      doScan();
+    } else {
+      const unsub = useScanStore.persist.onFinishHydration(() => {
+        doScan();
+        unsub();
+      });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -259,6 +309,36 @@ export function AuthenticatedLayout() {
     chrome.storage.onChanged.addListener(handler);
     return () => chrome.storage.onChanged.removeListener(handler);
   }, [performScan]);
+
+  // ─── Auto-analysis: trigger match when conditions met (Task 15) ────
+  const autoAnalysis = useSettingsStore((s) => s.autoAnalysis);
+  const matchData = useSidebarStore((s) => s.matchData);
+
+  useEffect(() => {
+    const { savedJobId } = useScanStore.getState();
+
+    if (
+      autoAnalysis &&
+      savedJobId &&
+      activeResumeId &&
+      !matchData &&
+      accessToken
+    ) {
+      apiClient
+        .analyzeMatch(accessToken, savedJobId)
+        .then((result) => {
+          useSidebarStore.getState().setMatchData({
+            score: result.match_score,
+            matchedSkills: result.strengths,
+            missingSkills: result.gaps,
+            summary: result.recommendations.join("; "),
+          });
+        })
+        .catch(() => {
+          // Non-critical: user can manually trigger from AI Studio
+        });
+    }
+  }, [autoAnalysis, scanStore.savedJobId, activeResumeId, matchData, accessToken]);
 
   const handleOpenDashboard = () => {
     try {
@@ -356,24 +436,43 @@ export function AuthenticatedLayout() {
     [scanStore]
   );
 
+  // ─── Header ─────────────────────────────────────────────────────────
   const header = (
     <AppHeader
       onSignOut={signOut}
       onThemeToggle={toggleTheme}
       onOpenDashboard={handleOpenDashboard}
       onReset={handleReset}
+      onProfileClick={() => setSettingsOpen(true)}
       resetButton
       isDarkMode={isDark}
     />
   );
 
+  // ─── Context Content (Resume Card) ─────────────────────────────────
   const resumeSummaries = useMemo(
     () => resumes.map((r) => ({ id: r.id, fileName: r.fileName })),
     [resumes]
   );
 
-  // ─── Scan Content ─────────────────────────────────────────────────
+  const contextContent = (
+    <ResumeCard
+      resumes={resumeSummaries}
+      activeResumeId={activeResumeId}
+      resumeData={activeResumeData}
+      isLoading={resumeLoading}
+      isUploading={resumeUploading}
+      error={resumeError}
+      onResumeSelect={handleResumeSelect}
+      onUpload={handleUpload}
+      onDelete={handleDelete}
+      onDrillDown={() => setViewLayer("resume_detail")}
+      onRetry={handleRetry}
+      onClearError={clearResumeError}
+    />
+  );
 
+  // ─── Scan Content ───────────────────────────────────────────────────
   const currentJobData =
     scanStore.isEditing && scanStore.editedJobData
       ? ({
@@ -428,13 +527,23 @@ export function AuthenticatedLayout() {
               Refining...
             </span>
           )}
+          {/* Save error (visible to user) */}
+          {scanStore.error && (
+            <p className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2 text-center">
+              {scanStore.error}
+            </p>
+          )}
           <JobCard
             job={currentJobData}
+            match={matchData ?? undefined}
             isEditing={scanStore.isEditing}
             onEditToggle={() => scanStore.toggleEdit()}
             onSave={handleSaveJob}
             onFieldChange={handleFieldChange}
             isSaving={scanStore.isSaving}
+            isScanning={false}
+            onScan={handleManualScan}
+            isAnalyzing={autoAnalysis && !!scanStore.savedJobId && !!activeResumeId && !matchData}
           />
         </>
       ) : null;
@@ -464,51 +573,38 @@ export function AuthenticatedLayout() {
       break;
   }
 
+  // ─── Tab lock: AI Studio, Autofill, Coach locked when no job ───────
+  const isLocked = !scanStore.jobData?.title;
+
   return (
-    <>
-      <ExtensionSidebar className={SIDE_PANEL_CLASSNAME}>
-        <div className="flex flex-col h-full">
-          {/* Header */}
-          <div className="p-2 bg-background z-10 shrink-0">
-            {header}
-          </div>
-
-          {/* Resume Context */}
-          <div className="bg-muted/30 dark:bg-muted/50 overflow-y-auto overflow-x-hidden shrink-0 scroll-fade-y scrollbar-hidden">
-            <div className="px-2 py-1">
-              <ResumeCard
-                resumes={resumeSummaries}
-                activeResumeId={activeResumeId}
-                resumeData={activeResumeData}
-                isLoading={resumeLoading}
-                isUploading={resumeUploading}
-                error={resumeError}
-                onResumeSelect={handleResumeSelect}
-                onUpload={handleUpload}
-                onDelete={handleDelete}
-                onRetry={handleRetry}
-                onClearError={clearResumeError}
-                isCollapsible
-                isOpen={isContextExpanded}
-                onOpenChange={setIsContextExpanded}
-              />
-            </div>
-          </div>
-
-          {/* Main Content — scrollable */}
-          <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 bg-muted/20 dark:bg-muted/40 scroll-fade-y scrollbar-hidden">
-            {scanContent}
-          </div>
-        </div>
-      </ExtensionSidebar>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept="application/pdf"
-        className="hidden"
-        onChange={handleFileChange}
-        aria-label="Upload resume PDF"
-      />
-    </>
+    <ErrorBoundary>
+      <ToastProvider>
+        {viewLayer === "resume_detail" ? (
+          <ResumeDetailView onClose={() => setViewLayer("main")} />
+        ) : (
+          <ExtensionSidebar
+            className={SIDE_PANEL_CLASSNAME}
+            header={header}
+            contextContent={contextContent}
+            scanContent={scanContent}
+            studioContent={<AIStudioTab />}
+            autofillContent={<AutofillTab />}
+            coachContent={<CoachTab />}
+            isLocked={isLocked}
+            activeTab={activeTab}
+            onTabChange={(tab: string) => setActiveTab(tab as import("../stores/sidebar-store").MainTab)}
+          />
+        )}
+        <SettingsDialog open={settingsOpen} onClose={() => setSettingsOpen(false)} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="application/pdf"
+          className="hidden"
+          onChange={handleFileChange}
+          aria-label="Upload resume PDF"
+        />
+      </ToastProvider>
+    </ErrorBoundary>
   );
 }

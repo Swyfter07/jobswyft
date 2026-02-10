@@ -258,6 +258,12 @@
   background-size: 100% 20px, 100% 20px, 100% 6px, 100% 6px;
   background-attachment: local, local, scroll, scroll;
 }
+/* ─── Indeterminate progress bar ─────────────────────────────────── */
+@keyframes indeterminate {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(400%); }
+}
+
 .dark .scroll-fade-y {
   background:
     linear-gradient(var(--background) 30%, transparent) center top,

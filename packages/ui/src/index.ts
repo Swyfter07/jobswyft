@@ -100,10 +100,17 @@ export { Skeleton } from "@/components/ui/skeleton"
 export { IconBadge } from "@/components/blocks/icon-badge"
 export { CopyChip, CopyButton } from "@/components/blocks/copy-chip"
 export { CollapsibleSection } from "@/components/blocks/collapsible-section"
+export { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
 
 // Components — features (official)
 export { ResumeCard } from "@/components/features/resume/resume-card"
 export { ResumeEmptyState } from "@/components/features/resume/resume-empty-state"
+export { PersonalInfo } from "@/components/features/resume/personal-info"
+export { SkillsSection } from "@/components/features/resume/skills-section"
+export { ExperienceSection } from "@/components/features/resume/experience-section"
+export { EducationSection } from "@/components/features/resume/education-section"
+export { CertificationsSection } from "@/components/features/resume/certifications-section"
+export { ProjectsSection } from "@/components/features/resume/projects-section"
 export { JobCard } from "@/components/features/job-card"
 export { ScanEmptyState } from "@/components/features/scan-empty-state"
 export { LoginView } from "@/components/features/login-view"
@@ -116,6 +123,7 @@ export { ExtensionSidebar } from "@/components/layout/extension-sidebar"
 export type { IconBadgeProps } from "@/components/blocks/icon-badge"
 export type { CopyChipProps, CopyButtonProps } from "@/components/blocks/copy-chip"
 export type { CollapsibleSectionProps } from "@/components/blocks/collapsible-section"
+export type { SkillPillProps, SkillSectionLabelProps } from "@/components/blocks/skill-pill"
 
 // Types — features (official)
 export type {
@@ -128,6 +136,12 @@ export type {
   ResumeSummary,
   ResumeCardProps,
 } from "@/components/features/resume/resume-card"
+export type { PersonalInfoProps } from "@/components/features/resume/personal-info"
+export type { SkillsSectionProps } from "@/components/features/resume/skills-section"
+export type { ExperienceSectionProps } from "@/components/features/resume/experience-section"
+export type { EducationSectionProps } from "@/components/features/resume/education-section"
+export type { CertificationsSectionProps } from "@/components/features/resume/certifications-section"
+export type { ProjectsSectionProps } from "@/components/features/resume/projects-section"
 export type { JobCardProps } from "@/components/features/job-card"
 export type { ScanEmptyStateProps } from "@/components/features/scan-empty-state"
 export type { LoginViewProps } from "@/components/features/login-view"

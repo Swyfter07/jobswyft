@@ -81,6 +81,7 @@ interface ResumeStoreState {
   uploadResume: (token: string, file: File) => Promise<void>;
   deleteResume: (token: string, id: string) => Promise<void>;
   setActiveResume: (token: string, id: string) => Promise<void>;
+  updateLocalResumeData: (updates: Partial<ResumeData>) => void;
   clearError: () => void;
 }
 
@@ -218,6 +219,12 @@ export const useResumeStore = create<ResumeStoreState>()(
         } catch (error) {
           set({ error: getErrorMessage(error) });
         }
+      },
+
+      updateLocalResumeData: (updates: Partial<ResumeData>) => {
+        const current = get().activeResumeData;
+        if (!current) return;
+        set({ activeResumeData: { ...current, ...updates } });
       },
 
       clearError: () => set({ error: null }),

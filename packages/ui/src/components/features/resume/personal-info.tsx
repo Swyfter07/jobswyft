@@ -10,6 +10,7 @@ import {
   ExternalLink,
 } from "lucide-react"
 import { CopyChip } from "@/components/blocks/copy-chip"
+import { Input } from "@/components/ui/input"
 
 export interface ResumePersonalInfo {
   fullName: string
@@ -22,9 +23,43 @@ export interface ResumePersonalInfo {
 
 export interface PersonalInfoProps {
   data: ResumePersonalInfo
+  isEditing?: boolean
+  onChange?: (field: keyof ResumePersonalInfo, value: string) => void
 }
 
-function PersonalInfo({ data }: PersonalInfoProps) {
+const PERSONAL_INFO_FIELDS: Array<{
+  key: keyof ResumePersonalInfo
+  label: string
+  icon: React.ReactElement
+  colSpan?: boolean
+}> = [
+  { key: "fullName", label: "Name", icon: <User /> },
+  { key: "email", label: "Email", icon: <Mail /> },
+  { key: "phone", label: "Phone", icon: <Phone /> },
+  { key: "linkedin", label: "LinkedIn", icon: <Globe /> },
+  { key: "website", label: "Website", icon: <ExternalLink /> },
+  { key: "location", label: "Location", icon: <MapPin />, colSpan: true },
+]
+
+function PersonalInfo({ data, isEditing, onChange }: PersonalInfoProps) {
+  if (isEditing) {
+    return (
+      <div className="grid grid-cols-2 gap-2">
+        {PERSONAL_INFO_FIELDS.map((f) => (
+          <div key={f.key} className={f.colSpan ? "col-span-2" : ""}>
+            <label className="text-micro text-muted-foreground mb-0.5 block">{f.label}</label>
+            <Input
+              value={data[f.key] ?? ""}
+              onChange={(e) => onChange?.(f.key, e.target.value)}
+              className="h-7 text-xs"
+              placeholder={f.label}
+            />
+          </div>
+        ))}
+      </div>
+    )
+  }
+
   const items: Array<{
     icon: React.ReactElement
     value: string
