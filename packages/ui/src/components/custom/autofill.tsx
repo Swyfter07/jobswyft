@@ -291,7 +291,7 @@ export function Autofill({
                         </Button>
                     </div>
                 ) : (
-                    <div className="p-4 space-y-6 pb-40">
+                    <div className="p-4 space-y-4 pb-6">
                         <FieldGroup title="Personal Info" items={personalFields} />
                         {resumeFields.length > 0 && <Separator />}
                         <FieldGroup title="Resume & Documents" items={resumeFields} />
