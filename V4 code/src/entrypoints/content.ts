@@ -46,6 +46,23 @@ export default defineContentScript({
 let isInspecting = false;
 let inspectionOverlay: HTMLDivElement | null = null;
 let lastHoveredElement: HTMLElement | null = null;
+let ghostLabels: HTMLDivElement[] = [];
+let quickPicker: HTMLDivElement | null = null;
+
+const COMMON_CATEGORIES: { id: FieldCategory; label: string }[] = [
+    { id: 'personal.firstName', label: 'First Name' },
+    { id: 'personal.lastName', label: 'Last Name' },
+    { id: 'personal.email', label: 'Email' },
+    { id: 'personal.phone', label: 'Phone' },
+    { id: 'personal.linkedin', label: 'LinkedIn' },
+    { id: 'personal.portfolio', label: 'Portfolio' },
+    { id: 'resume.upload', label: 'Resume' },
+    { id: 'eeo.gender', label: 'Gender' },
+    { id: 'eeo.race', label: 'Race/Ethnicity' },
+    { id: 'eeo.veteran', label: 'Veteran Status' },
+    { id: 'eeo.disability', label: 'Disability' }
+];
+
 
 function createInspectionOverlay() {
     if (inspectionOverlay) return;
@@ -70,7 +87,12 @@ function startInspection() {
     document.body.style.cursor = 'crosshair';
     document.addEventListener('mouseover', handleInspectionHover, true);
     document.addEventListener('click', handleInspectionClick, true);
-    console.log('[JobSwyft] Inspection mode started');
+
+    // Initial scan and tag everything
+    const fields = detectFormFields();
+    showGhostLabels(fields);
+
+    console.log('[JobSwyft] Inspection mode started with ghost labels');
 }
 
 function stopInspection() {
@@ -78,10 +100,193 @@ function stopInspection() {
     document.body.style.cursor = '';
     document.removeEventListener('mouseover', handleInspectionHover, true);
     document.removeEventListener('click', handleInspectionClick, true);
+    window.removeEventListener('scroll', updateGhostLabelPositions);
+    window.removeEventListener('resize', updateGhostLabelPositions);
+
     if (inspectionOverlay) {
         inspectionOverlay.style.display = 'none';
     }
+
+    clearGhostLabels();
+    hideQuickPicker();
+
     console.log('[JobSwyft] Inspection mode stopped');
+}
+
+function showGhostLabels(fields: DetectedField[]) {
+    clearGhostLabels();
+
+    fields.forEach(field => {
+        const element = document.querySelector(field.selector) as HTMLElement;
+        if (!element) return;
+
+        const label = document.createElement('div');
+        label.className = 'jobswyft-ghost-label';
+        (label as any)._targetSelector = field.selector; // Store for repositioning
+
+        const isLowConf = field.confidence === 'low' || field.category === 'questions';
+
+        Object.assign(label.style, {
+            position: 'absolute',
+            backgroundColor: isLowConf ? '#6366f1' : '#10b981', // Indigo for questions, Emerald for confirmed
+            color: 'white',
+            padding: '4px 8px',
+            borderRadius: '6px',
+            fontSize: '12px',
+            lineHeight: '1',
+            fontWeight: 'bold',
+            zIndex: '999998',
+            pointerEvents: 'none',
+            boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+            border: '1px solid rgba(255,255,255,0.2)',
+            whiteSpace: 'nowrap',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            opacity: '1'
+        });
+
+        label.textContent = isLowConf ? `? ${field.label}` : `✓ ${field.label}`;
+        document.body.appendChild(label);
+        ghostLabels.push(label);
+    });
+
+    updateGhostLabelPositions();
+    window.addEventListener('scroll', updateGhostLabelPositions, { passive: true });
+    window.addEventListener('resize', updateGhostLabelPositions, { passive: true });
+}
+
+function updateGhostLabelPositions() {
+    ghostLabels.forEach(label => {
+        const selector = (label as any)._targetSelector;
+        const target = document.querySelector(selector) as HTMLElement;
+        if (!target) {
+            label.style.display = 'none';
+            return;
+        }
+
+        const rect = target.getBoundingClientRect();
+        // Check if visible in viewport
+        if (rect.top < 0 || rect.left < 0 || rect.bottom > window.innerHeight || rect.right > window.innerWidth) {
+            // Optional: Dim or hide labels out of view? 
+            // For now, keep them positioned
+        }
+
+        label.style.top = `${rect.top + window.scrollY - 20}px`;
+        label.style.left = `${rect.left + window.scrollX}px`;
+        label.style.display = 'block';
+    });
+}
+
+function clearGhostLabels() {
+    ghostLabels.forEach(l => l.remove());
+    ghostLabels = [];
+}
+
+function updateGhostLabel(selector: string, labelText: string) {
+    const label = ghostLabels.find(l => (l as any)._targetSelector === selector);
+    if (label) {
+        label.textContent = `✓ ${labelText}`;
+        label.style.backgroundColor = '#10b981'; // Emerald
+        label.style.transform = 'scale(1.05)';
+        label.style.zIndex = '999999';
+        setTimeout(() => {
+            if (label) label.style.transform = 'scale(1)';
+        }, 200);
+    }
+}
+
+function showQuickPicker(target: HTMLElement, field: any) {
+    hideQuickPicker();
+
+    quickPicker = document.createElement('div');
+    quickPicker.id = 'jobswyft-quick-picker';
+    const rect = target.getBoundingClientRect();
+
+    Object.assign(quickPicker.style, {
+        position: 'absolute',
+        top: `${rect.bottom + window.scrollY + 8}px`,
+        left: `${rect.left + window.scrollX}px`,
+        backgroundColor: '#ffffff',
+        border: '1px solid #e2e8f0',
+        borderRadius: '12px',
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        zIndex: '1000000',
+        padding: '6px',
+        minWidth: '180px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '4px',
+        maxHeight: '320px',
+        overflowY: 'auto',
+        animation: 'jobswyft-fade-in 0.2s ease-out'
+    });
+
+    const header = document.createElement('div');
+    header.textContent = 'Map Field To:';
+    Object.assign(header.style, {
+        fontSize: '11px',
+        fontWeight: '800',
+        color: '#94a3b8',
+        padding: '8px 10px 4px 10px',
+        textTransform: 'uppercase',
+        letterSpacing: '0.05em'
+    });
+    quickPicker.appendChild(header);
+
+    COMMON_CATEGORIES.forEach(cat => {
+        const item = document.createElement('div');
+        item.textContent = cat.label;
+        Object.assign(item.style, {
+            padding: '8px 12px',
+            fontSize: '13px',
+            fontWeight: '500',
+            cursor: 'pointer',
+            borderRadius: '8px',
+            color: '#334155',
+            transition: 'all 0.15s ease'
+        });
+
+        item.onmouseover = () => {
+            item.style.backgroundColor = '#f1f5f9';
+            item.style.color = '#10b981';
+            item.style.paddingLeft = '14px';
+        };
+        item.onmouseout = () => {
+            item.style.backgroundColor = 'transparent';
+            item.style.color = '#334155';
+            item.style.paddingLeft = '12px';
+        };
+        item.onclick = (e) => {
+            e.stopPropagation();
+
+            // 1. Update visual feedback immediately
+            updateGhostLabel(field.selector, cat.label);
+
+            // 2. Send message to sidepanel
+            chrome.runtime.sendMessage({
+                action: 'FIELD_MAPPED',
+                field: { ...field, category: mapToLegacyCategory(cat.id as any), specificCategory: cat.id },
+                category: cat.id
+            });
+
+            // 3. Hide picker immediately, but wait a bit to stop inspection
+            // so the user can see the updated "✓" label
+            hideQuickPicker();
+            setTimeout(() => {
+                stopInspection();
+            }, 1000);
+        };
+
+        quickPicker?.appendChild(item);
+    });
+
+    document.body.appendChild(quickPicker);
+}
+
+function hideQuickPicker() {
+    if (quickPicker) {
+        quickPicker.remove();
+        quickPicker = null;
+    }
 }
 
 function handleInspectionHover(e: MouseEvent) {
@@ -119,12 +324,9 @@ function handleInspectionClick(e: MouseEvent) {
             type: (target as HTMLInputElement).type || target.tagName.toLowerCase()
         };
 
-        chrome.runtime.sendMessage({
-            action: 'FIELD_SELECTED',
-            field: fieldData
-        });
-
-        stopInspection();
+        showQuickPicker(target, fieldData);
+    } else {
+        hideQuickPicker();
     }
 }
 
@@ -181,7 +383,7 @@ function detectFormFields(): DetectedField[] {
                 // 1. DOM ID
                 // 2. Name attribute
                 // 3. Deterministic path/selector hash (V4 Improvement)
-                const id = element.id || (element as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`;
+                const id = element.id || (element as any).name || `field_${btoa(selector).substring(0, 16).replace(/[/+=]/g, '')}`;
 
                 // Try to get a human-readable label
                 let label = '';
@@ -226,12 +428,13 @@ function detectFormFields(): DetectedField[] {
             // High/Medium confidence match
             const selector = getCssSelector(input);
             fields.push({
-                id: input.id || (input as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`,
+                id: input.id || (input as any).name || `field_${btoa(selector).substring(0, 16).replace(/[/+=]/g, '')}`,
                 selector,
                 label: score.labelText || (input as any).name || (input as any).placeholder || "Field",
                 type: input.type || input.tagName.toLowerCase(),
                 currentValue: input.value || '',
                 category: mapToLegacyCategory(score.category as FieldCategory),
+                specificCategory: score.category,
                 confidence: score.confidence,
                 jobBoard
             });
@@ -246,7 +449,7 @@ function detectFormFields(): DetectedField[] {
             }
 
             const selector = getCssSelector(input);
-            const id = input.id || (input as any).name || `field_${btoa(selector).substring(0, 12)}_${fields.length}`;
+            const id = input.id || (input as any).name || `field_${btoa(selector).substring(0, 16).replace(/[/+=]/g, '')}`;
 
             // Try to extract a label for this unknown field
             let label = '';
@@ -311,7 +514,19 @@ function mapToLegacyCategory(newCategory: FieldCategory): 'personal' | 'resume' 
 const getCssSelector = (el: HTMLElement): string => {
     if (el.id) return `#${CSS.escape(el.id)}`;
     if ((el as any).name) return `[name="${CSS.escape((el as any).name)}"]`;
-    return el.tagName.toLowerCase();
+
+    // Positional fallback for stability
+    const tag = el.tagName.toLowerCase();
+    const parent = el.parentElement;
+    if (parent) {
+        const siblings = Array.from(parent.children).filter(c => c.tagName === el.tagName);
+        if (siblings.length > 1) {
+            const index = siblings.indexOf(el) + 1;
+            return `${tag}:nth-of-type(${index})`;
+        }
+    }
+
+    return tag;
 };
 
 // Define DetectedField type locally if not imported, or match existing
@@ -321,8 +536,9 @@ interface DetectedField {
     label: string;
     type: string;
     currentValue: string;
-    category: 'personal' | 'resume' | 'questions' | 'eeo';
-    confidence: 'high' | 'medium' | 'low';
+    category: 'personal' | 'gender' | 'sponsorship' | 'authorization' | 'questions' | 'eeo' | 'resume';
+    specificCategory?: string;
+    confidence?: 'high' | 'medium' | 'low';
     jobBoard: string;
 }
 

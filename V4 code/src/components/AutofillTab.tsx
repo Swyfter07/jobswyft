@@ -27,8 +27,6 @@ import {
     MousePointer2
 } from "lucide-react";
 
-// Fallback for missing currentUrl
-const currentUrl = typeof window !== 'undefined' ? window.location.href : '';
 
 interface DetectedField {
     id: string;
@@ -36,7 +34,8 @@ interface DetectedField {
     label: string;
     type: string;
     currentValue: string;
-    category: 'personal' | 'resume' | 'questions' | 'eeo';
+    category: 'personal' | 'gender' | 'sponsorship' | 'authorization' | 'questions' | 'eeo' | 'resume';
+    specificCategory?: string;
     eeoType?: 'veteran' | 'disability' | 'race' | 'gender' | 'sponsorship' | 'authorization';
     jobBoard: string;
     frameId?: number;
@@ -53,6 +52,7 @@ interface AutofillTabProps {
 export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 }: AutofillTabProps) {
     const { toast } = useToast();
     const [detectedFields, setDetectedFields] = useState<DetectedField[]>([]);
+    const [activeTabUrl, setActiveTabUrl] = useState<string>('');
     const [isFilling, setIsFilling] = useState(false);
     const [isScanning, setIsScanning] = useState(false);
     const [statusMessage, setStatusMessage] = useState<{ title: string; text?: string; type: 'success' | 'info' | 'error' } | null>(null);
@@ -75,9 +75,20 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
         detectFields(false);
     }, [refreshKey]);
 
+    // Helper to map granular category to legacy tab-level category
+    const mapToLegacyCategory = (specificCat: string): 'personal' | 'resume' | 'questions' | 'eeo' => {
+        if (specificCat.startsWith('personal.')) return 'personal';
+        if (specificCat.startsWith('resume.')) return 'resume';
+        if (specificCat.startsWith('eeo.')) return 'eeo';
+        return 'questions';
+    };
+
     // Map resume data to field values (Tier 1: Resume Data)
-    const getValueForField = (label: string, type: string, category?: string): string | undefined => {
+    const getValueForField = (field: DetectedField, effectiveCategory?: string): string | undefined => {
         if (!resumeData) return undefined;
+
+        const { label, type, specificCategory } = field;
+        const category = effectiveCategory || field.category;
 
         // Handle Resume Upload
         if (category === 'resume' || type === 'file') {
@@ -92,7 +103,20 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
         const labelLower = label.toLowerCase();
         const info = resumeData.personalInfo;
 
-        if (/name/.test(labelLower)) return info.fullName;
+        // Prioritize Specific Category (Manual Mapping or High Confidence Heuristics)
+        const cat = specificCategory || '';
+        if (cat === 'personal.firstName' || cat === 'personal.firstNameLastName') return info.fullName?.split(' ')[0] || info.fullName;
+        if (cat === 'personal.lastName') return info.fullName?.split(' ').slice(1).join(' ') || '';
+        if (cat === 'personal.email') return info.email;
+        if (cat === 'personal.phone') return info.phone;
+        if (cat === 'personal.linkedin') return info.linkedin;
+        if (cat === 'personal.portfolio' || cat === 'personal.website') return info.website;
+        if (cat === 'personal.location' || cat === 'personal.city') return info.location;
+
+        // Fallback to label-based heuristics
+        if (/first name/.test(labelLower)) return info.fullName?.split(' ')[0] || info.fullName;
+        if (/last name/.test(labelLower)) return info.fullName?.split(' ').slice(1).join(' ') || '';
+        if (/full name|name/.test(labelLower)) return info.fullName;
         if (/email/.test(labelLower)) return info.email;
         if (/phone|tel/.test(labelLower)) return info.phone;
         if (/linkedin/.test(labelLower)) return info.linkedin;
@@ -140,9 +164,21 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
             const allFields: DetectedField[] = [];
 
             // Get custom mappings for this domain
-            const url = new URL(tab.url || currentUrl);
+            const url = new URL(tab.url || activeTabUrl || 'https://default.com');
             const domain = url.hostname;
-            const customMaps = await storageService.getCustomMappings(domain);
+            const currentMaps = await storageService.getCustomMappings(domain);
+
+            // Helper for category stability: preserve previous specific categories
+            const mergeStableCategories = (newFields: DetectedField[]): DetectedField[] => {
+                return newFields.map(newField => {
+                    const existing = detectedFields.find(p => p.selector === newField.selector);
+                    // If new scan says 'questions' but we previously knew it was something better, restore the better one
+                    if (existing && newField.category === 'questions' && existing.category !== 'questions') {
+                        return { ...newField, category: existing.category, confidence: existing.confidence || 'high' };
+                    }
+                    return newField;
+                });
+            };
 
             // Query each frame
             await Promise.all(frames.map(async (frame) => {
@@ -157,12 +193,16 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                         // Tag fields with frameId
                         const frameFields = response.fields.map((f: DetectedField) => {
                             // Apply custom mapping if exists
-                            const customCat = customMaps[f.selector];
+                            const customCat = currentMaps[f.selector];
                             return {
                                 ...f,
                                 frameId: frame.frameId,
                                 id: `${f.id}_frame${frame.frameId}`,
-                                ...(customCat ? { category: customCat as any, confidence: 'high' } : {})
+                                ...(customCat ? {
+                                    category: mapToLegacyCategory(customCat),
+                                    specificCategory: customCat,
+                                    confidence: 'high'
+                                } : {})
                             };
                         });
                         allFields.push(...frameFields);
@@ -176,13 +216,16 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
             const filteredFields = allFields.filter(f => !ignoredFieldIds.has(f.id));
 
             if (filteredFields.length > 0) {
+                // Apply stability merge before AI
+                const stableFields = mergeStableCategories(filteredFields);
+
                 // Then refine with AI if needed
-                const candidates = filteredFields.filter(f => f.category === 'questions' || f.confidence === 'low');
+                const candidates = stableFields.filter(f => f.category === 'questions' || f.confidence === 'low');
                 if (candidates.length > 0 && !skipAI) {
-                    await runAISegmentation(filteredFields);
+                    await runAISegmentation(stableFields);
                 } else {
                     // Only set fields here if we are NOT running AI, OR after AI is done
-                    setDetectedFields(filteredFields);
+                    setDetectedFields(stableFields);
                 }
 
                 // If we don't have an override yet, check if there's an auto-detected resume field
@@ -207,18 +250,68 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
     const [mappingTarget, setMappingTarget] = useState<any | null>(null);
 
     /**
-     * Listen for manual field selection from content script
+     * Listen for manual field selection / mapping from content script
      */
     useEffect(() => {
-        const listener = (message: any) => {
+        const fetchInitialUrl = async () => {
+            const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+            if (tab?.url) setActiveTabUrl(tab.url);
+        };
+        fetchInitialUrl();
+
+        const listener = async (message: any) => {
             if (message.action === 'FIELD_SELECTED') {
                 setMappingTarget(message.field);
                 setIsInspecting(false);
+            } else if (message.action === 'FIELD_MAPPED') {
+                try {
+                    const { field, category } = message;
+                    setIsInspecting(false); // Map completed, stop inspecting
+
+                    // Use the current active tab URL to resolve the domain
+                    const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+                    const urlToUse = tab?.url || activeTabUrl;
+                    if (!urlToUse) throw new Error("No active tab URL found for mapping");
+
+                    const url = new URL(urlToUse);
+                    const domain = url.hostname;
+                    const currentMaps = await storageService.getCustomMappings(domain);
+
+                    await storageService.saveCustomMapping(domain, {
+                        ...currentMaps,
+                        [field.selector]: category
+                    });
+
+                    // Update UI state
+                    setDetectedFields(prev => {
+                        const exists = prev.find(f => f.selector === field.selector);
+                        const updatedField = {
+                            ...field,
+                            category: field.category as any,
+                            specificCategory: category, // granular
+                            confidence: 'high'
+                        };
+
+                        if (exists) {
+                            return prev.map(f => f.selector === field.selector ? updatedField : f);
+                        }
+                        return [...prev, updatedField];
+                    });
+
+                    setStatusMessage({
+                        title: "Field Mapped",
+                        text: `Saved mapping for ${field.label || 'field'}`,
+                        type: 'success'
+                    });
+                    setTimeout(() => setStatusMessage(null), 3000);
+                } catch (err) {
+                    console.error("[AutofillTab] Failed to process FIELD_MAPPED:", err);
+                }
             }
         };
         chrome.runtime.onMessage.addListener(listener);
         return () => chrome.runtime.onMessage.removeListener(listener);
-    }, []);
+    }, [activeTabUrl]);
 
     const toggleInspection = async () => {
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -248,7 +341,8 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
         };
 
         // Save to local persistence (Domain-based)
-        const url = new URL(currentUrl);
+        const urlToUse = activeTabUrl || (typeof window !== 'undefined' ? window.location.href : 'https://default.com');
+        const url = new URL(urlToUse);
         const domain = url.hostname;
         const currentMaps = await storageService.getCustomMappings(domain);
 
@@ -293,8 +387,13 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
 
             // Apply updates
             const updatedFields = currentFields.reduce((acc, field) => {
-                const newCat = segmentation[field.id];
+                // EXEMPT: If field has high confidence (manual mapping or robust heuristic), DO NOT let AI touch it
+                if (field.confidence === 'high') {
+                    acc.push(field);
+                    return acc;
+                }
 
+                const newCat = segmentation[field.id];
 
                 // If AI says 'ignore', track it and skip
                 if (newCat === 'ignore') {
@@ -303,7 +402,6 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                 }
 
                 // Aggressive Filter: If the label is still just "Question" or "Attach", it's likely a trash field
-                // BUT: Exempt file fields as they are often labeled simple "Attach"
                 if (field.type !== 'file' && (field.label === 'Question' || field.label === 'Attach') && (!newCat || newCat === 'question')) {
                     return acc;
                 }
@@ -311,7 +409,7 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                 if (newCat) {
                     let mappedCat: any = newCat;
                     // Normalize categories to match our state
-                    if (newCat === 'cover_letter') mappedCat = 'resume'; // Group cover letter with resume
+                    if (newCat === 'cover_letter') mappedCat = 'resume';
                     if (newCat === 'question') mappedCat = 'questions';
 
                     acc.push({ ...field, category: mappedCat, confidence: 'high' });
@@ -362,7 +460,7 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                 value = field.currentValue;
             } else if (category === 'personal' || category === 'resume') {
                 // Tier 1: Resume data
-                value = getValueForField(field.label, field.type, category);
+                value = getValueForField(field, category);
                 if (value) status = 'ready';
             } else if (category === 'eeo') {
                 // Tier 2: EEO preferences
@@ -409,11 +507,12 @@ export function AutofillTab({ resumeData, activeResume, jobData, refreshKey = 0 
                     }
 
                     // Tier 1: Resume data (Personal Only, files handled below)
-                    if (category === 'personal') {
-                        value = getValueForField(field.label, field.type, category);
-                    }
-                    // Tier 2: EEO preferences
-                    else if (category === 'eeo') {
+                    if (category === 'personal' || category === 'resume') {
+                        value = getValueForField(field, category);
+                        if (value) {
+                            // Tier 2: EEO preferences
+                        }
+                    } else if (category === 'eeo') {
                         value = getEEOValue(field.eeoType);
                     }
 
