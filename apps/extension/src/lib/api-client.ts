@@ -227,6 +227,19 @@ class ApiClient {
     });
   }
 
+  /** PATCH /v1/resumes/:id/parsed-data — Update resume parsed data. */
+  async updateParsedData(
+    token: string,
+    resumeId: string,
+    parsedData: Record<string, unknown>
+  ): Promise<ApiResumeResponse> {
+    return this.fetch<ApiResumeResponse>(`/v1/resumes/${resumeId}/parsed-data`, {
+      method: "PATCH",
+      body: JSON.stringify(parsedData),
+      token,
+    });
+  }
+
   // ─── AI extraction endpoint ────────────────────────────────────────
 
   /**

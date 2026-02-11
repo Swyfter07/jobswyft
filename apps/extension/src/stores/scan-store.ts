@@ -16,6 +16,7 @@ interface ScanState {
   isRefining: boolean;
   board: string | null;
   savedJobId: string | null;
+  hasShowMore: boolean;
 
   startScan: () => void;
   setScanResult: (data: Partial<JobData>, confidence?: ExtractionConfidence | null, board?: string | null) => void;
@@ -27,6 +28,7 @@ interface ScanState {
   setRefining: (value: boolean) => void;
   setConfidence: (conf: ExtractionConfidence | null) => void;
   setBoard: (name: string | null) => void;
+  setHasShowMore: (value: boolean) => void;
 }
 
 export const useScanStore = create<ScanState>()(
@@ -42,6 +44,7 @@ export const useScanStore = create<ScanState>()(
       isRefining: false,
       board: null,
       savedJobId: null,
+      hasShowMore: false,
 
       startScan: () => {
         set({
@@ -49,6 +52,7 @@ export const useScanStore = create<ScanState>()(
           error: null,
           isEditing: false,
           editedJobData: null,
+          hasShowMore: false,
         });
       },
 
@@ -161,6 +165,7 @@ export const useScanStore = create<ScanState>()(
           isRefining: false,
           board: null,
           savedJobId: null,
+          hasShowMore: false,
         });
       },
 
@@ -175,6 +180,10 @@ export const useScanStore = create<ScanState>()(
       setBoard: (name) => {
         set({ board: name });
       },
+
+      setHasShowMore: (value) => {
+        set({ hasShowMore: value });
+      },
     }),
     {
       name: "jobswyft-scan",
@@ -184,6 +193,7 @@ export const useScanStore = create<ScanState>()(
         jobData: state.jobData,
         isRefining: state.isRefining,
         savedJobId: state.savedJobId,
+        hasShowMore: state.hasShowMore,
       }),
     }
   )

@@ -11,7 +11,8 @@ Return ONLY valid JSON with this exact structure (use null for missing fields):
     "email": "string or null",
     "phone": "string or null",
     "location": "string or null",
-    "linkedin_url": "string or null"
+    "linkedin_url": "string or null",
+    "website": "string or null"
   }},
   "summary": "professional summary or objective statement, or null",
   "experience": [
@@ -20,25 +21,54 @@ Return ONLY valid JSON with this exact structure (use null for missing fields):
       "company": "company name",
       "start_date": "start date as string",
       "end_date": "end date as string or null if current",
-      "description": "job description or responsibilities"
+      "description": "1-2 sentence prose summary of the role, or null if none exists",
+      "highlights": ["individual bullet point 1", "individual bullet point 2"]
     }}
   ],
   "education": [
     {{
       "degree": "degree name",
       "institution": "school name",
-      "graduation_year": "year as string"
+      "graduation_year": "year as string",
+      "start_date": "start date as string or null",
+      "end_date": "end date as string or null",
+      "description": "prose description of studies, honors, or focus area, or null if none exists",
+      "highlights": ["achievement or activity 1", "achievement or activity 2"]
     }}
   ],
-  "skills": ["skill1", "skill2", "skill3"]
+  "skills": ["skill1", "skill2", "skill3"],
+  "certifications": [
+    {{
+      "name": "certification name",
+      "issuer": "issuing organization",
+      "date": "date obtained as string or null"
+    }}
+  ],
+  "projects": [
+    {{
+      "name": "project name",
+      "description": "prose project description, or null if only bullet points exist",
+      "tech_stack": ["technology1", "technology2"],
+      "url": "project URL or null",
+      "highlights": ["key outcome or feature 1", "key outcome or feature 2"]
+    }}
+  ]
 }}
 
 Important rules:
 - Return ONLY the JSON object, no markdown code blocks or extra text
 - Use null for any field you cannot find
 - For dates, use the format found in the resume (e.g., "Jan 2020", "2020-01", "2020")
-- Extract all work experiences and education entries found
+- Extract all work experiences, education entries, certifications, and projects found
 - Skills should be a flat array of strings
+- CRITICAL — description vs highlights distinction:
+  - "description" is an OPTIONAL prose summary (1-2 sentences written in paragraph form). Set it to null if no such prose exists.
+  - "highlights" is an array of individual bullet points / achievements / responsibilities.
+  - If an entry has ONLY bullet points and no prose paragraph, set description to null and put ALL bullets in highlights. Do NOT use the first bullet as the description.
+  - If an entry has a prose paragraph followed by bullets, put the prose in description and the bullets in highlights.
+  - If an entry has only a prose paragraph with no bullets, put it in description and set highlights to null.
+  - Never fabricate a description from bullet content. Only use actual prose text from the resume.
+- If there are no certifications or projects sections in the resume, set those fields to null
 
 Resume text:
 {resume_text}"""

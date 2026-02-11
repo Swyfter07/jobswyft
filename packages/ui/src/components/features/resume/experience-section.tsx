@@ -1,9 +1,12 @@
 "use client"
 
 import * as React from "react"
-import { ChevronDown } from "lucide-react"
+import { ChevronDown, Plus, X } from "lucide-react"
 
-import { cn } from "@/lib/utils"
+import { cn, autoResize, autoResizeRef } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Collapsible,
   CollapsibleContent,
@@ -22,14 +25,22 @@ export interface ResumeExperienceEntry {
 
 export interface ExperienceSectionProps {
   entries: ResumeExperienceEntry[]
+  isEditing?: boolean
+  onChange?: (entries: ResumeExperienceEntry[]) => void
 }
 
-function ExperienceSection({ entries }: ExperienceSectionProps) {
+function ExperienceSection({ entries, isEditing, onChange }: ExperienceSectionProps) {
   const [expandedIndex, setExpandedIndex] = React.useState<number | null>(0)
   const [showAll, setShowAll] = React.useState(false)
   const VISIBLE_LIMIT = 2
   const hasMore = entries.length > VISIBLE_LIMIT
-  const visibleEntries = showAll ? entries : entries.slice(0, VISIBLE_LIMIT)
+  const visibleEntries = showAll || isEditing ? entries : entries.slice(0, VISIBLE_LIMIT)
+
+  const handleEntryChange = (idx: number, updated: ResumeExperienceEntry) => {
+    const next = [...entries]
+    next[idx] = updated
+    onChange?.(next)
+  }
 
   return (
     <div className="space-y-2">
@@ -37,11 +48,13 @@ function ExperienceSection({ entries }: ExperienceSectionProps) {
         <ExperienceEntryCard
           key={`${entry.company}-${idx}`}
           entry={entry}
-          isOpen={expandedIndex === idx}
-          onOpenChange={(isOpen) => setExpandedIndex(isOpen ? idx : null)}
+          isOpen={isEditing || expandedIndex === idx}
+          onOpenChange={(isOpen) => !isEditing && setExpandedIndex(isOpen ? idx : null)}
+          isEditing={isEditing}
+          onChange={(updated) => handleEntryChange(idx, updated)}
         />
       ))}
-      {hasMore && (
+      {hasMore && !isEditing && (
         <button
           type="button"
           onClick={() => setShowAll(!showAll)}
@@ -72,10 +85,14 @@ function ExperienceEntryCard({
   entry,
   isOpen,
   onOpenChange,
+  isEditing,
+  onChange,
 }: {
   entry: ResumeExperienceEntry
   isOpen: boolean
   onOpenChange: (open: boolean) => void
+  isEditing?: boolean
+  onChange?: (entry: ResumeExperienceEntry) => void
 }) {
   const [descExpanded, setDescExpanded] = React.useState(false)
   const [highlightsExpanded, setHighlightsExpanded] = React.useState(false)
@@ -85,6 +102,98 @@ function ExperienceEntryCard({
     entry.description,
     ...entry.highlights.map((h) => `- ${h}`),
   ].join("\n")
+
+  const handleFieldChange = (field: keyof ResumeExperienceEntry, value: string) => {
+    onChange?.({ ...entry, [field]: value })
+  }
+
+  const handleHighlightChange = (idx: number, value: string) => {
+    const next = [...entry.highlights]
+    next[idx] = value
+    onChange?.({ ...entry, highlights: next })
+  }
+
+  const addHighlight = () => {
+    onChange?.({ ...entry, highlights: [...entry.highlights, ""] })
+  }
+
+  const removeHighlight = (idx: number) => {
+    onChange?.({ ...entry, highlights: entry.highlights.filter((_, i) => i !== idx) })
+  }
+
+  if (isEditing) {
+    return (
+      <div className="rounded-lg border border-border bg-gradient-to-r from-muted/30 to-transparent p-2.5 space-y-2">
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            value={entry.title}
+            onChange={(e) => handleFieldChange("title", e.target.value)}
+            placeholder="Job title"
+            className="h-7 text-xs"
+          />
+          <Input
+            value={entry.company}
+            onChange={(e) => handleFieldChange("company", e.target.value)}
+            placeholder="Company"
+            className="h-7 text-xs"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          <Input
+            value={entry.startDate}
+            onChange={(e) => handleFieldChange("startDate", e.target.value)}
+            placeholder="Start date"
+            className="h-7 text-xs"
+          />
+          <Input
+            value={entry.endDate}
+            onChange={(e) => handleFieldChange("endDate", e.target.value)}
+            placeholder="End date"
+            className="h-7 text-xs"
+          />
+        </div>
+        <Textarea
+          ref={autoResizeRef}
+          value={entry.description}
+          onChange={(e) => handleFieldChange("description", e.target.value)}
+          onInput={autoResize}
+          placeholder="Role description..."
+          className="min-h-[60px] text-xs resize-none overflow-hidden"
+        />
+        <div className="space-y-1.5">
+          {entry.highlights.map((h, idx) => (
+            <div key={`hl-${idx}-${h.slice(0, 16)}`} className="flex gap-2 items-start">
+              <div className="mt-3 h-1 w-1 rounded-full bg-primary shrink-0" />
+              <Textarea
+                ref={autoResizeRef}
+                value={h}
+                onChange={(e) => handleHighlightChange(idx, e.target.value)}
+                onInput={autoResize}
+                className="min-h-[40px] text-xs flex-1 resize-none overflow-hidden"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                onClick={() => removeHighlight(idx)}
+              >
+                <X className="size-3" />
+              </Button>
+            </div>
+          ))}
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-xs h-7"
+            onClick={addHighlight}
+          >
+            <Plus className="size-3 mr-1" />
+            Add Bullet
+          </Button>
+        </div>
+      </div>
+    )
+  }
 
   const isLong = entry.description.length > DESCRIPTION_CHAR_LIMIT
   const displayedDesc =

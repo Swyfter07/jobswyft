@@ -63,6 +63,10 @@ export interface ApiEducationItem {
   degree: string | null
   institution: string | null
   graduation_year: string | null
+  start_date?: string | null
+  end_date?: string | null
+  description?: string | null
+  highlights?: string[]
 }
 
 export interface ApiCertificationItem {
@@ -76,6 +80,7 @@ export interface ApiProjectItem {
   description: string | null
   tech_stack?: string[]
   url?: string | null
+  highlights?: string[]
 }
 
 export interface ApiParsedResumeData {

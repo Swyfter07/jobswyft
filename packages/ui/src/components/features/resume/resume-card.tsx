@@ -79,7 +79,55 @@ interface ResumeCardProps {
   className?: string
 }
 
-// ─── Loading Skeleton ───────────────────────────────────────────────
+// ─── Parsing State (V4 style) ───────────────────────────────────────
+
+function ResumeParsingState() {
+  const [progress, setProgress] = React.useState(0)
+
+  React.useEffect(() => {
+    const t1 = setTimeout(() => setProgress(40), 1000)
+    const t2 = setTimeout(() => setProgress(75), 3000)
+    return () => {
+      clearTimeout(t1)
+      clearTimeout(t2)
+    }
+  }, [])
+
+  return (
+    <div className="p-4 space-y-3">
+      <div className="flex items-center gap-3">
+        <Loader2 className="size-5 text-primary animate-spin" />
+        <div className="flex-1">
+          <p className="text-sm font-medium text-foreground">
+            Parsing Resume...
+          </p>
+          <p className="text-xs text-muted-foreground">
+            Extracting skills, experience, and education
+          </p>
+        </div>
+      </div>
+      <div className="space-y-1">
+        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+          {progress > 0 ? (
+            <div
+              className="h-full bg-primary transition-all duration-700 ease-out rounded-full"
+              style={{ width: `${progress}%` }}
+            />
+          ) : (
+            <div className="h-full w-1/3 bg-primary rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" />
+          )}
+        </div>
+        {progress > 0 && (
+          <p className="text-micro text-muted-foreground text-right">
+            {progress}%
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Loading Skeleton (non-upload fetch) ────────────────────────────
 
 function ResumeLoadingSkeleton() {
   return (
@@ -247,7 +295,9 @@ function ResumeCard({
             </button>
           )}
         </div>
-      ) : isBusy ? (
+      ) : isUploading ? (
+        <ResumeParsingState />
+      ) : isLoading ? (
         <>
           <div className="h-1 w-full bg-muted rounded-full overflow-hidden">
             <div className="h-full w-1/3 bg-primary rounded-full animate-[indeterminate_1.5s_ease-in-out_infinite]" />

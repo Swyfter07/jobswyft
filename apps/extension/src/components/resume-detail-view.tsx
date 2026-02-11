@@ -3,6 +3,7 @@ import {
   ChevronLeft,
   Pencil,
   Save,
+  Loader2,
   User,
   Wrench,
   Briefcase,
@@ -21,8 +22,15 @@ import {
   CertificationsSection,
   ProjectsSection,
 } from "@jobswyft/ui";
-import type { ResumePersonalInfo } from "@jobswyft/ui";
+import type {
+  ResumeData,
+  ResumePersonalInfo,
+  ResumeExperienceEntry,
+  ResumeEducationEntry,
+  ResumeProjectEntry,
+} from "@jobswyft/ui";
 import { useResumeStore } from "../stores/resume-store";
+import { useAuthStore } from "../stores/auth-store";
 
 interface ResumeDetailViewProps {
   onClose: () => void;
@@ -45,50 +53,82 @@ function SectionHeader({
 }
 
 export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
-  const { activeResumeData, updateLocalResumeData } = useResumeStore();
+  const { activeResumeData, saveResumeData } = useResumeStore();
+  const accessToken = useAuthStore((s) => s.accessToken);
   const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
-  // Local edit copies (only PersonalInfo + Skills are editable)
-  const [editPersonalInfo, setEditPersonalInfo] =
-    useState<ResumePersonalInfo | null>(null);
-  const [editSkills, setEditSkills] = useState<string[] | null>(null);
+  // Full edit data clone (deep clone on enter edit)
+  const [editData, setEditData] = useState<ResumeData | null>(null);
 
   const data = activeResumeData;
 
-  const handleToggleEdit = useCallback(() => {
-    if (isEditing) {
-      // Save: merge edits into store
-      const updates: Record<string, unknown> = {};
-      if (editPersonalInfo) updates.personalInfo = editPersonalInfo;
-      if (editSkills) updates.skills = editSkills;
-      if (Object.keys(updates).length > 0) {
-        updateLocalResumeData(updates);
-      }
-      setIsEditing(false);
-      setEditPersonalInfo(null);
-      setEditSkills(null);
-    } else {
-      // Enter edit: snapshot current data
-      if (data) {
-        setEditPersonalInfo({ ...data.personalInfo });
-        setEditSkills([...data.skills]);
-      }
+  const handleEnterEdit = useCallback(() => {
+    if (data) {
+      setEditData(JSON.parse(JSON.stringify(data)));
+      setSaveError(null);
       setIsEditing(true);
     }
-  }, [isEditing, data, editPersonalInfo, editSkills, updateLocalResumeData]);
+  }, [data]);
 
+  const handleCancel = useCallback(() => {
+    setIsEditing(false);
+    setEditData(null);
+    setSaveError(null);
+  }, []);
+
+  const handleSave = useCallback(async () => {
+    if (!editData || !accessToken) return;
+    setIsSaving(true);
+    setSaveError(null);
+    try {
+      await saveResumeData(accessToken, editData);
+      setIsEditing(false);
+      setEditData(null);
+    } catch {
+      setSaveError("Failed to save. Please try again.");
+    } finally {
+      setIsSaving(false);
+    }
+  }, [editData, accessToken, saveResumeData]);
+
+  // Section-level onChange handlers that update editData
   const handlePersonalInfoChange = useCallback(
     (field: keyof ResumePersonalInfo, value: string) => {
-      setEditPersonalInfo((prev) =>
-        prev ? { ...prev, [field]: value } : prev
+      setEditData((prev) =>
+        prev
+          ? { ...prev, personalInfo: { ...prev.personalInfo, [field]: value } }
+          : prev
       );
     },
     []
   );
 
   const handleSkillsChange = useCallback((skills: string[]) => {
-    setEditSkills(skills);
+    setEditData((prev) => (prev ? { ...prev, skills } : prev));
   }, []);
+
+  const handleExperienceChange = useCallback(
+    (entries: ResumeExperienceEntry[]) => {
+      setEditData((prev) => (prev ? { ...prev, experience: entries } : prev));
+    },
+    []
+  );
+
+  const handleEducationChange = useCallback(
+    (entries: ResumeEducationEntry[]) => {
+      setEditData((prev) => (prev ? { ...prev, education: entries } : prev));
+    },
+    []
+  );
+
+  const handleProjectsChange = useCallback(
+    (entries: ResumeProjectEntry[]) => {
+      setEditData((prev) => (prev ? { ...prev, projects: entries } : prev));
+    },
+    []
+  );
 
   if (!data) {
     return (
@@ -98,9 +138,8 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
     );
   }
 
-  const personalInfo =
-    isEditing && editPersonalInfo ? editPersonalInfo : data.personalInfo;
-  const skills = isEditing && editSkills ? editSkills : data.skills;
+  // Use editData when editing, otherwise use store data
+  const displayData = isEditing && editData ? editData : data;
 
   return (
     <div className="flex flex-col h-full bg-background">
@@ -137,17 +176,23 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
                 variant="ghost"
                 size="sm"
                 className="h-8 text-xs"
-                onClick={() => {
-                  setIsEditing(false);
-                  setEditPersonalInfo(null);
-                  setEditSkills(null);
-                }}
+                onClick={handleCancel}
+                disabled={isSaving}
               >
                 Cancel
               </Button>
-              <Button size="sm" className="h-8 text-xs" onClick={handleToggleEdit}>
-                <Save className="size-3.5 mr-1.5" />
-                Save
+              <Button
+                size="sm"
+                className="h-8 text-xs"
+                onClick={handleSave}
+                disabled={isSaving}
+              >
+                {isSaving ? (
+                  <Loader2 className="size-3.5 mr-1.5 animate-spin" />
+                ) : (
+                  <Save className="size-3.5 mr-1.5" />
+                )}
+                {isSaving ? "Saving..." : "Save"}
               </Button>
             </>
           ) : (
@@ -155,7 +200,7 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
               variant="outline"
               size="sm"
               className="h-8 text-xs"
-              onClick={handleToggleEdit}
+              onClick={handleEnterEdit}
             >
               <Pencil className="size-3.5 mr-1.5" />
               Edit
@@ -164,6 +209,13 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
         </div>
       </div>
 
+      {/* Save error banner */}
+      {saveError && (
+        <div className="mx-4 mt-2 px-3 py-2 bg-destructive/10 text-destructive text-xs rounded-md">
+          {saveError}
+        </div>
+      )}
+
       {/* Scrollable Body */}
       <div className="flex-1 overflow-y-auto bg-muted/5 scrollbar-hidden">
         <div className="p-4 space-y-6">
@@ -171,7 +223,7 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
           <section>
             <SectionHeader icon={<User className="size-3" />} label="Personal Info" />
             <PersonalInfo
-              data={personalInfo}
+              data={displayData.personalInfo}
               isEditing={isEditing}
               onChange={handlePersonalInfoChange}
             />
@@ -183,13 +235,13 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
           <section>
             <SectionHeader icon={<Wrench className="size-3" />} label="Skills" />
             <SkillsSection
-              skills={skills}
+              skills={displayData.skills}
               isEditing={isEditing}
               onChange={handleSkillsChange}
             />
           </section>
 
-          {data.experience.length > 0 && (
+          {displayData.experience.length > 0 && (
             <>
               <Separator />
               <section>
@@ -197,12 +249,16 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
                   icon={<Briefcase className="size-3" />}
                   label="Experience"
                 />
-                <ExperienceSection entries={data.experience} />
+                <ExperienceSection
+                  entries={displayData.experience}
+                  isEditing={isEditing}
+                  onChange={handleExperienceChange}
+                />
               </section>
             </>
           )}
 
-          {data.education.length > 0 && (
+          {displayData.education.length > 0 && (
             <>
               <Separator />
               <section>
@@ -210,12 +266,16 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
                   icon={<GraduationCap className="size-3" />}
                   label="Education"
                 />
-                <EducationSection entries={data.education} />
+                <EducationSection
+                  entries={displayData.education}
+                  isEditing={isEditing}
+                  onChange={handleEducationChange}
+                />
               </section>
             </>
           )}
 
-          {data.certifications && data.certifications.length > 0 && (
+          {displayData.certifications && displayData.certifications.length > 0 && (
             <>
               <Separator />
               <section>
@@ -223,12 +283,12 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
                   icon={<Award className="size-3" />}
                   label="Certifications"
                 />
-                <CertificationsSection entries={data.certifications} />
+                <CertificationsSection entries={displayData.certifications} />
               </section>
             </>
           )}
 
-          {data.projects && data.projects.length > 0 && (
+          {displayData.projects && displayData.projects.length > 0 && (
             <>
               <Separator />
               <section>
@@ -236,7 +296,11 @@ export function ResumeDetailView({ onClose }: ResumeDetailViewProps) {
                   icon={<FolderOpen className="size-3" />}
                   label="Projects"
                 />
-                <ProjectsSection entries={data.projects} />
+                <ProjectsSection
+                  entries={displayData.projects}
+                  isEditing={isEditing}
+                  onChange={handleProjectsChange}
+                />
               </section>
             </>
           )}

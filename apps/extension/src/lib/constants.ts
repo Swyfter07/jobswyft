@@ -18,3 +18,8 @@ export const SENTINEL_STORAGE_KEY = "jobswyft-content-ready";
 
 /** Session storage key for cooldown data (survives SW restart) */
 export const COOLDOWN_STORAGE_KEY = "jobswyft-scan-cooldown";
+
+/** Storage key for settings (used by background worker's raw chrome.storage reads).
+ *  Must match settings-store.ts Zustand persist name.
+ *  Format: { state: { autoScan: boolean, autoAnalysis: boolean, ... }, version: N } */
+export const SETTINGS_STORAGE_KEY = "jobswyft-settings";

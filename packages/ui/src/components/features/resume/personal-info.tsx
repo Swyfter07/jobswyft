@@ -19,6 +19,10 @@ export interface ResumePersonalInfo {
   location: string
   linkedin?: string
   website?: string
+  /** @internal Preserved from API for lossless round-trip */
+  _apiFirstName?: string
+  /** @internal Preserved from API for lossless round-trip */
+  _apiLastName?: string
 }
 
 export interface PersonalInfoProps {

@@ -335,6 +335,50 @@ class ResumeService:
                 status_code=500,
             )
 
+    async def update_parsed_data(
+        self, user_id: str, resume_id: str, parsed_data: dict
+    ) -> Optional[dict]:
+        """Update the parsed_data for a resume.
+
+        Performs a shallow merge: existing top-level keys not present in
+        ``parsed_data`` are preserved (e.g. ``summary``).  Keys that ARE
+        present are fully replaced (e.g. ``experience``).
+
+        Args:
+            user_id: User's UUID.
+            resume_id: Resume's UUID.
+            parsed_data: Validated parsed data dictionary (partial).
+
+        Returns:
+            Updated resume data with is_active computed, or None if not found.
+        """
+        # Verify resume exists and belongs to user
+        resume = await self.get_resume(user_id, resume_id)
+        if not resume:
+            return None
+
+        # Merge: preserve existing keys not sent by the client (e.g. summary)
+        existing_data = resume.get("parsed_data") or {}
+        merged_data = {**existing_data, **parsed_data}
+
+        # Update parsed_data column
+        response = (
+            self.admin_client.table("resumes")
+            .update({"parsed_data": merged_data})
+            .eq("id", resume_id)
+            .eq("user_id", user_id)
+            .execute()
+        )
+
+        if not response.data:
+            return None
+
+        updated_resume = response.data[0]
+        # Carry over is_active from the get_resume call
+        updated_resume["is_active"] = resume["is_active"]
+
+        return updated_resume
+
     async def set_active_resume(self, user_id: str, resume_id: str) -> bool:
         """Set a resume as the user's active resume.
 

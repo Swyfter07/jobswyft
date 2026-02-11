@@ -14,6 +14,7 @@ class ExperienceItem(BaseModel):
     start_date: Optional[str] = None
     end_date: Optional[str] = None
     description: Optional[str] = None
+    highlights: Optional[List[str]] = None
 
 
 class EducationItem(BaseModel):
@@ -22,6 +23,28 @@ class EducationItem(BaseModel):
     degree: Optional[str] = None
     institution: Optional[str] = None
     graduation_year: Optional[str] = None
+    start_date: Optional[str] = None
+    end_date: Optional[str] = None
+    description: Optional[str] = None
+    highlights: Optional[List[str]] = None
+
+
+class CertificationItem(BaseModel):
+    """Certification entry."""
+
+    name: Optional[str] = None
+    issuer: Optional[str] = None
+    date: Optional[str] = None
+
+
+class ProjectItem(BaseModel):
+    """Project entry."""
+
+    name: Optional[str] = None
+    description: Optional[str] = None
+    tech_stack: Optional[List[str]] = None
+    url: Optional[str] = None
+    highlights: Optional[List[str]] = None
 
 
 class ContactInfo(BaseModel):
@@ -33,6 +56,7 @@ class ContactInfo(BaseModel):
     phone: Optional[str] = None
     location: Optional[str] = None
     linkedin_url: Optional[str] = None
+    website: Optional[str] = None
 
 
 class ParsedResumeData(BaseModel):
@@ -43,6 +67,8 @@ class ParsedResumeData(BaseModel):
     experience: Optional[List[ExperienceItem]] = None
     education: Optional[List[EducationItem]] = None
     skills: Optional[List[str]] = None
+    certifications: Optional[List[CertificationItem]] = None
+    projects: Optional[List[ProjectItem]] = None
 
 
 class ResumeResponse(BaseModel):

@@ -1,6 +1,8 @@
 import { useRef, useEffect, useCallback, useMemo, useState } from "react";
+import { AlertTriangle } from "lucide-react";
 import {
   AppHeader,
+  Button,
   ExtensionSidebar,
   ResumeCard,
   JobCard,
@@ -16,6 +18,8 @@ import { useScanStore } from "../stores/scan-store";
 import { useCreditsStore } from "../stores/credits-store";
 import { useSettingsStore } from "../stores/settings-store";
 import { scrapeJobPage } from "../features/scanning/scanner";
+import { SELECTOR_REGISTRY } from "../features/scanning/selector-registry";
+import { detectJobPage } from "../features/scanning/job-detector";
 import { validateExtraction, type ExtractionSource } from "../features/scanning/extraction-validator";
 import { cleanHtmlForAI } from "../features/scanning/html-cleaner";
 import { aggregateFrameResults } from "../features/scanning/frame-aggregator";
@@ -64,6 +68,7 @@ export function AuthenticatedLayout() {
     clearError: clearResumeError,
   } = useResumeStore();
   const scanStore = useScanStore();
+  const { autoScan, autoAnalysis: autoAnalysisSetting, setAutoScan, setAutoAnalysis } = useSettingsStore();
   const fetchCredits = useCreditsStore((s) => s.fetchCredits);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -73,18 +78,29 @@ export function AuthenticatedLayout() {
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [viewLayer, setViewLayer] = useState<"main" | "resume_detail">("main");
+  const [showRescanWarning, setShowRescanWarning] = useState(false);
 
-  // Fetch resumes on mount when authenticated
+  // Fetch resumes on mount when authenticated (always fetch to sync with server)
+  const hasFetchedResumes = useRef(false);
   useEffect(() => {
-    if (accessToken && resumes.length === 0) {
+    if (accessToken && !hasFetchedResumes.current) {
+      hasFetchedResumes.current = true;
       fetchResumes(accessToken);
     }
-  }, [accessToken, resumes.length, fetchResumes]);
+  }, [accessToken, fetchResumes]);
 
   // Re-fetch active resume detail if ID is persisted but data was lost (not persisted)
+  // Guard with a ref to prevent infinite retry loops on persistent failures (e.g. 404)
+  const detailRetryCount = useRef(0);
   useEffect(() => {
     if (accessToken && activeResumeId && !activeResumeData && !resumeLoading) {
-      useResumeStore.getState().fetchResumeDetail(accessToken, activeResumeId);
+      if (detailRetryCount.current < 2) {
+        detailRetryCount.current += 1;
+        useResumeStore.getState().fetchResumeDetail(accessToken, activeResumeId);
+      }
+    }
+    if (activeResumeData) {
+      detailRetryCount.current = 0;
     }
   }, [accessToken, activeResumeId, activeResumeData, resumeLoading]);
 
@@ -115,11 +131,14 @@ export function AuthenticatedLayout() {
         const results = await chrome.scripting.executeScript({
           target: { tabId, allFrames: true },
           func: scrapeJobPage,
-          args: [board],
+          args: [board, SELECTOR_REGISTRY],
         });
 
         // Aggregate results — main frame (frameId 0) first, sub-frames fill gaps only
-        const { data: best, sources: bestSources } = aggregateFrameResults(results);
+        const { data: best, sources: bestSources, hasShowMore } = aggregateFrameResults(results);
+
+        // Track show-more detection for banner display
+        scanStore.setHasShowMore(hasShowMore);
 
         // ─── Confidence scoring (AC3, AC4) ─────────────────────────────
         let validation = validateExtraction(best, bestSources as Record<string, ExtractionSource>);
@@ -191,7 +210,7 @@ export function AuthenticatedLayout() {
                 const reResults = await chrome.scripting.executeScript({
                   target: { tabId, allFrames: true },
                   func: scrapeJobPage,
-                  args: [board],
+                  args: [board, SELECTOR_REGISTRY],
                 });
 
                 // Fresh scan — don't carry forward stale data from initial scan
@@ -275,10 +294,29 @@ export function AuthenticatedLayout() {
       const request = changes[AUTO_SCAN_STORAGE_KEY].newValue;
       if (!request?.tabId) return;
 
+      // Gate on autoScan preference (side panel can use Zustand directly)
+      if (!useSettingsStore.getState().autoScan) return;
+
       // Deduplicate using unique ID (AC: 5.6 — crypto.randomUUID per signal)
       const requestId = request.id;
       if (!requestId || requestId === lastProcessedId.current) return;
       lastProcessedId.current = requestId;
+
+      // ─── Journey tracking (AC7, AC10) ─────────────────────────────
+      const { scanStatus, jobData } = useScanStore.getState();
+      const hasExistingJob = scanStatus === "success" && jobData !== null;
+
+      if (hasExistingJob && request.url) {
+        const incomingIsJobPage = detectJobPage(request.url);
+        const isSameUrl = request.url === jobData.sourceUrl;
+
+        if (!incomingIsJobPage && !isSameUrl) {
+          // User navigated to non-job page (e.g., apply form) — preserve context (FR72b)
+          return;
+        }
+        // If incoming IS a different job page, proceed with scan (new job)
+        // If same URL, proceed (re-scan same page, e.g., after show-more)
+      }
 
       performScan(request.tabId, { board: request.board ?? null });
     };
@@ -297,6 +335,27 @@ export function AuthenticatedLayout() {
       const signal = changes[SENTINEL_STORAGE_KEY].newValue;
       if (!signal?.url) return;
 
+      // Gate on autoScan preference
+      if (!useSettingsStore.getState().autoScan) return;
+
+      // Read hasShowMore from sentinel signal if present
+      if (signal.hasShowMore !== undefined) {
+        scanStore.setHasShowMore(signal.hasShowMore);
+      }
+
+      // Form detection: 5+ form fields on a non-job page with existing job data → Full Power state
+      // Threshold is 5 (not 3) to avoid false positives from search bars/filters on job listing pages.
+      // Only transition when the sentinel URL is NOT a known job page (i.e., it's an application form).
+      if (signal.formFieldCount !== undefined && signal.formFieldCount >= 5) {
+        const isApplicationPage = signal.url && !detectJobPage(signal.url);
+        if (isApplicationPage) {
+          const { scanStatus, jobData } = useScanStore.getState();
+          if (scanStatus === "success" && jobData !== null) {
+            setSidebarState("full-power");
+          }
+        }
+      }
+
       // Sentinel signals readiness — trigger scan on active tab
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         const tab = tabs[0];
@@ -308,17 +367,16 @@ export function AuthenticatedLayout() {
 
     chrome.storage.onChanged.addListener(handler);
     return () => chrome.storage.onChanged.removeListener(handler);
-  }, [performScan]);
+  }, [performScan, scanStore, setSidebarState]);
 
   // ─── Auto-analysis: trigger match when conditions met (Task 15) ────
-  const autoAnalysis = useSettingsStore((s) => s.autoAnalysis);
   const matchData = useSidebarStore((s) => s.matchData);
 
   useEffect(() => {
     const { savedJobId } = useScanStore.getState();
 
     if (
-      autoAnalysis &&
+      autoAnalysisSetting &&
       savedJobId &&
       activeResumeId &&
       !matchData &&
@@ -338,7 +396,7 @@ export function AuthenticatedLayout() {
           // Non-critical: user can manually trigger from AI Studio
         });
     }
-  }, [autoAnalysis, scanStore.savedJobId, activeResumeId, matchData, accessToken]);
+  }, [autoAnalysisSetting, scanStore.savedJobId, activeResumeId, matchData, accessToken]);
 
   const handleOpenDashboard = () => {
     try {
@@ -397,7 +455,7 @@ export function AuthenticatedLayout() {
     }
   }, [accessToken, fetchResumes]);
 
-  const handleManualScan = useCallback(() => {
+  const doManualScan = useCallback(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
       if (tab?.id) {
@@ -405,6 +463,15 @@ export function AuthenticatedLayout() {
       }
     });
   }, [performScan]);
+
+  const handleManualScan = useCallback(() => {
+    const hasExistingJob = scanStore.jobData !== null && scanStore.scanStatus === "success";
+    if (hasExistingJob) {
+      setShowRescanWarning(true);
+      return;
+    }
+    doManualScan();
+  }, [scanStore.jobData, scanStore.scanStatus, doManualScan]);
 
   const handleManualEntry = useCallback(() => {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
@@ -437,6 +504,9 @@ export function AuthenticatedLayout() {
   );
 
   // ─── Header ─────────────────────────────────────────────────────────
+  const handleAutoScanToggle = useCallback(() => setAutoScan(!autoScan), [autoScan, setAutoScan]);
+  const handleAutoAnalysisToggle = useCallback(() => setAutoAnalysis(!autoAnalysisSetting), [autoAnalysisSetting, setAutoAnalysis]);
+
   const header = (
     <AppHeader
       onSignOut={signOut}
@@ -446,6 +516,10 @@ export function AuthenticatedLayout() {
       onProfileClick={() => setSettingsOpen(true)}
       resetButton
       isDarkMode={isDark}
+      autoScanEnabled={autoScan}
+      onAutoScanToggle={handleAutoScanToggle}
+      autoAnalysisEnabled={autoAnalysisSetting}
+      onAutoAnalysisToggle={handleAutoAnalysisToggle}
     />
   );
 
@@ -521,6 +595,27 @@ export function AuthenticatedLayout() {
     case "success":
       scanContent = currentJobData ? (
         <>
+          {/* Rescan override warning (AC9) */}
+          {showRescanWarning && (
+            <div className="rounded-md bg-destructive/10 border border-destructive/30 px-3 py-2 text-xs flex flex-col gap-2">
+              <span className="font-medium text-destructive">Rescan will replace the current job data.</span>
+              <div className="flex gap-2">
+                <Button size="sm" variant="destructive" onClick={() => { setShowRescanWarning(false); doManualScan(); }}>
+                  Rescan
+                </Button>
+                <Button size="sm" variant="ghost" onClick={() => setShowRescanWarning(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          )}
+          {/* Incomplete description banner */}
+          {scanStore.hasShowMore && (
+            <div className="rounded-md bg-warning/10 border border-warning/30 px-3 py-2 text-xs text-warning-foreground flex items-center gap-2">
+              <AlertTriangle className="size-3.5 shrink-0" />
+              <span>Description may be incomplete. Expand &quot;Show More&quot; on the page and rescan for full details.</span>
+            </div>
+          )}
           {/* Refining badge (AC7, Task 9) */}
           {scanStore.isRefining && (
             <span className="text-micro text-muted-foreground animate-pulse motion-reduce:animate-none">
@@ -543,7 +638,7 @@ export function AuthenticatedLayout() {
             isSaving={scanStore.isSaving}
             isScanning={false}
             onScan={handleManualScan}
-            isAnalyzing={autoAnalysis && !!scanStore.savedJobId && !!activeResumeId && !matchData}
+            isAnalyzing={autoAnalysisSetting && !!scanStore.savedJobId && !!activeResumeId && !matchData}
           />
         </>
       ) : null;

@@ -160,6 +160,7 @@ export {
   ApiResponseError,
   mapResumeList,
   mapResumeResponse,
+  reverseMapResumeData,
   mapJobResponse,
   mapMatchAnalysis,
   mapUsageResponse,

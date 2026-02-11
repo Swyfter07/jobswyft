@@ -2,7 +2,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { apiClient } from "../lib/api-client";
 import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
-import { ApiResponseError, mapResumeResponse } from "@jobswyft/ui";
+import { ApiResponseError, mapResumeResponse, reverseMapResumeData } from "@jobswyft/ui";
 import type {
   ApiResumeListItem,
   ApiResumeResponse,
@@ -72,6 +72,7 @@ interface ResumeStoreState {
   resumes: ResumeListEntry[];
   activeResumeId: string | null;
   activeResumeData: ResumeData | null;
+  resumeCache: Record<string, ResumeData>;
   isLoading: boolean;
   isUploading: boolean;
   error: string | null;
@@ -81,6 +82,7 @@ interface ResumeStoreState {
   uploadResume: (token: string, file: File) => Promise<void>;
   deleteResume: (token: string, id: string) => Promise<void>;
   setActiveResume: (token: string, id: string) => Promise<void>;
+  saveResumeData: (token: string, data: ResumeData) => Promise<void>;
   updateLocalResumeData: (updates: Partial<ResumeData>) => void;
   clearError: () => void;
 }
@@ -91,6 +93,7 @@ export const useResumeStore = create<ResumeStoreState>()(
       resumes: [],
       activeResumeId: null,
       activeResumeData: null,
+      resumeCache: {},
       isLoading: false,
       isUploading: false,
       error: null,
@@ -117,11 +120,26 @@ export const useResumeStore = create<ResumeStoreState>()(
       },
 
       fetchResumeDetail: async (token: string, id: string) => {
+        // Check cache first
+        const cached = get().resumeCache[id];
+        if (cached) {
+          set({ activeResumeData: cached, isLoading: false });
+          return;
+        }
+
         set({ isLoading: true, error: null });
         try {
           const data = await apiClient.getResume(token, id);
           const resumeData = mapResumeResponse(data);
-          set({ activeResumeData: resumeData, isLoading: false });
+          if (resumeData) {
+            set({
+              activeResumeData: resumeData,
+              resumeCache: { ...get().resumeCache, [id]: resumeData },
+              isLoading: false,
+            });
+          } else {
+            set({ activeResumeData: null, isLoading: false });
+          }
         } catch (error) {
           set({ isLoading: false, error: getErrorMessage(error) });
         }
@@ -186,10 +204,14 @@ export const useResumeStore = create<ResumeStoreState>()(
             ? remaining[0]?.id ?? null
             : get().activeResumeId;
 
+          // Remove from cache
+          const { [id]: _, ...restCache } = get().resumeCache;
+
           set({
             resumes: remaining,
             activeResumeId: newActiveId,
             activeResumeData: wasActive ? null : get().activeResumeData,
+            resumeCache: restCache,
           });
 
           // If deleted active resume and there's a new active, fetch its detail
@@ -202,7 +224,12 @@ export const useResumeStore = create<ResumeStoreState>()(
       },
 
       setActiveResume: async (token: string, id: string) => {
-        set({ error: null, activeResumeId: id, activeResumeData: null });
+        const cached = get().resumeCache[id];
+        set({
+          error: null,
+          activeResumeId: id,
+          activeResumeData: cached ?? null,
+        });
         try {
           await apiClient.setActiveResume(token, id);
 
@@ -214,10 +241,28 @@ export const useResumeStore = create<ResumeStoreState>()(
             })),
           });
 
-          // Fetch detail for newly active resume
-          await get().fetchResumeDetail(token, id);
+          // Fetch detail only if not cached
+          if (!cached) {
+            await get().fetchResumeDetail(token, id);
+          }
         } catch (error) {
           set({ error: getErrorMessage(error) });
+        }
+      },
+
+      saveResumeData: async (token: string, data: ResumeData) => {
+        set({ error: null });
+        try {
+          const apiData = reverseMapResumeData(data);
+          await apiClient.updateParsedData(token, data.id, apiData);
+          // Update cache + active data
+          set({
+            activeResumeData: data,
+            resumeCache: { ...get().resumeCache, [data.id]: data },
+          });
+        } catch (error) {
+          set({ error: getErrorMessage(error) });
+          throw error; // re-throw so UI can handle
         }
       },
 

@@ -1,5 +1,5 @@
 import React from "react"
-import { Briefcase, Sun, Moon, Settings, User, LogOut, ExternalLink, RefreshCw } from "lucide-react"
+import { Briefcase, Sun, Moon, Settings, User, LogOut, ExternalLink, RefreshCw, Zap, Sparkles } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -20,6 +20,10 @@ export interface AppHeaderProps extends React.HTMLAttributes<HTMLElement> {
     onReset?: () => void
     isDarkMode?: boolean
     resetButton?: boolean
+    autoScanEnabled?: boolean
+    onAutoScanToggle?: () => void
+    autoAnalysisEnabled?: boolean
+    onAutoAnalysisToggle?: () => void
 }
 
 export function AppHeader({
@@ -32,6 +36,10 @@ export function AppHeader({
     onReset,
     isDarkMode = false,
     resetButton = false,
+    autoScanEnabled,
+    onAutoScanToggle,
+    autoAnalysisEnabled,
+    onAutoAnalysisToggle,
     className,
     ...props
 }: AppHeaderProps) {
@@ -52,6 +60,42 @@ export function AppHeader({
 
                 {/* Right: Actions */}
                 <div className="flex items-center gap-1">
+                    {onAutoScanToggle && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onAutoScanToggle}
+                            aria-label={`Auto-scan: ${autoScanEnabled ? "ON" : "OFF"}`}
+                            title={`Auto-scan: ${autoScanEnabled ? "ON" : "OFF"}`}
+                            className={cn(
+                                "size-8",
+                                autoScanEnabled
+                                    ? "bg-primary/15 text-primary hover:bg-primary/25"
+                                    : "text-muted-foreground opacity-60 hover:text-foreground hover:opacity-100"
+                            )}
+                        >
+                            <Zap className="size-4" />
+                        </Button>
+                    )}
+
+                    {onAutoAnalysisToggle && (
+                        <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={onAutoAnalysisToggle}
+                            aria-label={`Auto-analysis: ${autoAnalysisEnabled ? "ON" : "OFF"}`}
+                            title={`Auto-analysis: ${autoAnalysisEnabled ? "ON" : "OFF"}`}
+                            className={cn(
+                                "size-8",
+                                autoAnalysisEnabled
+                                    ? "bg-primary/15 text-primary hover:bg-primary/25"
+                                    : "text-muted-foreground opacity-60 hover:text-foreground hover:opacity-100"
+                            )}
+                        >
+                            <Sparkles className="size-4" />
+                        </Button>
+                    )}
+
                     <Button
                         variant="ghost"
                         size="icon"

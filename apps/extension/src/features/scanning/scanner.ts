@@ -7,14 +7,24 @@
  *
  * Extraction strategy (layered, each fills gaps from the previous):
  *   1. JSON-LD structured data (most reliable when present)
- *   2. Board-specific + heuristic CSS selectors
+ *   2. Registry-driven CSS selectors (board-filtered + generic fallbacks)
  *   3. OpenGraph meta tags
  *   4. Generic fallbacks (document.title, meta description)
- *   5. Heuristic fallback (hidden content, details/accordions, extended selectors)
+ *   5. Heuristic fallback (hidden content, extended selectors — READ ONLY, no DOM clicks)
  *
- * Returns job data + per-field extraction source for confidence scoring.
+ * Returns job data + per-field extraction source + sourceSelectorIds for traceability.
  */
-export function scrapeJobPage(_board?: string | null) {
+export function scrapeJobPage(
+  board: string | null,
+  registry: Array<{
+    id: string;
+    board: string;
+    field: string;
+    selectors: string[];
+    priority: number;
+    status: string;
+  }>
+) {
   const clean = (str: string | null | undefined): string =>
     str ? str.trim().replace(/\s+/g, " ") : "";
 
@@ -35,6 +45,20 @@ export function scrapeJobPage(_board?: string | null) {
   const stripNotificationPrefix = (t: string): string =>
     t.replace(/^\(\d+\)\s*/, "");
 
+  /** Query a list of CSS selectors, return first non-empty text match */
+  const qs = (selectors: string[]): string => {
+    for (const sel of selectors) {
+      try {
+        const el = document.querySelector(sel);
+        const text = el?.textContent?.trim();
+        if (text && text.length > 0) return clean(text);
+      } catch {
+        // Ignore invalid selectors
+      }
+    }
+    return "";
+  };
+
   const url = window.location.href;
 
   let title = "";
@@ -46,6 +70,8 @@ export function scrapeJobPage(_board?: string | null) {
 
   // Per-field source tracking for confidence scoring
   const sources: Record<string, string> = {};
+  // Per-field registry entry ID tracking for traceability
+  const sourceSelectorIds: Record<string, string> = {};
 
   // ─── Layer 1: JSON-LD Structured Data ──────────────────────────────
   try {
@@ -140,207 +166,89 @@ export function scrapeJobPage(_board?: string | null) {
     // Ignore JSON-LD extraction failure
   }
 
-  // ─── Layer 2: CSS Selectors (Board-Specific + Heuristic) ──────────
-  const qs = (selectors: string[]): string => {
-    for (const sel of selectors) {
-      try {
-        const el = document.querySelector(sel);
-        const text = el?.textContent?.trim();
-        if (text && text.length > 0) return clean(text);
-      } catch {
-        // Ignore invalid selectors
-      }
+  // ─── Layer 2: Registry-Driven CSS Selectors ────────────────────────
+  // Filter registry: active entries for this board + generic fallbacks, sorted by priority
+  const activeEntries = registry
+    .filter(r => r.status !== "deprecated" && (r.board === board || r.board === "generic"))
+    .sort((a, b) => a.priority - b.priority);
+
+  // Field accessor helpers — map field name to getter/setter
+  const getField = (field: string): string => {
+    switch (field) {
+      case "title": return title;
+      case "company": return company;
+      case "description": return description;
+      case "location": return location;
+      case "salary": return salary;
+      case "employmentType": return employmentType;
+      default: return "";
     }
-    return "";
   };
 
-  // Determine source type for CSS layer (board-specific vs generic)
-  const cssSource = "css-board";
-  const cssGenericSource = "css-generic";
+  const setField = (field: string, value: string): void => {
+    switch (field) {
+      case "title": title = value; break;
+      case "company": company = value; break;
+      case "description": description = value; break;
+      case "location": location = value; break;
+      case "salary": salary = value; break;
+      case "employmentType": employmentType = value; break;
+    }
+  };
 
-  if (!title) {
-    const t = qs([
-      // LinkedIn (multiple generations of class names)
-      ".job-details-jobs-unified-top-card__job-title h1",
-      ".job-details-jobs-unified-top-card__job-title a",
-      ".job-details-jobs-unified-top-card__job-title",
-      ".jobs-unified-top-card__job-title a",
-      ".jobs-unified-top-card__job-title",
-      ".t-24.job-details-jobs-unified-top-card__job-title",
-      '.jobs-details__main-content h1',
-      '.jobs-details-top-card__job-title',
-      // LinkedIn: title inside the detail card — more specific than generic h1
-      '.job-view-layout h1',
-      '.jobs-search__job-details h1',
-      '.jobs-details h1',
-      // Indeed
-      'h1[data-testid="jobsearch-JobInfoHeader-title"]',
-      ".jobsearch-JobInfoHeader-title",
-      // Greenhouse
-      ".app-title",
-      "h1.heading",
-      // Lever
-      ".posting-headline h2",
-      ".section-header h2",
-      // Workday
-      '[data-automation-id="jobPostingHeader"]',
-    ]);
-    if (t && isValidJobTitle(t)) {
-      title = stripNotificationPrefix(t);
-      sources.title = cssSource;
-    } else {
-      // Generic h1 fallback — validate it looks like a job title
-      const generic = qs(["h1"]);
-      if (generic && isValidJobTitle(generic)) {
-        title = stripNotificationPrefix(generic);
-        sources.title = cssGenericSource;
+  for (const entry of activeEntries) {
+    const currentValue = getField(entry.field);
+
+    // Non-description fields: skip if already filled
+    if (entry.field !== "description" && currentValue) continue;
+
+    // Description: user selection override (highest priority)
+    if (entry.field === "description" && !currentValue) {
+      const selection = window.getSelection()?.toString() || "";
+      if (selection.length > 50) {
+        description = selection;
+        sources.description = "user-edit";
+        continue;
       }
+    }
+
+    const result = qs(entry.selectors);
+    if (!result) continue;
+
+    const sourceType = entry.board === "generic" ? "css-generic" : "css-board";
+
+    // Field-specific validation
+    if (entry.field === "title") {
+      if (!isValidJobTitle(result)) continue;
+      setField("title", stripNotificationPrefix(result));
+      sources.title = sourceType;
+      sourceSelectorIds.title = entry.id;
+    } else if (entry.field === "salary") {
+      // Salary must contain a currency symbol or formatted number
+      if (!/[$€£¥]|\d{1,3}(,\d{3})/.test(result)) continue;
+      setField("salary", result);
+      sources.salary = sourceType;
+      sourceSelectorIds.salary = entry.id;
+    } else if (entry.field === "description") {
+      if (result.length > (currentValue?.length || 0)) {
+        setField("description", result);
+        sources.description = sources.description || sourceType;
+        sourceSelectorIds.description = entry.id;
+      }
+    } else {
+      setField(entry.field, result);
+      sources[entry.field] = sourceType;
+      sourceSelectorIds[entry.field] = entry.id;
     }
   }
 
+  // OG site_name fallback for company (not in registry — special case)
   if (!company) {
-    const c = qs([
-      // LinkedIn (multiple generations)
-      ".job-details-jobs-unified-top-card__company-name a",
-      ".job-details-jobs-unified-top-card__company-name",
-      ".jobs-unified-top-card__company-name a",
-      ".jobs-unified-top-card__company-name",
-      '.jobs-details-top-card__company-info a',
-      '.jobs-details-top-card__company-info',
-      // Indeed
-      '[data-testid="inlineHeader-companyName"] a',
-      '[data-company-name="true"]',
-      // Greenhouse
-      ".company-name",
-    ]);
-    if (c) {
-      company = c;
-      sources.company = cssSource;
-    } else {
-      const generic = qs([
-        '[class*="company"]',
-        '[class*="employer"]',
-        '[class*="organization"]',
-      ]);
-      if (generic) { company = generic; sources.company = cssGenericSource; }
-    }
-    // OG site_name fallback for company
-    if (!company) {
-      const ogCompany = document
-        .querySelector('meta[property="og:site_name"]')
-        ?.getAttribute("content")
-        ?.trim() || "";
-      if (ogCompany) { company = ogCompany; sources.company = "og-meta"; }
-    }
-  }
-
-  if (!description || description.length < 50) {
-    // User selection (highest priority if deliberate)
-    const selection = window.getSelection()?.toString() || "";
-    if (selection.length > 50) {
-      description = selection;
-      sources.description = "user-edit";
-    } else {
-      const descResult = qs([
-        // Indeed
-        "#jobDescriptionText",
-        ".jobsearch-jobDescriptionText",
-        ".jobsearch-JobComponent-description",
-        // LinkedIn
-        ".jobs-description__content",
-        ".jobs-box__html-content",
-        "#job-details",
-        ".show-more-less-html__markup",
-        // Glassdoor
-        '[class*="JobDetails_jobDescription"]',
-        ".jobDescriptionContent",
-        '[data-test="jobDescription"]',
-        // ZipRecruiter
-        ".jobDescriptionSection",
-        ".job_description",
-        // Lever
-        '[data-testid="jobDescription-container"]',
-        ".section-wrapper",
-        // Workday
-        '[data-automation-id="jobPostingDescription"]',
-        ".job-description-container",
-        // Greenhouse
-        "#content",
-        ".job-post-description",
-        "#job_description",
-        // AngelList / Wellfound
-        ".job-details",
-        '[class*="styles_description"]',
-        // SmartRecruiters
-        ".job-sections",
-        // Ashby
-        ".ashby-job-posting-description",
-        // Generic fallbacks
-        '[data-test="job-description-text"]',
-        '[id*="job_description"]',
-        '[id*="job-description"]',
-        '[class*="job-description"]',
-        '[class*="jobDescription"]',
-        '[class*="description"]',
-        "article",
-        "main",
-      ]);
-      if (descResult.length > (description?.length || 0)) {
-        description = descResult;
-        sources.description = sources.description || cssSource;
-      }
-    }
-  }
-
-  if (!location) {
-    const l = qs([
-      // LinkedIn
-      ".job-details-jobs-unified-top-card__bullet",
-      ".jobs-unified-top-card__bullet",
-      // Indeed
-      '[data-testid="inlineHeader-companyLocation"]',
-      ".jobsearch-JobInfoHeader-subtitle > div:last-child",
-      // Greenhouse
-      ".location",
-      // Lever
-      ".posting-categories .sort-by-time .posting-category:first-child",
-    ]);
-    if (l) {
-      location = l;
-      sources.location = cssSource;
-    } else {
-      const generic = qs([
-        '[class*="location"]',
-        '[class*="jobLocation"]',
-      ]);
-      if (generic) { location = generic; sources.location = cssGenericSource; }
-    }
-  }
-
-  if (!salary) {
-    const s = qs([
-      // LinkedIn
-      ".job-details-jobs-unified-top-card__job-insight--highlight span",
-      ".salary-main-rail__current-range",
-      // Indeed
-      '[data-testid="attribute_snippet_testid"]',
-      "#salaryInfoAndJobType",
-      // Generic
-      '[class*="salary"]',
-      '[class*="compensation"]',
-    ]);
-    // Validate: salary text must contain a currency symbol or formatted number
-    if (s && /[$€£¥]|\d{1,3}(,\d{3})/.test(s)) { salary = s; sources.salary = cssSource; }
-  }
-
-  if (!employmentType) {
-    const et = qs([
-      // Indeed
-      '[data-testid="attribute_snippet_testid"]',
-      // Lever
-      ".posting-categories .workplaceTypes",
-    ]);
-    if (et) { employmentType = et; sources.employmentType = cssSource; }
+    const ogCompany = document
+      .querySelector('meta[property="og:site_name"]')
+      ?.getAttribute("content")
+      ?.trim() || "";
+    if (ogCompany) { company = ogCompany; sources.company = "og-meta"; }
   }
 
   // ─── Layer 3: OpenGraph Meta Tags ─────────────────────────────────
@@ -357,7 +265,7 @@ export function scrapeJobPage(_board?: string | null) {
   if (!title) {
     let docTitle = document.title.split(/[|\-–—]/).shift()?.trim() || "";
     docTitle = stripNotificationPrefix(docTitle);
-    if (docTitle && isValidJobTitle(docTitle)) { title = docTitle; sources.title = cssGenericSource; }
+    if (docTitle && isValidJobTitle(docTitle)) { title = docTitle; sources.title = "css-generic"; }
   }
   if (!description) {
     const metaDesc = document
@@ -367,23 +275,11 @@ export function scrapeJobPage(_board?: string | null) {
     if (metaDesc) { description = metaDesc; sources.description = "og-meta"; }
   }
 
-  // ─── Layer 5: Heuristic Fallback ──────────────────────────────────
-  // Reads hidden content, expands collapsed sections, tries extended selectors.
-  // Only runs if key fields are still missing.
+  // ─── Layer 5: Heuristic Fallback (READ ONLY — no DOM clicks) ──────
+  // Reads hidden content and tries extended selectors.
+  // DOES NOT click "show more", expand <details>, or trigger [aria-expanded].
   if (!title || !company || !description || description.length < 50) {
     try {
-      // Expand <details> elements that aren't open
-      const closedDetails = document.querySelectorAll("details:not([open])");
-      for (const d of closedDetails) {
-        (d as HTMLDetailsElement).open = true;
-      }
-
-      // Expand accordion sections
-      const collapsed = document.querySelectorAll('[aria-expanded="false"]');
-      for (const el of collapsed) {
-        try { (el as HTMLElement).click(); } catch { /* ignore click failures */ }
-      }
-
       // Read CSS-hidden content that may contain description text
       if (!description || description.length < 50) {
         const hiddenEls = document.querySelectorAll(
@@ -397,31 +293,24 @@ export function scrapeJobPage(_board?: string | null) {
           }
         }
       }
-
-      // Extended generic selectors for remaining missing fields
-      if (!title) {
-        const t = qs(['[role="heading"]', "h2"]);
-        if (t && isValidJobTitle(t)) { title = stripNotificationPrefix(t); sources.title = "heuristic"; }
-      }
-      if (!company) {
-        const c = qs(['[class*="brand"]', '[class*="org"]']);
-        if (c) { company = c; sources.company = "heuristic"; }
-      }
-      if (!description || description.length < 50) {
-        const d = qs(['[role="main"] p', "article p", ".content p"]);
-        if (d && d.length > (description?.length || 0)) {
-          description = d;
-          sources.description = "heuristic";
-        }
-      }
-      if (!location) {
-        const l = qs(['[class*="address"]', '[class*="region"]']);
-        if (l) { location = l; sources.location = "heuristic"; }
-      }
     } catch {
       // Ignore heuristic fallback failures
     }
   }
+
+  // ─── Detect "Show More" buttons (detection only, no clicking) ─────
+  const showMoreSelectors = [
+    ".show-more-less-html__button--more",
+    'button[aria-label="Show full description"]',
+    '[class*="show-more"]',
+    '[class*="showMore"]',
+    '[class*="read-more"]',
+    '[class*="readMore"]',
+    "details:not([open])",
+  ];
+  const hasShowMore = showMoreSelectors.some(sel => {
+    try { return document.querySelector(sel) !== null; } catch { return false; }
+  });
 
   // Strip common heading prefixes from description
   if (description) {
@@ -439,5 +328,7 @@ export function scrapeJobPage(_board?: string | null) {
     employmentType,
     sourceUrl: url,
     sources,
+    sourceSelectorIds,
+    hasShowMore,
   };
 }

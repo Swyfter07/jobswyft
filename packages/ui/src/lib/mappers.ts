@@ -123,6 +123,8 @@ function mapParsedResumeData(
     location: contact?.location ?? "",
     linkedin: contact?.linkedin_url ?? undefined,
     website: contact?.website ?? undefined,
+    _apiFirstName: contact?.first_name ?? undefined,
+    _apiLastName: contact?.last_name ?? undefined,
   }
 
   return {
@@ -152,8 +154,10 @@ function mapEducation(item: ApiEducationItem): ResumeEducationEntry {
   return {
     degree: item.degree ?? "",
     school: item.institution ?? "",
-    startDate: item.graduation_year ?? "",
-    endDate: item.graduation_year ?? "",
+    startDate: item.start_date ?? item.graduation_year ?? "",
+    endDate: item.end_date ?? item.graduation_year ?? "",
+    description: item.description ?? undefined,
+    highlights: item.highlights ?? undefined,
   }
 }
 
@@ -175,6 +179,69 @@ function mapProject(
     description: item.description ?? "",
     techStack: item.tech_stack ?? [],
     url: item.url ?? undefined,
+    highlights: item.highlights ?? undefined,
+  }
+}
+
+// ─── Reverse Mapper (UI → API) ──────────────────────────────────────
+
+/** Reverse-map UI ResumeData → API ParsedResumeData (for PATCH endpoint).
+ *  Only includes fields the UI manages. Omitted fields (e.g. summary)
+ *  are preserved server-side via deep merge. */
+export function reverseMapResumeData(data: ResumeData): Record<string, unknown> {
+  // Use preserved API names if the user didn't change fullName
+  const originalFullName = [
+    data.personalInfo._apiFirstName,
+    data.personalInfo._apiLastName,
+  ].filter(Boolean).join(" ")
+  const nameChanged = data.personalInfo.fullName !== originalFullName
+
+  return {
+    contact: {
+      first_name: nameChanged
+        ? (data.personalInfo.fullName.split(" ")[0] || null)
+        : (data.personalInfo._apiFirstName || null),
+      last_name: nameChanged
+        ? (data.personalInfo.fullName.split(" ").slice(1).join(" ") || null)
+        : (data.personalInfo._apiLastName || null),
+      email: data.personalInfo.email || null,
+      phone: data.personalInfo.phone || null,
+      location: data.personalInfo.location || null,
+      linkedin_url: data.personalInfo.linkedin || null,
+      website: data.personalInfo.website || null,
+    },
+    skills: data.skills,
+    experience: data.experience.map((e) => ({
+      title: e.title || null,
+      company: e.company || null,
+      start_date: e.startDate || null,
+      end_date: e.endDate || null,
+      description: e.description || null,
+      highlights: e.highlights.length > 0 ? e.highlights : null,
+    })),
+    education: data.education.map((e) => ({
+      degree: e.degree || null,
+      institution: e.school || null,
+      start_date: e.startDate || null,
+      end_date: e.endDate || null,
+      graduation_year: e.endDate || null,
+      description: e.description || null,
+      highlights: e.highlights && e.highlights.length > 0 ? e.highlights : null,
+    })),
+    certifications:
+      data.certifications?.map((c) => ({
+        name: c.name || null,
+        issuer: c.issuer || null,
+        date: c.date || null,
+      })) ?? null,
+    projects:
+      data.projects?.map((p) => ({
+        name: p.name || null,
+        description: p.description || null,
+        tech_stack: p.techStack.length > 0 ? p.techStack : null,
+        url: p.url || null,
+        highlights: p.highlights && p.highlights.length > 0 ? p.highlights : null,
+      })) ?? null,
   }
 }
 

@@ -43,9 +43,28 @@ export default defineContentScript({
   main() {
     const SENTINEL_KEY = "jobswyft-content-ready";
     const FALLBACK_TIMEOUT_MS = 3000;
-    const POST_EXPAND_DELAY_MS = 500;
 
     let signaled = false;
+
+    // ─── Show More Detection (READ ONLY — no clicking) ────────────────
+    function detectShowMore(): boolean {
+      const showMoreSelectors = [
+        ".show-more-less-html__button--more",           // LinkedIn
+        'button[aria-label="Show full description"]',   // Indeed
+        '[class*="show-more"]', '[class*="showMore"]',
+        '[class*="read-more"]', '[class*="readMore"]',
+        "details:not([open])",
+      ];
+      return showMoreSelectors.some(sel => {
+        try { return document.querySelector(sel) !== null; } catch { return false; }
+      });
+    }
+
+    // ─── Form Field Detection (passive count for Full Power state) ────
+    function detectFormFields(): number {
+      const selector = 'input:not([type="hidden"]):not([type="submit"]):not([type="button"]), textarea, select';
+      return document.querySelectorAll(selector).length;
+    }
 
     function signalReady(): void {
       if (signaled) return;
@@ -57,68 +76,10 @@ export default defineContentScript({
           tabId: -1, // Will be resolved by background
           url: window.location.href,
           timestamp: Date.now(),
+          hasShowMore: detectShowMore(),
+          formFieldCount: detectFormFields(),
         },
       });
-    }
-
-    // ─── Show More Expansion ──────────────────────────────────────────
-    function expandShowMore(): boolean {
-      let expanded = false;
-
-      // LinkedIn: show-more-less-html button
-      const linkedInShowMore = document.querySelector<HTMLButtonElement>(
-        ".show-more-less-html__button--more"
-      );
-      if (linkedInShowMore) {
-        linkedInShowMore.click();
-        expanded = true;
-      }
-
-      // Indeed: Show full description button
-      const indeedShowMore = document.querySelector<HTMLButtonElement>(
-        'button[aria-label="Show full description"]'
-      );
-      if (indeedShowMore) {
-        indeedShowMore.click();
-        expanded = true;
-      }
-
-      // Generic "show more" buttons
-      const genericButtons = document.querySelectorAll<HTMLButtonElement>(
-        '[class*="show-more"], [class*="showMore"], [class*="read-more"], [class*="readMore"]'
-      );
-      for (const btn of genericButtons) {
-        try {
-          btn.click();
-          expanded = true;
-        } catch {
-          // Ignore click failures
-        }
-      }
-
-      // Expand collapsed <details> elements
-      const closedDetails = document.querySelectorAll<HTMLDetailsElement>(
-        "details:not([open])"
-      );
-      for (const d of closedDetails) {
-        d.open = true;
-        expanded = true;
-      }
-
-      // Expand aria-expanded="false" elements
-      const collapsed = document.querySelectorAll<HTMLElement>(
-        '[aria-expanded="false"]'
-      );
-      for (const el of collapsed) {
-        try {
-          el.click();
-          expanded = true;
-        } catch {
-          // Ignore click failures
-        }
-      }
-
-      return expanded;
     }
 
     // ─── Board-Specific Readiness Signals ─────────────────────────────
@@ -153,12 +114,7 @@ export default defineContentScript({
 
     // Check if content is already present
     if (readinessSelector && document.querySelector(readinessSelector)) {
-      const expanded = expandShowMore();
-      if (expanded) {
-        setTimeout(signalReady, POST_EXPAND_DELAY_MS);
-      } else {
-        signalReady();
-      }
+      signalReady();
       return;
     }
 
@@ -169,12 +125,7 @@ export default defineContentScript({
       if (readinessSelector && document.querySelector(readinessSelector)) {
         observer.disconnect();
         if (fallbackTimer) clearTimeout(fallbackTimer);
-        const expanded = expandShowMore();
-        if (expanded) {
-          setTimeout(signalReady, POST_EXPAND_DELAY_MS);
-        } else {
-          signalReady();
-        }
+        signalReady();
       }
     });
 
@@ -186,7 +137,6 @@ export default defineContentScript({
     // ─── Fallback Timeout (AC1: 3 second fallback) ───────────────────
     fallbackTimer = setTimeout(() => {
       observer.disconnect();
-      expandShowMore();
       signalReady();
     }, FALLBACK_TIMEOUT_MS);
 

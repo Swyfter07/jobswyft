@@ -14,6 +14,8 @@ const SIMPLE_FIELDS = ["title", "company", "location", "salary", "employmentType
 export interface AggregatedResult {
   data: Record<string, string>;
   sources: Record<string, string>;
+  sourceSelectorIds: Record<string, string>;
+  hasShowMore: boolean;
 }
 
 /**
@@ -46,6 +48,8 @@ export function aggregateFrameResults(
     title: "", company: "", description: "", location: "", salary: "", employmentType: "", sourceUrl: "",
   };
   const sources: Record<string, string> = {};
+  const sourceSelectorIds: Record<string, string> = {};
+  let hasShowMore = false;
 
   const safeResults = results || [];
 
@@ -56,10 +60,14 @@ export function aggregateFrameResults(
     const d = r?.result;
     if (!d) continue;
 
+    // hasShowMore: OR across all frames — if ANY frame detected show-more, report true
+    if (d.hasShowMore) hasShowMore = true;
+
     for (const field of SIMPLE_FIELDS) {
       if (d[field] && !data[field]) {
         data[field] = d[field];
         if (d.sources?.[field]) sources[field] = d.sources[field];
+        if (d.sourceSelectorIds?.[field]) sourceSelectorIds[field] = d.sourceSelectorIds[field];
       }
     }
 
@@ -67,8 +75,9 @@ export function aggregateFrameResults(
     if (d.description && d.description.length > (data.description?.length || 0)) {
       data.description = d.description;
       if (d.sources?.description) sources.description = d.sources.description;
+      if (d.sourceSelectorIds?.description) sourceSelectorIds.description = d.sourceSelectorIds.description;
     }
   }
 
-  return { data, sources };
+  return { data, sources, sourceSelectorIds, hasShowMore };
 }

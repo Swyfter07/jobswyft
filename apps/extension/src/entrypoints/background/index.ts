@@ -1,5 +1,5 @@
 import { detectJobPage, getJobBoard } from "../../features/scanning/job-detector";
-import { AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY, COOLDOWN_STORAGE_KEY } from "../../lib/constants";
+import { AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY, COOLDOWN_STORAGE_KEY, SETTINGS_STORAGE_KEY } from "../../lib/constants";
 
 /** Cooldown (ms) to avoid re-scanning the same URL */
 const SCAN_COOLDOWN_MS = 30_000;
@@ -47,13 +47,30 @@ async function markAsScanned(url: string): Promise<void> {
  * Includes board name for board-aware extraction (AC10).
  */
 async function triggerAutoScan(tabId: number, url: string): Promise<void> {
+  // Check autoScan preference before signaling (background can't use Zustand directly).
+  // chromeStorageAdapter stores the Zustand state as a JSON string, not a parsed object.
+  // Structure after JSON.parse: { state: { autoScan: true, ... }, version: N }
+  try {
+    const settingsResult = await chrome.storage.local.get(SETTINGS_STORAGE_KEY);
+    const raw = settingsResult[SETTINGS_STORAGE_KEY];
+    if (typeof raw === "string") {
+      const parsed = JSON.parse(raw);
+      if (parsed?.state?.autoScan === false) return;
+    } else if (raw?.state?.autoScan === false) {
+      // Defensive: handle case where storage contains a parsed object
+      return;
+    }
+  } catch {
+    // If settings read fails, default to enabled (autoScan: true is the default)
+  }
+
   if (await wasRecentlyScanned(url)) return;
   await markAsScanned(url);
 
   const board = getJobBoard(url);
 
   await chrome.storage.local.set({
-    [AUTO_SCAN_STORAGE_KEY]: { tabId, url, board, timestamp: Date.now(), id: crypto.randomUUID() },
+    [AUTO_SCAN_STORAGE_KEY]: { tabId, url, board, isJobPage: true, timestamp: Date.now(), id: crypto.randomUUID() },
   });
 }
 

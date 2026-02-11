@@ -5,6 +5,7 @@ import {
   ApiResponseError,
   mapResumeList,
   mapResumeResponse,
+  reverseMapResumeData,
   mapJobResponse,
   mapMatchAnalysis,
   mapUsageResponse,
@@ -218,6 +219,110 @@ describe("mapResumeResponse", () => {
     expect(result.education).toEqual([])
     expect(result.certifications).toBeUndefined()
     expect(result.projects).toBeUndefined()
+  })
+})
+
+// ─── Reverse Mapper ─────────────────────────────────────────────────
+
+describe("reverseMapResumeData", () => {
+  it("maps UI ResumeData back to API snake_case shape", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+
+    expect(result).not.toHaveProperty("summary")
+    expect(result).toHaveProperty("contact")
+    expect(result).toHaveProperty("skills")
+    expect(result).toHaveProperty("experience")
+    expect(result).toHaveProperty("education")
+    expect(result).toHaveProperty("certifications")
+    expect(result).toHaveProperty("projects")
+
+    const contact = result.contact as Record<string, unknown>
+    expect(contact.first_name).toBe("Jane")
+    expect(contact.last_name).toBe("Doe")
+    expect(contact.email).toBe("jane@example.com")
+    expect(contact.linkedin_url).toBe("https://linkedin.com/in/janedoe")
+    expect(contact.website).toBe("https://janedoe.dev")
+  })
+
+  it("preserves original first/last name on round-trip when name is unchanged", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    // Verify _api fields are stored
+    expect(uiData.personalInfo._apiFirstName).toBe("Jane")
+    expect(uiData.personalInfo._apiLastName).toBe("Doe")
+
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    const contact = result.contact as Record<string, unknown>
+    expect(contact.first_name).toBe("Jane")
+    expect(contact.last_name).toBe("Doe")
+  })
+
+  it("splits name when user edits fullName", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    uiData.personalInfo.fullName = "John Smith Jr."
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    const contact = result.contact as Record<string, unknown>
+    expect(contact.first_name).toBe("John")
+    expect(contact.last_name).toBe("Smith Jr.")
+  })
+
+  it("does NOT include summary field (preserves server-side via merge)", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    expect(result).not.toHaveProperty("summary")
+  })
+
+  it("maps experience entries back to snake_case", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    const experience = result.experience as Record<string, unknown>[]
+    expect(experience[0]).toEqual({
+      title: "Senior Engineer",
+      company: "Acme Corp",
+      start_date: "2020-01",
+      end_date: "Present",
+      description: "Led frontend team",
+      highlights: ["Built design system", "Improved performance 40%"],
+    })
+  })
+
+  it("maps education entries back to snake_case with graduation_year", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    const education = result.education as Record<string, unknown>[]
+    expect(education[0]).toMatchObject({
+      degree: "BS Computer Science",
+      institution: "MIT",
+    })
+  })
+
+  it("maps projects back to snake_case", () => {
+    const uiData = mapResumeResponse(sampleApiResume)!
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    const projects = result.projects as Record<string, unknown>[]
+    expect(projects![0]).toMatchObject({
+      name: "OpenWidget",
+      description: "Open source widget library",
+      tech_stack: ["React", "Storybook"],
+      url: "https://github.com/janedoe/openwidget",
+    })
+  })
+
+  it("handles empty/null optional fields gracefully", () => {
+    const uiData = mapResumeResponse({
+      ...sampleApiResume,
+      parsed_data: {
+        contact: null,
+        summary: null,
+        experience: null,
+        education: null,
+        skills: null,
+      },
+    })!
+    const result = reverseMapResumeData(uiData) as Record<string, unknown>
+    expect(result.certifications).toBeNull()
+    expect(result.projects).toBeNull()
+    expect(result.skills).toEqual([])
   })
 })
 

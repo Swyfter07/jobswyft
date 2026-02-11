@@ -8,7 +8,7 @@ from uuid import UUID
 from app.core.deps import CurrentUser
 from app.core.exceptions import ApiException, ErrorCode, ResumeNotFoundError
 from app.models.base import ok, paginated
-from app.models.resume import ResumeListItem, ResumeDetailResponse
+from app.models.resume import ParsedResumeData, ResumeListItem, ResumeDetailResponse
 from app.services.resume_service import ResumeService
 
 logger = logging.getLogger(__name__)
@@ -158,6 +158,57 @@ async def get_resume(
     }
 
     # Validate with Pydantic model
+    detail_response = ResumeDetailResponse(**response_data)
+
+    return ok(detail_response.model_dump())
+
+
+@router.patch("/{resume_id}/parsed-data")
+async def update_resume_parsed_data(
+    resume_id: UUID,
+    body: ParsedResumeData,
+    user: CurrentUser,
+    resume_service: ResumeService = Depends(get_resume_service),
+) -> dict:
+    """Update resume parsed data.
+
+    Accepts full ParsedResumeData JSON body. Overwrites entire parsed_data column.
+
+    Args:
+        resume_id: Resume UUID.
+        body: ParsedResumeData to save.
+        user: Authenticated user from dependency.
+        resume_service: Resume service instance.
+
+    Returns:
+        Updated resume details with download URL.
+
+    Raises:
+        AUTH_REQUIRED (401): No authentication token.
+        RESUME_NOT_FOUND (404): Resume doesn't exist or belongs to another user.
+    """
+    user_id = user["id"]
+
+    validated_data = body.model_dump(exclude_none=True)
+
+    updated_resume = await resume_service.update_parsed_data(
+        user_id, str(resume_id), validated_data
+    )
+
+    if not updated_resume:
+        logger.warning(f"Resume {resume_id} not found for user {user_id[:8]}...")
+        raise ResumeNotFoundError()
+
+    # Generate signed download URL for consistency with GET endpoint
+    download_url = await resume_service.get_signed_download_url(
+        updated_resume["file_path"]
+    )
+
+    response_data = {
+        **updated_resume,
+        "download_url": download_url,
+    }
+
     detail_response = ResumeDetailResponse(**response_data)
 
     return ok(detail_response.model_dump())
