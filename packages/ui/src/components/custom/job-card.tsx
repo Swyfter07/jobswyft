@@ -125,6 +125,7 @@ export function JobCard({
     job,
     match,
     onCoach,
+    onDiveDeeper,
     className,
     isEditing: initialIsEditing = false,
     onAnalyze,
@@ -434,7 +435,7 @@ export function JobCard({
                                         </Button>
 
                                         <Button
-                                            onClick={props.onDiveDeeper}
+                                            onClick={onDiveDeeper}
                                             className="flex-1 bg-gradient-to-br from-violet-600 via-violet-500 to-violet-400 text-white hover:from-violet-700 hover:via-violet-600 hover:to-violet-500 font-semibold shadow-md border-t border-white/20 hover:shadow-lg hover:shadow-violet-500/40 transition-all duration-300"
                                         >
                                             <Sparkles className="mr-2 size-4" />

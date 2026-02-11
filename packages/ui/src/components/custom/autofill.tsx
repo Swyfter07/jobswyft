@@ -140,12 +140,12 @@ export function Autofill({
                                 className={cn(
                                     "flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border",
                                     "transition-all duration-300 ease-in-out animate-in fade-in zoom-in-95",
-                                    isClickable ? "cursor-pointer hover:scale-105 hover:shadow-md" : "cursor-default",
+                                    isClickable ? "cursor-pointer hover:border-emerald-500/50 hover:bg-emerald-500/5 hover:scale-105 hover:shadow-md active:scale-95" : "cursor-default",
                                     field.status === "missing"
                                         ? "bg-destructive/10 border-destructive/20 text-destructive dark:bg-destructive/20 dark:border-destructive/30 dark:text-destructive-foreground"
                                         : field.status === "filled"
                                             ? "bg-emerald-100 border-emerald-300 text-emerald-700 dark:bg-emerald-950 dark:border-emerald-700 dark:text-emerald-300 animate-pulse-once"
-                                            : "bg-card border-border text-foreground hover:border-muted-foreground/50"
+                                            : "bg-card border-border text-foreground hover:border-muted-foreground/50 hover:shadow-sm"
                                 )}
                                 title={isClickable ? "Click to map field" : field.value}
                                 onClick={() => isClickable && onFieldClick?.(field)}

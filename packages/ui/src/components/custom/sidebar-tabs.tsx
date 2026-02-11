@@ -16,32 +16,28 @@ export function SidebarTabs({ isLocked = false, className, variant = "classic" }
             label: "Scan",
             icon: Search,
             activeColor: "data-[state=active]:bg-blue-500 data-[state=active]:shadow-xl data-[state=active]:shadow-blue-500/50 data-[state=active]:border-blue-500 dark:data-[state=active]:bg-blue-400 dark:data-[state=active]:shadow-blue-400/60 dark:data-[state=active]:border-blue-400",
-            inactiveColor: "text-gray-500 border-gray-200 hover:bg-gray-100/50 hover:text-gray-900 hover:border-gray-300",
-            darkInactive: "dark:text-gray-400 dark:border-gray-800 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 dark:hover:border-gray-700"
+            inactiveColor: "text-tab-foreground border-tab-border hover:bg-tab-bg-hover hover:text-foreground hover:border-foreground/20",
         },
         {
             value: "ai-studio" as const,
             label: "Studio",
             icon: Sparkles,
             activeColor: "data-[state=active]:bg-violet-600 data-[state=active]:shadow-xl data-[state=active]:shadow-violet-600/50 data-[state=active]:border-violet-600 dark:data-[state=active]:bg-violet-500 dark:data-[state=active]:shadow-violet-500/60 dark:data-[state=active]:border-violet-500",
-            inactiveColor: "text-gray-500 border-gray-200 hover:bg-gray-100/50 hover:text-gray-900 hover:border-gray-300",
-            darkInactive: "dark:text-gray-400 dark:border-gray-800 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 dark:hover:border-gray-700"
+            inactiveColor: "text-tab-foreground border-tab-border hover:bg-tab-bg-hover hover:text-foreground hover:border-foreground/20",
         },
         {
             value: "autofill" as const,
             label: "Autofill",
             icon: FormInput,
             activeColor: "data-[state=active]:bg-emerald-600 data-[state=active]:shadow-xl data-[state=active]:shadow-emerald-600/50 data-[state=active]:border-emerald-600 dark:data-[state=active]:bg-emerald-500 dark:data-[state=active]:shadow-emerald-500/60 dark:data-[state=active]:border-emerald-500",
-            inactiveColor: "text-gray-500 border-gray-200 hover:bg-gray-100/50 hover:text-gray-900 hover:border-gray-300",
-            darkInactive: "dark:text-gray-400 dark:border-gray-800 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 dark:hover:border-gray-700"
+            inactiveColor: "text-tab-foreground border-tab-border hover:bg-tab-bg-hover hover:text-foreground hover:border-foreground/20",
         },
         {
             value: "coach" as const,
             label: "Coach",
             icon: Bot,
             activeColor: "data-[state=active]:bg-orange-500 data-[state=active]:shadow-xl data-[state=active]:shadow-orange-500/50 data-[state=active]:border-orange-500 dark:data-[state=active]:bg-orange-400 dark:data-[state=active]:shadow-orange-400/60 dark:data-[state=active]:border-orange-400",
-            inactiveColor: "text-gray-500 border-gray-200 hover:bg-gray-100/50 hover:text-gray-900 hover:border-gray-300",
-            darkInactive: "dark:text-gray-400 dark:border-gray-800 dark:hover:bg-gray-800/50 dark:hover:text-gray-200 dark:hover:border-gray-700"
+            inactiveColor: "text-tab-foreground border-tab-border hover:bg-tab-bg-hover hover:text-foreground hover:border-foreground/20",
         }
     ]
 
@@ -92,7 +88,6 @@ export function SidebarTabs({ isLocked = false, className, variant = "classic" }
                                 "data-[state=active]:shadow-xl data-[state=active]:text-white data-[state=active]:translate-x-1.5 active:scale-[0.95]",
                                 tab.activeColor,
                                 tab.inactiveColor,
-                                tab.darkInactive,
                                 isDisabled && "opacity-40 grayscale pointer-events-none"
                             )}
                         >
@@ -121,7 +116,6 @@ export function SidebarTabs({ isLocked = false, className, variant = "classic" }
                             "data-[state=active]:shadow-2xl data-[state=active]:text-white data-[state=active]:scale-[1.10] active:scale-90",
                             tab.activeColor,
                             tab.inactiveColor,
-                            tab.darkInactive,
                             isDisabled && "opacity-40 grayscale pointer-events-none"
                         )}
                     >

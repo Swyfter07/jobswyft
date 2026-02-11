@@ -10,9 +10,11 @@ interface ScanTabProps {
     onJobUpdate: (data: JobData | null) => void;
     resumeContent?: string | null;
     autoAnalysis?: boolean;
+    onDiveDeeper?: () => void;
+    onCoach?: () => void;
 }
 
-export const ScanTab = ({ jobData, onJobUpdate, resumeContent, autoAnalysis = true }: ScanTabProps) => {
+export const ScanTab = ({ jobData, onJobUpdate, resumeContent, autoAnalysis = true, onDiveDeeper, onCoach }: ScanTabProps) => {
 
     const [isScanning, setIsScanning] = useState(false);
     const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -169,6 +171,8 @@ export const ScanTab = ({ jobData, onJobUpdate, resumeContent, autoAnalysis = tr
                 isAutoScanEnabled={isAutoScanEnabled}
                 onToggleAutoScan={toggleAutoScan}
                 onClear={() => onJobUpdate(null)}
+                onDiveDeeper={onDiveDeeper}
+                onCoach={onCoach}
             />
         );
     }

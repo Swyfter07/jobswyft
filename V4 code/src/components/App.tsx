@@ -215,6 +215,8 @@ function App() {
                                     onJobUpdate={setJobData}
                                     resumeContent={activeResume?.content || null}
                                     autoAnalysis={autoAnalysis}
+                                    onDiveDeeper={() => setActiveTab('ai-studio')}
+                                    onCoach={() => setActiveTab('coach')}
                                 />
                             }
 
@@ -301,7 +303,7 @@ function App() {
                                             <PersonalInfoContent
                                                 data={activeResumeData.personalInfo}
                                                 isEditing={isEditing}
-                                                onChange={(data) => handleResumeUpdate('personalInfo', data)}
+                                                onChange={(data: any) => handleResumeUpdate('personalInfo', data)}
                                             />
                                         </ResumeSection>
 
@@ -309,7 +311,7 @@ function App() {
                                             <SkillsContent
                                                 skills={activeResumeData.skills}
                                                 isEditing={isEditing}
-                                                onChange={(data) => handleResumeUpdate('skills', data)}
+                                                onChange={(data: any) => handleResumeUpdate('skills', data)}
                                             />
                                         </ResumeSection>
 
@@ -317,7 +319,7 @@ function App() {
                                             <ExperienceContent
                                                 entries={activeResumeData.experience}
                                                 isEditing={isEditing}
-                                                onChange={(data) => handleResumeUpdate('experience', data)}
+                                                onChange={(data: any) => handleResumeUpdate('experience', data)}
                                             />
 
                                         </ResumeSection>
@@ -326,7 +328,7 @@ function App() {
                                             <EducationContent
                                                 entries={activeResumeData.education}
                                                 isEditing={isEditing}
-                                                onChange={(data) => handleResumeUpdate('education', data)}
+                                                onChange={(data: any) => handleResumeUpdate('education', data)}
                                             />
                                         </ResumeSection>
                                     </>
