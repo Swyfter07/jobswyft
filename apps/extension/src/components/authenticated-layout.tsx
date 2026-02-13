@@ -80,6 +80,7 @@ export function AuthenticatedLayout() {
   const isDark = theme === "dark";
   const lastProcessedId = useRef("");
   const verificationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const matchAnalysisTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [viewLayer, setViewLayer] = useState<"main" | "resume_detail">("main");
@@ -127,9 +128,19 @@ export function AuthenticatedLayout() {
 
   // ─── Core scan function: injects scraper into page via executeScript ─
   const performScan = useCallback(
-    async (tabId: number, options?: { board?: string | null; skipAI?: boolean }) => {
+    async (tabId: number, options?: { board?: string | null; skipAI?: boolean; skipJobPageCheck?: boolean }) => {
       const board = options?.board ?? null;
       const skipAI = options?.skipAI ?? false;
+
+      // Guard: skip scan on non-job pages unless explicitly overridden (manual scan)
+      if (!options?.skipJobPageCheck) {
+        try {
+          const tab = await chrome.tabs.get(tabId);
+          if (!tab?.url || !detectJobPage(tab.url)) return;
+        } catch {
+          return; // Tab may no longer exist
+        }
+      }
 
       scanStore.startScan();
       try {
@@ -441,6 +452,9 @@ export function AuthenticatedLayout() {
   const matchData = useSidebarStore((s) => s.matchData);
 
   useEffect(() => {
+    // Clear any pending debounced call from previous dep change
+    if (matchAnalysisTimer.current) clearTimeout(matchAnalysisTimer.current);
+
     const { savedJobId } = useScanStore.getState();
 
     if (
@@ -450,20 +464,26 @@ export function AuthenticatedLayout() {
       !matchData &&
       accessToken
     ) {
-      apiClient
-        .analyzeMatch(accessToken, savedJobId)
-        .then((result) => {
-          useSidebarStore.getState().setMatchData({
-            score: result.match_score,
-            matchedSkills: result.strengths,
-            missingSkills: result.gaps,
-            summary: result.recommendations.join("; "),
+      matchAnalysisTimer.current = setTimeout(() => {
+        apiClient
+          .analyzeMatch(accessToken, savedJobId)
+          .then((result) => {
+            useSidebarStore.getState().setMatchData({
+              score: result.match_score,
+              matchedSkills: result.strengths,
+              missingSkills: result.gaps,
+              summary: result.recommendations.join("; "),
+            });
+          })
+          .catch(() => {
+            // Non-critical: user can manually trigger from AI Studio
           });
-        })
-        .catch(() => {
-          // Non-critical: user can manually trigger from AI Studio
-        });
+      }, 500);
     }
+
+    return () => {
+      if (matchAnalysisTimer.current) clearTimeout(matchAnalysisTimer.current);
+    };
   }, [autoAnalysisSetting, scanStore.savedJobId, activeResumeId, matchData, accessToken]);
 
   const handleOpenDashboard = () => {
@@ -527,7 +547,7 @@ export function AuthenticatedLayout() {
     chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       const tab = tabs[0];
       if (tab?.id) {
-        performScan(tab.id);
+        performScan(tab.id, { skipJobPageCheck: true });
       }
     });
   }, [performScan]);

@@ -6,7 +6,6 @@ from typing import Any, Dict, Optional
 
 from app.core.exceptions import (
     AIProviderUnavailableError,
-    CreditExhaustedError,
     JobNotFoundError,
     ResumeNotFoundError,
     ValidationError,
@@ -89,29 +88,22 @@ class MatchService:
             recommendations, and ai_provider_used.
 
         Raises:
-            CreditExhaustedError: If user has no credits.
             ValidationError: If no resume selected.
             ResumeNotFoundError: If resume not found or belongs to another user.
             JobNotFoundError: If job not found or belongs to another user.
             AIProviderUnavailableError: If both AI providers fail.
         """
-        # Step 1: Check credits FIRST
-        has_credits = await self.usage_service.check_credits(user_id)
-        if not has_credits:
-            logger.warning(f"User {_hash_id(user_id)}... has no credits for match analysis")
-            raise CreditExhaustedError()
-
-        # Step 2: Get user profile for active resume and AI preference
+        # Step 1: Get user profile for active resume and AI preference
         profile = await self._get_user_profile(user_id)
         user_preference = profile.get("preferred_ai_provider")
 
-        # Step 3: Resolve resume ID
+        # Step 2: Resolve resume ID
         effective_resume_id = resume_id or profile.get("active_resume_id")
         if not effective_resume_id:
             logger.warning(f"User {_hash_id(user_id)}... has no resume selected")
             raise ValidationError("No resume selected. Upload or select a resume first.")
 
-        # Step 4: Validate and fetch resume
+        # Step 3: Validate and fetch resume
         resume = await self.resume_service.get_resume(user_id, effective_resume_id)
         if not resume:
             logger.warning(
@@ -127,7 +119,7 @@ class MatchService:
             )
             raise ValidationError("Resume has not been parsed. Please re-upload your resume.")
 
-        # Step 5: Validate and fetch job
+        # Step 4: Validate and fetch job
         job = await self.job_service.get_job(user_id, job_id)
         if not job:
             logger.warning(
@@ -151,7 +143,7 @@ class MatchService:
                 "Please shorten the description."
             )
 
-        # Step 6: Generate match analysis with AI
+        # Step 5: Generate match analysis with AI
         try:
             logger.info(
                 f"Match analysis - user: {_hash_id(user_id)}..., "
@@ -168,15 +160,7 @@ class MatchService:
             logger.error(f"All AI providers failed for match analysis: {e}")
             raise AIProviderUnavailableError() from e
 
-        # Step 7: Record usage AFTER successful AI call
-        await self.usage_service.record_usage(
-            user_id=user_id,
-            operation_type="match",
-            ai_provider=provider_used,
-            credits_used=1,
-        )
-
-        # Step 8: Return analysis with provider info
+        # Step 6: Return analysis with provider info
         return {
             "match_score": analysis["match_score"],
             "strengths": analysis["strengths"],

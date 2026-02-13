@@ -99,7 +99,6 @@ async def generate_match_analysis(
         VALIDATION_ERROR (400): No resume selected or other validation issue.
         RESUME_NOT_FOUND (404): Resume doesn't exist or belongs to another user.
         JOB_NOT_FOUND (404): Job doesn't exist or belongs to another user.
-        CREDIT_EXHAUSTED (422): User has no remaining credits.
         AI_PROVIDER_UNAVAILABLE (503): Both AI providers failed.
     """
     user_id = user["id"]

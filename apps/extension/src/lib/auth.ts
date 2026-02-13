@@ -15,7 +15,17 @@ function getSupabase(): SupabaseClient {
     );
   }
 
-  _supabase = createClient(url, key);
+  _supabase = createClient(url, key, {
+    auth: {
+      // Chrome extensions manage sessions manually via chrome.storage.local
+      // (see storage.ts). Supabase defaults use localStorage + auto-refresh
+      // polling, which causes continuous failed `chrome-extension://invalid/`
+      // network requests in extension contexts.
+      autoRefreshToken: false,
+      persistSession: false,
+      detectSessionInUrl: false,
+    },
+  });
   return _supabase;
 }
 
