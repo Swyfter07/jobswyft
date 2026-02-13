@@ -23,3 +23,6 @@ export const COOLDOWN_STORAGE_KEY = "jobswyft-scan-cooldown";
  *  Must match settings-store.ts Zustand persist name.
  *  Format: { state: { autoScan: boolean, autoAnalysis: boolean, ... }, version: N } */
 export const SETTINGS_STORAGE_KEY = "jobswyft-settings";
+
+/** Storage key for autofill state (Zustand persist). */
+export const AUTOFILL_STORAGE_KEY = "jobswyft-autofill";

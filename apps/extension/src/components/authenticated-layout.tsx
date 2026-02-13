@@ -25,6 +25,11 @@ import { cleanHtmlForAI } from "../features/scanning/html-cleaner";
 import { aggregateFrameResults } from "../features/scanning/frame-aggregator";
 import { apiClient } from "../lib/api-client";
 import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME, AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY } from "../lib/constants";
+import { useAutofillStore } from "../stores/autofill-store";
+import { detectATSForm } from "../features/autofill/ats-detector";
+import { detectFormFields } from "../features/autofill/field-detector";
+import { AUTOFILL_FIELD_REGISTRY } from "../features/autofill/field-registry";
+import { fetchAutofillData } from "../features/autofill/autofill-data-service";
 import { AIStudioTab } from "./ai-studio-tab";
 import { AutofillTab } from "./autofill-tab";
 import { CoachTab } from "./coach-tab";
@@ -352,6 +357,69 @@ export function AuthenticatedLayout() {
           const { scanStatus, jobData } = useScanStore.getState();
           if (scanStatus === "success" && jobData !== null) {
             setSidebarState("full-power");
+
+            // Auto-trigger autofill detection on application pages
+            chrome.tabs.query({ active: true, currentWindow: true }, async (tabs) => {
+              const tab = tabs[0];
+              if (!tab?.id || !tab?.url) return;
+
+              const autofillStore = useAutofillStore.getState();
+              if (autofillStore.detectionStatus === "detecting") return; // Already running
+
+              const { board } = detectATSForm(tab.url);
+              const boardName = board || null;
+              const registrySerialized = AUTOFILL_FIELD_REGISTRY.map((e) => ({
+                id: e.id, board: e.board, fieldType: e.fieldType,
+                selectors: e.selectors, priority: e.priority, status: e.status,
+              }));
+
+              try {
+                autofillStore.setDetecting();
+
+                // Detection + data fetch in parallel
+                const [results, autofillData] = await Promise.all([
+                  chrome.scripting.executeScript({
+                    target: { tabId: tab.id!, allFrames: true },
+                    func: detectFormFields,
+                    args: [boardName, registrySerialized],
+                  }),
+                  accessToken ? fetchAutofillData(accessToken) : Promise.resolve(null),
+                ]);
+
+                // Aggregate frame results
+                const allFields: Array<Record<string, unknown>> = [];
+                const seenIds = new Set<string>();
+                let totalScanned = 0;
+
+                for (const fr of results) {
+                  if (!fr?.result) continue;
+                  const r = fr.result as { fields: Array<{ stableId: string }>; totalElementsScanned: number };
+                  totalScanned += r.totalElementsScanned;
+                  for (const field of r.fields) {
+                    if (!seenIds.has(field.stableId)) {
+                      seenIds.add(field.stableId);
+                      allFields.push({ ...field, frameId: fr.frameId ?? 0 });
+                    }
+                  }
+                }
+
+                autofillStore.setDetectionResult({
+                  fields: allFields as never[],
+                  board: boardName,
+                  url: tab.url!,
+                  timestamp: Date.now(),
+                  durationMs: 0,
+                  totalElementsScanned: totalScanned,
+                });
+
+                if (autofillData) {
+                  autofillStore.setAutofillData(autofillData);
+                  autofillStore.mapFields(useSettingsStore.getState().eeoPreferences);
+                }
+              } catch {
+                // Non-critical: user can manually scan from autofill tab
+              }
+            });
           }
         }
       }

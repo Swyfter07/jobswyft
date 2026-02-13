@@ -1,5 +1,6 @@
 import { API_URL } from "./constants";
 import type { UserProfile } from "../stores/auth-store";
+import type { AutofillData } from "../features/autofill/field-types";
 import { unwrap, type ApiResumeListItem, type ApiResumeResponse, type ApiJobResponse, type ApiPaginatedData, type ApiResponse } from "@jobswyft/ui";
 
 export interface ApiUploadResponse {
@@ -354,6 +355,55 @@ class ApiClient {
       }),
       token,
     });
+  }
+
+  // ─── Autofill endpoint ─────────────────────────────────────────────
+
+  /** GET /v1/autofill/data — Get autofill data for form completion. */
+  async getAutofillData(token: string): Promise<AutofillData> {
+    const raw = await this.fetch<{
+      personal: {
+        first_name: string | null;
+        last_name: string | null;
+        full_name: string | null;
+        email: string | null;
+        phone: string | null;
+        location: string | null;
+        linkedin_url: string | null;
+        portfolio_url: string | null;
+      };
+      resume: {
+        id: string;
+        file_name: string | null;
+        download_url: string | null;
+        parsed_summary: string | null;
+      } | null;
+      work_authorization: string | null;
+      salary_expectation: string | null;
+    }>("/v1/autofill/data", { token });
+
+    return {
+      personal: {
+        firstName: raw.personal.first_name,
+        lastName: raw.personal.last_name,
+        fullName: raw.personal.full_name,
+        email: raw.personal.email,
+        phone: raw.personal.phone,
+        location: raw.personal.location,
+        linkedinUrl: raw.personal.linkedin_url,
+        portfolioUrl: raw.personal.portfolio_url,
+      },
+      resume: raw.resume
+        ? {
+            id: raw.resume.id,
+            fileName: raw.resume.file_name,
+            downloadUrl: raw.resume.download_url,
+            parsedSummary: raw.resume.parsed_summary,
+          }
+        : null,
+      workAuthorization: raw.work_authorization,
+      salaryExpectation: raw.salary_expectation,
+    };
   }
 
   /** GET /v1/usage — Get credit usage info. */
