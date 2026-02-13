@@ -1,7 +1,7 @@
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { useThemeStore } from "./theme-store";
+// @vitest-environment jsdom
+import { describe, it, expect, beforeEach, vi, beforeAll } from "vitest";
 
-// Mock chrome.storage
+// Mock chrome.storage BEFORE import
 vi.mock("../lib/chrome-storage-adapter", () => ({
   chromeStorageAdapter: {
     getItem: vi.fn(async () => null),
@@ -10,26 +10,36 @@ vi.mock("../lib/chrome-storage-adapter", () => ({
   },
 }));
 
-// Mock matchMedia
-Object.defineProperty(window, "matchMedia", {
-  writable: true,
-  value: vi.fn().mockImplementation((query: string) => ({
-    matches: query === "(prefers-color-scheme: dark)" ? false : true,
-    media: query,
-    onchange: null,
-    addEventListener: vi.fn(),
-    removeEventListener: vi.fn(),
-    dispatchEvent: vi.fn(),
-  })),
-});
-
 describe("useThemeStore", () => {
-  beforeEach(() => {
-    // Reset store state before each test
-    useThemeStore.setState({
-      theme: "light",
-      userOverride: false,
+  let useThemeStore: any;
+
+  beforeAll(async () => {
+    // Mock matchMedia
+    Object.defineProperty(window, "matchMedia", {
+      writable: true,
+      value: vi.fn().mockImplementation((query: string) => ({
+        matches: query === "(prefers-color-scheme: dark)" ? false : true,
+        media: query,
+        onchange: null,
+        addEventListener: vi.fn(),
+        removeEventListener: vi.fn(),
+        dispatchEvent: vi.fn(),
+      })),
     });
+
+    // Dynamic import to ensure window mock is ready
+    const mod = await import("./theme-store");
+    useThemeStore = mod.useThemeStore;
+  });
+
+  beforeEach(() => {
+    if (useThemeStore) {
+      // Reset store state before each test
+      useThemeStore.setState({
+        theme: "light",
+        userOverride: false,
+      });
+    }
     vi.clearAllMocks();
   });
 
