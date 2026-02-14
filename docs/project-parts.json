@@ -1,0 +1,12 @@
+{
+  "repository_type": "monorepo",
+  "parts": [
+    {"part_id": "api", "project_type_id": "backend", "display_name": "FastAPI backend", "root_path": "apps/api"},
+    {"part_id": "extension", "project_type_id": "extension", "display_name": "WXT Chrome extension", "root_path": "apps/extension"},
+    {"part_id": "ui", "project_type_id": "library", "display_name": "React component library", "root_path": "packages/ui"}
+  ],
+  "integration_points": [
+    {"from": "extension", "to": "api", "type": "REST API", "details": "JWT auth, custom endpoints"},
+    {"from": "extension", "to": "ui", "type": "Import", "details": "@jobswyft/ui workspace package"}
+  ]
+}

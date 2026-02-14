@@ -1,0 +1,19 @@
+{
+  "workflow_version": "1.2.0",
+  "timestamps": {"started": "2026-02-13T00:00:00Z", "last_updated": "2026-02-13T00:00:00Z", "completed": "2026-02-13T00:00:00Z"},
+  "mode": "initial_scan",
+  "scan_level": "exhaustive",
+  "project_root": "/Users/enigma/Developer/jobswyft",
+  "output_folder": "/Users/enigma/Developer/jobswyft/docs",
+  "completed_steps": [{"step": "step_1", "status": "completed", "timestamp": "2026-02-13", "summary": "Classified as monorepo with 3 parts"}, {"step": "step_2", "status": "completed", "timestamp": "2026-02-13", "summary": "Found 8+ existing docs, PRD Shah.md as primary reference"}, {"step": "step_3", "status": "completed", "timestamp": "2026-02-13", "summary": "Tech stack: FastAPI + WXT + React"}, {"step": "step_4", "status": "completed", "timestamp": "2026-02-13", "summary": "Conditional analysis complete, 10+ files written"}, {"step": "step_5", "status": "completed", "timestamp": "2026-02-13", "summary": "Source tree documented"}, {"step": "step_6", "status": "completed", "timestamp": "2026-02-13", "summary": "Dev/deployment guides written"}, {"step": "step_7", "status": "completed", "timestamp": "2026-02-13", "summary": "Integration architecture documented"}, {"step": "step_8", "status": "completed", "timestamp": "2026-02-13", "summary": "Architecture docs written for 3 parts"}, {"step": "step_9", "status": "completed", "timestamp": "2026-02-13", "summary": "All supporting docs written"}, {"step": "step_10", "status": "completed", "timestamp": "2026-02-13", "summary": "Master index generated"}, {"step": "step_11", "status": "completed", "timestamp": "2026-02-13", "summary": "Validation and review complete"}, {"step": "step_12", "status": "completed", "timestamp": "2026-02-13", "summary": "Workflow complete"}],
+  "current_step": "completed",
+  "findings": {"project_classification": "monorepo, 3 parts, FastAPI + WXT + React", "technology_stack": {"api": "FastAPI + Supabase", "extension": "WXT + React + Zustand", "ui": "Vite + React + shadcn/ui"}},
+  "outputs_generated": ["project-scan-report.json", "technology-stack.md", "architecture-patterns.md", "api-contracts-api.md", "data-models-api.md", "component-inventory-ui.md", "source-tree-analysis.md", "development-guide.md", "deployment-guide.md", "integration-architecture.md", "project-overview.md", "project-parts.json", "index.md"],
+  "resume_instructions": "Starting from step 2",
+  "user_context": "Include PRD Shah.md as primary reference - may have newer versions of requirements than _bmad-output planning artifacts",
+  "project_types": [
+    {"part_id": "api", "project_type_id": "backend", "display_name": "FastAPI backend"},
+    {"part_id": "extension", "project_type_id": "extension", "display_name": "WXT Chrome extension"},
+    {"part_id": "ui", "project_type_id": "library", "display_name": "React component library"}
+  ]
+}
