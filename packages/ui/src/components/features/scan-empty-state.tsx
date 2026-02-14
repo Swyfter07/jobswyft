@@ -32,13 +32,9 @@ export function ScanEmptyState({
           Scan This Page
         </Button>
       )}
-      <button
-        type="button"
-        className="text-xs text-primary hover:underline"
-        onClick={onManualEntry}
-      >
+      <Button variant="link" size="sm" className="text-xs h-auto p-0 text-primary" onClick={onManualEntry}>
         Or paste a job description
-      </button>
+      </Button>
     </div>
   )
 }
