@@ -23,7 +23,7 @@ export function ScanEmptyState({
       )}
       {...props}
     >
-      <Search className="size-8 text-muted-foreground/40" />
+      <Search className="size-8 text-muted-foreground/40 animate-pulse" />
       <p className="text-sm text-muted-foreground text-center">
         Navigate to a job posting to get started
       </p>

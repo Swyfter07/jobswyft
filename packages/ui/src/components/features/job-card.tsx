@@ -155,7 +155,7 @@ export function JobCard({
         </div>
       )}
 
-      <CardHeader className="-mt-4 pt-4 pb-3 space-y-3 bg-card-accent-bg flex-shrink-0">
+      <CardHeader className="pb-3 space-y-3 bg-gradient-to-r from-card-accent-bg to-transparent flex-shrink-0">
         {/* Top Row: Header + Match */}
         <div className="flex items-start justify-between gap-4">
           <div className="space-y-1.5 w-full">

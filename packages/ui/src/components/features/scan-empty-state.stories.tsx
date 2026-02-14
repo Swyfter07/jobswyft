@@ -32,3 +32,17 @@ export const WithManualScan: Story = {
     canManualScan: true,
   },
 }
+
+export const DarkMode: Story = {
+  name: "Dark Mode",
+  decorators: [
+    (Story) => (
+      <div className="dark bg-background p-4 rounded-xl w-[340px]">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    canManualScan: true,
+  },
+}

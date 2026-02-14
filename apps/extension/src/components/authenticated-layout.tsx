@@ -36,6 +36,7 @@ import { AUTOFILL_FIELD_REGISTRY } from "../features/autofill/field-registry";
 import { fetchAutofillData } from "../features/autofill/autofill-data-service";
 import { AIStudioTab } from "./ai-studio-tab";
 import { AutofillTab } from "./autofill-tab";
+import { CoachTab } from "./coach-tab";
 import { ResumeDetailView } from "./resume-detail-view";
 import { SettingsDialog } from "./settings-dialog";
 import { ErrorBoundary } from "./error-boundary";
@@ -775,6 +776,7 @@ export function AuthenticatedLayout() {
             scanContent={scanContent}
             studioContent={<AIStudioTab />}
             autofillContent={<AutofillTab />}
+            coachContent={<CoachTab />}
             isLocked={isLocked}
             activeTab={activeTab}
             onTabChange={(tab: string) => setActiveTab(tab as import("../stores/sidebar-store").MainTab)}

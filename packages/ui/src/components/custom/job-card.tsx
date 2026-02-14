@@ -12,9 +12,9 @@ import { Button } from "@/components/ui/button"
 import { Separator } from "@/components/ui/separator"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { MatchIndicator } from "@/components/custom/match-indicator"
-import { SkillPill, SkillSectionLabel } from "@/components/custom/skill-pill"
-import { IconBadge } from "@/components/custom/icon-badge"
+import { MatchIndicator } from "@/components/blocks/match-indicator"
+import { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
+import { IconBadge } from "@/components/blocks/icon-badge"
 
 // ─── Interfaces ─────────────────────────────────────────────────────────────
 
@@ -63,7 +63,7 @@ export function JobCard({
 
     return (
         <Card className={cn("w-full overflow-hidden border-2 border-card-accent-border", className)} {...props}>
-            <CardHeader className="space-y-3 bg-muted/20 dark:bg-muted/40">
+            <CardHeader className="space-y-3 bg-card-accent-bg">
                 {/* Top Row: Header & Match */}
                 <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -105,6 +105,7 @@ export function JobCard({
                         size="icon"
                         className="size-8 shrink-0 text-muted-foreground hover:text-foreground"
                         onClick={() => setIsEditing(!isEditing)}
+                        aria-label={isEditing ? "Cancel editing" : "Edit job details"}
                     >
                         {isEditing ? <X className="size-4" /> : <Pencil className="size-4" />}
                     </Button>

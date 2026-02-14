@@ -36,3 +36,27 @@ export const Error: Story = {
         error: "Sign-in failed. Please check your connection and try again.",
     },
 }
+
+export const DarkMode: Story = {
+    name: "Dark Mode",
+    decorators: [
+        (Story) => (
+            <div className="dark w-[400px] h-[600px] bg-background rounded-xl">
+                <Story />
+            </div>
+        ),
+    ],
+    args: {},
+}
+
+export const ExtensionViewport: Story = {
+    name: "Extension Viewport (360×600)",
+    decorators: [
+        (Story) => (
+            <div className="w-[360px] h-[600px]">
+                <Story />
+            </div>
+        ),
+    ],
+    args: {},
+}

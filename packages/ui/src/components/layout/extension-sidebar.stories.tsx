@@ -71,7 +71,7 @@ const defaultResumeContext = (
     />
 )
 
-// ─── Tab-Based Stories (3-Tab Navigation) ────────────────────────────
+// ─── Tab-Based Stories (4-Tab Navigation) ────────────────────────────
 
 /** Default view — Scan tab active, empty state */
 export const ScanTabEmpty: Story = {
@@ -85,6 +85,7 @@ export const ScanTabEmpty: Story = {
         scanContent: <ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "scan",
     },
 }
@@ -122,6 +123,7 @@ export const ScanTabLoading: Story = {
         ),
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "scan",
     },
 }
@@ -138,6 +140,7 @@ export const ScanTabSuccess: Story = {
         scanContent: <JobCard job={MOCK_JOB} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "scan",
     },
 }
@@ -166,6 +169,7 @@ export const ScanTabError: Story = {
         ),
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "scan",
     },
 }
@@ -201,6 +205,7 @@ export const AIStudioTab: Story = {
             </div>
         ),
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "ai-studio",
     },
 }
@@ -224,11 +229,43 @@ export const AutofillTab: Story = {
                 </div>
             </div>
         ),
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "autofill",
     },
 }
 
-/** Locked tabs — AI Studio and Autofill disabled (no job scanned) */
+/** Coach tab active */
+export const CoachTab: Story = {
+    name: "Coach Tab: Active",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: (
+            <div className="flex flex-col h-full">
+                <div className="flex-1 space-y-3 p-3">
+                    <div className="text-center text-xs text-muted-foreground py-8">
+                        Ask your career coach anything about this job, interview prep, or your application strategy.
+                    </div>
+                </div>
+                <div className="border-t border-border p-3">
+                    <div className="flex gap-2">
+                        <div className="flex-1 rounded-md border border-input bg-background px-3 py-2 text-sm text-muted-foreground">Ask your career coach...</div>
+                        <Button size="sm" disabled>Send</Button>
+                    </div>
+                </div>
+            </div>
+        ),
+        defaultTab: "coach",
+    },
+}
+
+/** Locked tabs — AI Studio, Autofill, and Coach disabled (no job scanned) */
 export const LockedTabs: Story = {
     name: "Locked Tabs (No Job Data)",
     decorators: [CenteredLayout],
@@ -240,6 +277,7 @@ export const LockedTabs: Story = {
         scanContent: <ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         isLocked: true,
         defaultTab: "scan",
     },
@@ -286,6 +324,7 @@ export const MaxedOut: Story = {
         scanContent: <JobCard job={MOCK_JOB} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "scan",
     },
 }
@@ -323,6 +362,7 @@ export const WithFooter: Story = {
         scanContent: <JobCard job={MOCK_JOB} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         footer: (
             <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground">
                 <span>3 / 10 credits remaining</span>
@@ -347,6 +387,7 @@ export const DarkMode: Story = {
         scanContent: <JobCard job={MOCK_JOB} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         defaultTab: "scan",
     },
 }
@@ -363,6 +404,7 @@ export const DarkModeLocked: Story = {
         scanContent: <ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />,
         studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
         autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        coachContent: <div className="text-sm text-muted-foreground p-4">Coach content placeholder</div>,
         isLocked: true,
         defaultTab: "scan",
     },

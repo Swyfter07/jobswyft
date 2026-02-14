@@ -19,9 +19,9 @@ import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { SelectionChips } from "@/components/custom/selection-chips"
-import { MatchIndicator } from "@/components/custom/match-indicator"
-import { SkillPill, SkillSectionLabel } from "@/components/custom/skill-pill"
-import { IconBadge } from "@/components/custom/icon-badge"
+import { MatchIndicator } from "@/components/blocks/match-indicator"
+import { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
+import { IconBadge } from "@/components/blocks/icon-badge"
 
 // ─── Types ──────────────────────────────────────────────────────────────
 

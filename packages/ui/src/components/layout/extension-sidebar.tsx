@@ -1,5 +1,5 @@
 import React from "react"
-import { Search, Sparkles, FormInput } from "lucide-react"
+import { Search, Sparkles, FormInput, Bot } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
@@ -9,6 +9,7 @@ export interface ExtensionSidebarProps extends React.HTMLAttributes<HTMLDivEleme
     scanContent?: React.ReactNode
     studioContent?: React.ReactNode
     autofillContent?: React.ReactNode
+    coachContent?: React.ReactNode
     footer?: React.ReactNode
     isLocked?: boolean
     defaultTab?: string
@@ -30,6 +31,7 @@ export function ExtensionSidebar({
     scanContent,
     studioContent,
     autofillContent,
+    coachContent,
     footer,
     isLocked = false,
     defaultTab = "scan",
@@ -96,7 +98,7 @@ export function ExtensionSidebar({
                     <Tabs value={currentTab} onValueChange={handleTabChange} className="flex-1 flex flex-col overflow-hidden min-h-[200px]">
                         {/* Tab Bar — shrink-0, never scrolls */}
                         <nav className="shrink-0 px-3 pt-3 pb-2 bg-background border-b z-10">
-                            <TabsList className="w-full grid grid-cols-3 h-9">
+                            <TabsList className="w-full grid grid-cols-4 h-9">
                                 <TabsTrigger value="scan" aria-label="Scan" className="text-xs gap-1.5 px-1">
                                     <Search className="size-4" />
                                     <span>Scan</span>
@@ -123,6 +125,17 @@ export function ExtensionSidebar({
                                     </TabIcon>
                                     <span>Autofill</span>
                                 </TabsTrigger>
+                                <TabsTrigger
+                                    value="coach"
+                                    aria-label="Coach"
+                                    className={cn("text-xs gap-1.5 px-1", isLocked && "text-muted-foreground")}
+                                    disabled={isLocked}
+                                >
+                                    <TabIcon locked={isLocked}>
+                                        <Bot className="size-4" />
+                                    </TabIcon>
+                                    <span>Coach</span>
+                                </TabsTrigger>
                             </TabsList>
                         </nav>
 
@@ -142,6 +155,9 @@ export function ExtensionSidebar({
                             </TabsContent>
                             <TabsContent value="autofill" forceMount className={cn("h-full mt-0 p-3 space-y-3", hasChangedTab.current && "animate-tab-content", currentTab !== "autofill" && "hidden")} aria-hidden={currentTab !== "autofill"}>
                                 {autofillContent}
+                            </TabsContent>
+                            <TabsContent value="coach" forceMount className={cn("h-full mt-0 p-3 space-y-3", hasChangedTab.current && "animate-tab-content", currentTab !== "coach" && "hidden")} aria-hidden={currentTab !== "coach"}>
+                                {coachContent}
                             </TabsContent>
                         </main>
                     </Tabs>

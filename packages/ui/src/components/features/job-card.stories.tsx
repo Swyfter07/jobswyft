@@ -114,6 +114,82 @@ export const Saving: Story = {
   },
 }
 
+export const WithMatchAnalysis: Story = {
+  name: "With Match Analysis",
+  args: {
+    job: fullJob,
+    match: {
+      score: 85,
+      matchedSkills: ["React", "TypeScript", "Next.js", "Design Systems"],
+      missingSkills: ["Python", "Kubernetes"],
+      summary: "Strong match based on frontend expertise and design system experience.",
+    },
+  },
+}
+
+export const AnalyzingMatch: Story = {
+  name: "Analyzing Match",
+  args: {
+    job: fullJob,
+    isAnalyzing: true,
+  },
+}
+
+export const Scanning: Story = {
+  name: "Scanning Overlay",
+  args: {
+    job: fullJob,
+    isScanning: true,
+  },
+}
+
+export const DarkMode: Story = {
+  name: "Dark Mode",
+  decorators: [
+    (Story) => (
+      <div className="dark bg-background p-4 rounded-xl w-[340px]">
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <InteractiveWrapper initialJob={fullJob} />,
+}
+
+export const DarkModeWithMatch: Story = {
+  name: "Dark Mode: With Match",
+  decorators: [
+    (Story) => (
+      <div className="dark bg-background p-4 rounded-xl w-[340px]">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    job: fullJob,
+    match: {
+      score: 72,
+      matchedSkills: ["React", "TypeScript"],
+      missingSkills: ["Python", "AWS", "Docker"],
+      summary: "Good fit with room for growth in backend skills.",
+    },
+  },
+}
+
+export const ExtensionViewport: Story = {
+  name: "Extension Viewport (360×600)",
+  parameters: {
+    viewport: { defaultViewport: "extensionDefault" },
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[360px] p-3">
+        <Story />
+      </div>
+    ),
+  ],
+  render: () => <InteractiveWrapper initialJob={fullJob} />,
+}
+
 /** Loading skeleton that matches the JobCard layout — shown during scanning */
 export const Loading: Story = {
   name: "Loading (Skeleton)",

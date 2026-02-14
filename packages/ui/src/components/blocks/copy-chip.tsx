@@ -117,6 +117,7 @@ function CopyChip({ value, icon, iconPosition = "left", label, className }: Copy
         <button
           type="button"
           onClick={() => copy(value)}
+          aria-label={`Copy ${truncateText(label || value, 40)}`}
           className={cn(
             "inline-flex items-center gap-1.5 rounded-md border border-input",
             "bg-transparent px-2 py-0.5 text-xs font-medium text-foreground",
