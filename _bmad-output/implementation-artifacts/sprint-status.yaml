@@ -129,7 +129,7 @@ development_status:
   # Surfaces: packages/engine/, apps/extension/ (adapter)
   epic-2: in-progress
   2-1-engine-package-scaffold-scan-engine-extraction: done
-  2-2-middleware-extraction-pipeline: in-progress
+  2-2-middleware-extraction-pipeline: review
   2-3-smart-extraction-patterns-confidence-self-healing: backlog
   2-4-site-config-system-board-registry: backlog
   2-5-autofill-engine-core-field-detection-form-filling: backlog

@@ -21,6 +21,14 @@ export default [
           name: "browser",
           message: "Browser APIs are not allowed in @jobswyft/engine. Keep the engine package pure.",
         },
+        {
+          name: "document",
+          message: "Use ctx.dom instead of global document. Pipeline layers must only access DOM through DetectionContext.",
+        },
+        {
+          name: "window",
+          message: "Use ctx.dom instead of global window. Pipeline layers must only access DOM through DetectionContext.",
+        },
       ],
     },
   },

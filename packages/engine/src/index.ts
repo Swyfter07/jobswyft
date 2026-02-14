@@ -34,6 +34,33 @@ export {
   resolveFieldType,
 } from "./scoring/signal-weights";
 
+// ─── Pipeline ───────────────────────────────────────────────────────────────
+export {
+  createDetectionContext,
+  updateCompleteness,
+  recordLayerExecution,
+  compose,
+  boardDetector,
+  jsonLd,
+  cssSelector,
+  createConfidenceGate,
+  ogMeta,
+  heuristic,
+  aiFallback,
+  postProcess,
+  createDefaultPipeline,
+} from "./pipeline/index";
+export type {
+  LayerName,
+  FieldExtraction,
+  TraceAttempt,
+  FieldTrace,
+  ExtractionTrace,
+  SiteConfig,
+  DetectionContext,
+  ExtractionMiddleware,
+} from "./pipeline/index";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type { FrameResult } from "./types/frame-result";
 
