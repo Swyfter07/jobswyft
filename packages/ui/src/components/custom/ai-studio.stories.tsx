@@ -2,24 +2,16 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AIStudio } from "./ai-studio"
 
 const meta = {
-    title: "Custom/AIStudio",
+    title: "Custom/AI Studio",
     component: AIStudio,
     parameters: {
         layout: "centered",
+        viewport: { defaultViewport: "extensionDefault" },
     },
     tags: ["autodocs"],
-    argTypes: {
-        isLocked: { control: "boolean" },
-        isGenerating: { control: "boolean" },
-        creditBalance: { control: "number" },
-        onUnlock: { action: "unlock" },
-        onGenerate: { action: "generate" },
-        onReset: { action: "reset" },
-        onTabChange: { action: "tab changed" },
-    },
     decorators: [
         (Story) => (
-            <div className="w-[400px] p-4">
+            <div className="w-[360px]">
                 <Story />
             </div>
         ),
@@ -29,54 +21,57 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const Locked: Story = {
-    args: {
-        isLocked: true,
-        creditBalance: 5,
-    },
+const defaultMatchData = {
+    score: 85,
+    matchedSkills: ["React", "TypeScript", "Tailwind"],
+    missingSkills: ["GraphQL", "AWS"],
 }
 
-export const Unlocked: Story = {
+export const Default: Story = {
     args: {
         isLocked: false,
-        creditBalance: 5,
+        matchData: defaultMatchData,
+        defaultTab: "match",
     },
 }
 
 export const MatchTab: Story = {
     args: {
         isLocked: false,
-        creditBalance: 5,
+        matchData: defaultMatchData,
         defaultTab: "match",
-        matchData: {
-            score: 85,
-            matchedSkills: ["React", "TypeScript", "Tailwind", "Node.js"],
-            missingSkills: ["GraphQL", "AWS"],
-        },
     },
 }
 
 export const CoverLetterTab: Story = {
     args: {
         isLocked: false,
-        creditBalance: 5,
+        matchData: defaultMatchData,
         defaultTab: "cover-letter",
-    },
-}
-
-export const AnswerTab: Story = {
-    args: {
-        isLocked: false,
-        creditBalance: 5,
-        defaultTab: "answer",
     },
 }
 
 export const OutreachTab: Story = {
     args: {
         isLocked: false,
-        creditBalance: 5,
+        matchData: defaultMatchData,
         defaultTab: "outreach",
+    },
+}
+
+export const ChatTab: Story = {
+    args: {
+        isLocked: false,
+        matchData: defaultMatchData,
+        defaultTab: "chat",
+    },
+}
+
+export const Locked: Story = {
+    args: {
+        isLocked: true,
+        matchData: defaultMatchData,
+        onUnlock: () => {},
     },
 }
 
@@ -85,20 +80,68 @@ export const Generating: Story = {
         isLocked: false,
         isGenerating: true,
         generatingLabel: "Generating cover letter...",
-        creditBalance: 5,
+        matchData: defaultMatchData,
         defaultTab: "cover-letter",
     },
 }
 
-export const LowMatch: Story = {
+export const DarkMode: Story = {
+    decorators: [
+        (Story) => (
+            <div className="dark w-[360px] bg-background rounded-xl p-4">
+                <Story />
+            </div>
+        ),
+    ],
     args: {
         isLocked: false,
-        creditBalance: 2,
-        defaultTab: "match",
+        matchData: defaultMatchData,
+    },
+}
+
+export const ExtensionViewport: Story = {
+    parameters: {
+        viewport: { defaultViewport: "extensionDefault" },
+    },
+    decorators: [
+        (Story) => (
+            <div className="w-[360px]">
+                <Story />
+            </div>
+        ),
+    ],
+    args: {
+        isLocked: false,
+        matchData: defaultMatchData,
+    },
+}
+
+export const OverflowContent: Story = {
+    parameters: {
+        viewport: { defaultViewport: "extensionDefault" },
+    },
+    decorators: [
+        (Story) => (
+            <div className="w-[360px]">
+                <Story />
+            </div>
+        ),
+    ],
+    args: {
+        isLocked: false,
         matchData: {
-            score: 35,
-            matchedSkills: ["JavaScript"],
-            missingSkills: ["React", "TypeScript", "GraphQL", "AWS", "Docker"],
+            score: 92,
+            matchedSkills: [
+                "React", "TypeScript", "Tailwind CSS", "Node.js", "Express", 
+                "PostgreSQL", "REST APIs", "Git", "Docker", "AWS", 
+                "CI/CD", "Jest", "React Testing Library", "Storybook",
+                "Webpack", "Vite", "GraphQL", "Redis", "MongoDB"
+            ],
+            missingSkills: [
+                "Kubernetes", "Terraform", "Go", "Python", "Ruby on Rails",
+                "Vue.js", "Angular", "Svelte", "Microservices", "gRPC"
+            ],
         },
+        defaultTab: "match",
     },
 }

@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { IconBadge } from "@/components/custom/icon-badge"
+import { IconBadge } from "@/components/blocks/icon-badge"
 
 export interface Message {
     id: string
@@ -29,6 +29,13 @@ export function Coach({
 }: CoachProps) {
     const [messages, setMessages] = useState<Message[]>(initialMessages)
     const [inputValue, setInputValue] = useState("")
+
+    // Sync initialMessages when prop changes (e.g., parent resets chat)
+    useEffect(() => {
+        if (messages.length === 0 && initialMessages.length > 0) {
+            setMessages(initialMessages)
+        }
+    }, [initialMessages, messages.length])
     const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
@@ -114,7 +121,7 @@ export function Coach({
                                 >
                                     <p className="leading-snug whitespace-pre-wrap break-words">{msg.content}</p>
                                     <span className={cn(
-                                        "text-[9px] opacity-70",
+                                        "text-micro opacity-70",
                                         msg.role === "user" ? "text-primary-foreground" : "text-muted-foreground"
                                     )}>
                                         {msg.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

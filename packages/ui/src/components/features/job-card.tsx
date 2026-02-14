@@ -210,26 +210,28 @@ export function JobCard({
                         </CardTitle>
                       )}
                       <div className="flex items-center shrink-0">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="size-6 text-muted-foreground/50 hover:text-foreground"
-                          onClick={onEditToggle}
-                          title="Edit Job Details"
-                        >
-                          <Pencil className="size-3" />
-                        </Button>
-                        {onScan && (
                           <Button
                             variant="ghost"
                             size="icon"
-                            className="size-6 text-muted-foreground/50 hover:text-foreground ml-1"
-                            onClick={onScan}
-                            title="Re-scan Job"
-                            disabled={isScanning}
+                            className="size-6 text-muted-foreground/50 hover:text-foreground"
+                            onClick={onEditToggle}
+                            title="Edit Job Details"
+                            aria-label="Edit Job Details"
                           >
-                            <RefreshCw className={cn("size-3", isScanning && "animate-spin")} />
+                            <Pencil className="size-3" />
                           </Button>
+                        {onScan && (
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="size-6 text-muted-foreground/50 hover:text-foreground ml-1"
+                              onClick={onScan}
+                              title="Re-scan Job"
+                              aria-label="Re-scan Job"
+                              disabled={isScanning}
+                            >
+                              <RefreshCw className={cn("size-3", isScanning && "animate-spin")} />
+                            </Button>
                         )}
                       </div>
                     </div>

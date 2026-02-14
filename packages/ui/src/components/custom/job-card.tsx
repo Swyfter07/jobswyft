@@ -1,4 +1,4 @@
-import React from "react"
+import React, { useEffect } from "react"
 import { Building, MapPin, Clock, Brain, Sparkles, Pencil, X } from "lucide-react"
 import { cn } from "@/lib/utils"
 import {
@@ -60,6 +60,14 @@ export function JobCard({
     const [title, setTitle] = React.useState(job.title)
     const [company, setCompany] = React.useState(job.company)
     const [description, setDescription] = React.useState(job.description)
+
+    useEffect(() => {
+        if (!isEditing) {
+            setTitle(job.title)
+            setCompany(job.company)
+            setDescription(job.description ?? "")
+        }
+    }, [job.title, job.company, job.description, isEditing])
 
     return (
         <Card className={cn("w-full overflow-hidden border-2 border-card-accent-border", className)} {...props}>

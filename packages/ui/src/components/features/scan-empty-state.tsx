@@ -18,7 +18,7 @@ export function ScanEmptyState({
   return (
     <div
       className={cn(
-        "border-2 border-card-accent-border rounded-lg p-6 flex flex-col items-center gap-4",
+        "border-2 border-dashed border-card-accent-border rounded-lg p-6 flex flex-col items-center gap-4",
         className,
       )}
       {...props}

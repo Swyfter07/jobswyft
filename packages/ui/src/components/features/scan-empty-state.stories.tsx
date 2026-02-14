@@ -6,7 +6,7 @@ const meta: Meta<typeof ScanEmptyState> = {
   component: ScanEmptyState,
   parameters: {
     layout: "centered",
-    viewport: { defaultViewport: "extension" },
+    viewport: { defaultViewport: "extensionDefault" },
   },
   decorators: [
     (Story) => (
@@ -38,6 +38,23 @@ export const DarkMode: Story = {
   decorators: [
     (Story) => (
       <div className="dark bg-background p-4 rounded-xl w-[340px]">
+        <Story />
+      </div>
+    ),
+  ],
+  args: {
+    canManualScan: true,
+  },
+}
+
+export const ExtensionViewport: Story = {
+  name: "Extension Viewport (360×600)",
+  parameters: {
+    viewport: { defaultViewport: "extensionDefault" },
+  },
+  decorators: [
+    (Story) => (
+      <div className="w-[360px] min-h-[400px] p-4">
         <Story />
       </div>
     ),

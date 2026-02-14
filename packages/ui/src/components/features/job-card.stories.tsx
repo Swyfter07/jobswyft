@@ -70,7 +70,7 @@ const meta: Meta<typeof JobCard> = {
   component: JobCard,
   parameters: {
     layout: "centered",
-    viewport: { defaultViewport: "extension" },
+    viewport: { defaultViewport: "extensionDefault" },
   },
   decorators: [
     (Story) => (

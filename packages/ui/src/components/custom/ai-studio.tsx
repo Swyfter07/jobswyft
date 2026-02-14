@@ -18,7 +18,7 @@ import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
-import { SelectionChips } from "@/components/custom/selection-chips"
+import { SelectionChips } from "@/components/blocks/selection-chips"
 import { MatchIndicator } from "@/components/blocks/match-indicator"
 import { SkillPill, SkillSectionLabel } from "@/components/blocks/skill-pill"
 import { IconBadge } from "@/components/blocks/icon-badge"
@@ -183,7 +183,7 @@ function CoverLetterTab({
     )
 }
 
-function AnswerTab({
+function ChatTab({
     tone,
     length,
     onToneChange,
@@ -326,7 +326,8 @@ export function AIStudio({
                         size="icon"
                         className="size-6 text-muted-foreground hover:text-foreground"
                         title="Reset All"
-                        onClick={onReset}
+                        aria-label="Reset All"
+                        onClick={() => onReset?.()}
                     >
                         <RotateCcw className="size-3.5" />
                     </Button>
@@ -335,7 +336,7 @@ export function AIStudio({
 
             <CardContent className="p-0">
                 <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
-                    <div className="px-4 py-3">
+                    <div className="shrink-0 px-4 py-3">
                         <TabsList className="flex w-full items-center gap-1 rounded-lg bg-secondary/50 p-1 text-muted-foreground h-auto">
                             <TabsTrigger value="match" className={triggerClass}>
                                 <Sparkles className="size-3.5" />
@@ -345,13 +346,13 @@ export function AIStudio({
                                 <FileText className="size-3.5" />
                                 <span>Cover</span>
                             </TabsTrigger>
-                            <TabsTrigger value="answer" className={triggerClass}>
-                                <MessageSquare className="size-3.5" />
-                                <span>Answer</span>
-                            </TabsTrigger>
                             <TabsTrigger value="outreach" className={triggerClass}>
                                 <Send className="size-3.5" />
                                 <span>Outreach</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="chat" className={triggerClass}>
+                                <MessageSquare className="size-3.5" />
+                                <span>Chat</span>
                             </TabsTrigger>
                         </TabsList>
                     </div>
@@ -393,18 +394,6 @@ export function AIStudio({
                                     />
                                 </TabsContent>
 
-                                <TabsContent value="answer" className="mt-0">
-                                    <AnswerTab
-                                        tone={tone}
-                                        length={length}
-                                        onToneChange={setTone}
-                                        onLengthChange={setLength}
-                                        isGenerating={isGenerating}
-                                        generatingLabel={generatingLabel}
-                                        onGenerate={() => onGenerate?.({ tab: "answer", tone, length })}
-                                    />
-                                </TabsContent>
-
                                 <TabsContent value="outreach" className="mt-0">
                                     <OutreachTab
                                         tone={tone}
@@ -416,6 +405,18 @@ export function AIStudio({
                                         isGenerating={isGenerating}
                                         generatingLabel={generatingLabel}
                                         onGenerate={() => onGenerate?.({ tab: "outreach", tone, length, platform })}
+                                    />
+                                </TabsContent>
+
+                                <TabsContent value="chat" className="mt-0">
+                                    <ChatTab
+                                        tone={tone}
+                                        length={length}
+                                        onToneChange={setTone}
+                                        onLengthChange={setLength}
+                                        isGenerating={isGenerating}
+                                        generatingLabel={generatingLabel}
+                                        onGenerate={() => onGenerate?.({ tab: "chat", tone, length })}
                                     />
                                 </TabsContent>
                             </div>
