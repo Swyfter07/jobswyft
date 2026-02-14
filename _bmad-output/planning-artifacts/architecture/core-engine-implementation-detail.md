@@ -44,44 +44,85 @@
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-## Extraction Pipeline
+## Extraction Pipeline (ADR-REV-SE5 — Middleware Architecture)
 
-Per-field, layers execute top-to-bottom. Stop on first accepted match per field.
+Koa-style middleware pipeline with shared `DetectionContext` and inline confidence gates. Each middleware can short-circuit by not calling `next()`. Site configs can customize layer ordering via `pipelineHints`.
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
-│  Layer 1: JSON-LD                                  conf 0.95    │
-│  Parse <script type="application/ld+json"> blocks               │
-│  Recursive search for @type: "JobPosting" (handles @graph)      │
-│  ~40% of job pages have JSON-LD (Indeed, Greenhouse usually)    │
-└────────────────────────┬────────────────────────────────────────┘
-                         │ fields still empty?
-┌────────────────────────▼────────────────────────────────────────┐
-│  Layer 2: CSS Selectors                       conf 0.85/0.60   │
-│  Board-specific selectors first, then generic fallback          │
-│  Registry-driven (ADR-REV-D1): only board-relevant selectors    │
-│  Title: 17 selectors, Company: 10, Description: 27, etc.       │
-└────────────────────────┬────────────────────────────────────────┘
-                         │ fields still empty?
-┌────────────────────────▼────────────────────────────────────────┐
-│  Layer 3: OpenGraph Meta                           conf 0.40   │
-│  <meta property="og:title"> for title only                      │
-└────────────────────────┬────────────────────────────────────────┘
-                         │ fields still empty?
-┌────────────────────────▼────────────────────────────────────────┐
-│  Layer 4: Heuristic                                conf 0.30   │
-│  Expand <details>, read CSS-hidden content, extended selectors  │
-│  Only runs if title OR company OR description missing/short     │
-└────────────────────────┬────────────────────────────────────────┘
-                         │ completeness < 0.7?
-┌────────────────────────▼────────────────────────────────────────┐
-│  Layer 5: AI Backend (POST /v1/ai/extract-job)     conf 0.90   │
-│  Cleaned HTML (8KB max) → fast model (Haiku)                    │
-│  One AI call per scan maximum. 50/user/day rate limit.          │
-│  No credit cost (infrastructure, not user-facing AI feature)    │
-└─────────────────────────────────────────────────────────────────┘
+┌─────────────────────────────────────────────────────────────────────┐
+│  DetectionContext (shared, enriched by each middleware):             │
+│  { url, dom, board, fields, confidence, completeness, trace,        │
+│    siteConfig, frameId, metadata }                                  │
+└─────────────────────────────────────────────────────────────────────┘
 
-Post-extraction: Delayed verification if completeness < 0.8 (re-scan after 5s, rule-based only)
+Pipeline (default ordering — site configs can customize):
+
+  1. BoardDetectorMiddleware       → sets ctx.board, ctx.siteConfig
+  │
+  2. JsonLdMiddleware              → conf 0.95 per field
+  │   Parse <script type="application/ld+json"> blocks
+  │   Recursive search for @type: "JobPosting" (handles @graph)
+  │   ~40% of job pages have JSON-LD (Indeed, Greenhouse usually)
+  │
+  3. ConfidenceGateMiddleware      → SKIP remaining if completeness >= 0.85
+  │
+  4. CssSelectorMiddleware         → conf 0.85 (board-specific) / 0.60 (generic)
+  │   Board-specific selectors first, then generic fallback
+  │   Registry-driven (ADR-REV-D1): only board-relevant selectors
+  │
+  5. ConfidenceGateMiddleware      → SKIP remaining if completeness >= 0.75
+  │
+  6. OgMetaMiddleware              → conf 0.40
+  │   <meta property="og:title"> for title only
+  │
+  7. HeuristicMiddleware           → conf 0.30
+  │   Expand <details>, read CSS-hidden content, extended selectors
+  │
+  8. ConfidenceGateMiddleware      → SKIP AI if completeness >= 0.70
+  │
+  9. AiFallbackMiddleware          → conf 0.90
+  │   Cleaned HTML (8KB max) → fast model (Haiku)
+  │   One AI call per scan maximum. 50/user/day rate limit.
+  │   No credit cost (infrastructure, not user-facing AI feature)
+  │   Prepares payload; actual API call relayed via port to background
+  │
+  10. PostProcessMiddleware        → normalize, validate, finalize trace
+      Delayed verification if completeness < 0.8 (re-scan after 5s, rule-based only)
+```
+
+**Middleware Runner (packages/engine/src/pipeline/middleware.ts):**
+```typescript
+type Next = () => Promise<void>;
+type ExtractionMiddleware = (ctx: DetectionContext, next: Next) => Promise<void>;
+
+function createPipeline(...middlewares: ExtractionMiddleware[]) {
+  return {
+    async execute(ctx: DetectionContext): Promise<DetectionContext> {
+      let prevIndex = -1;
+      const runner = async (index: number): Promise<void> => {
+        if (index === prevIndex) throw new Error('next() called multiple times');
+        prevIndex = index;
+        const mw = middlewares[index];
+        if (mw) await mw(ctx, () => runner(index + 1));
+      };
+      await runner(0);
+      return ctx;
+    }
+  };
+}
+```
+
+**Confidence Gate (packages/engine/src/pipeline/confidence-gate.ts):**
+```typescript
+function confidenceGate(threshold: number): ExtractionMiddleware {
+  return async (ctx, next) => {
+    if (ctx.completeness >= threshold) {
+      ctx.trace.addEvent({ type: 'gate_skip', threshold, completeness: ctx.completeness });
+      return; // Short-circuit — don't call next()
+    }
+    await next();
+  };
+}
 ```
 
 **Completeness Scoring Weights:**
@@ -244,61 +285,121 @@ GROUP BY 1;
 | **Correction Feedback** | User edits wrong extraction | User unmaps a wrong mapping |
 | **Telemetry** | Scan events | Autofill events |
 
-**Shared Module Structure:**
+**Package Structure (ADR-REV-D4 — `packages/engine/`):**
 ```
-features/engine/          ← Pure functional core (hexagonal, no Chrome APIs)
-├── extraction-pipeline.ts
-├── confidence-scorer.ts
-├── selector-health.ts
-├── heuristic-repair.ts
-├── config-loader.ts
-├── config-schema.ts
-├── extraction-trace.ts
-├── dom-readiness.ts
-├── constants.ts
-└── __tests__/
+packages/engine/          ← Pure functional core (hexagonal, no Chrome APIs)
+├── src/
+│   ├── pipeline/              ← Middleware infrastructure (ADR-REV-SE5)
+│   │   ├── middleware.ts      ← Pipeline runner (Koa-style)
+│   │   ├── confidence-gate.ts ← Inline confidence gates
+│   │   └── types.ts           ← DetectionContext, ExtractionMiddleware
+│   ├── extraction/            ← Scan engine middleware layers
+│   │   ├── json-ld.ts
+│   │   ├── css-selector.ts
+│   │   ├── og-meta.ts
+│   │   ├── heuristic.ts
+│   │   ├── ai-fallback.ts    ← Prepares payload; API call via port
+│   │   └── board-detector.ts
+│   ├── autofill/              ← Autofill engine core logic
+│   │   ├── field-classifier.ts    ← Three-tier: Known/Inferrable/Unknown
+│   │   ├── field-mapper.ts
+│   │   ├── signal-aggregator.ts   ← Similo-inspired multi-signal scoring
+│   │   └── fill-script-builder.ts ← Generates opid-based fill instructions
+│   ├── registry/              ← Selector registry + health
+│   │   ├── selector-registry.ts
+│   │   ├── selector-health.ts
+│   │   ├── heuristic-repair.ts
+│   │   └── config-schema.ts  ← Zod schemas
+│   ├── scoring/               ← Confidence scoring
+│   │   ├── confidence-scorer.ts
+│   │   ├── signal-weights.ts
+│   │   └── constants.ts
+│   ├── trace/
+│   │   └── extraction-trace.ts
+│   ├── types/
+│   │   ├── detection-context.ts
+│   │   ├── site-config.ts
+│   │   ├── extraction.ts
+│   │   ├── autofill.ts
+│   │   └── telemetry.ts
+│   └── index.ts
+├── test/
+│   ├── fixtures/              ← HTML snapshots per ATS
+│   │   ├── greenhouse/
+│   │   ├── lever/
+│   │   ├── workday/
+│   │   └── smartrecruiters/
+│   └── setup.ts
+├── package.json
+├── tsup.config.ts
+└── vitest.config.ts
 
-features/scanning/        ← DOM reader (uses engine functions)
-├── scanner.ts
-├── frame-aggregator.ts
-├── extraction-validator.ts
-├── html-cleaner.ts
-└── job-detector.ts
-
-features/autofill/        ← DOM writer (uses engine functions)
-├── field-detector.ts
-├── field-filler.ts
-├── field-registry.ts
-├── field-types.ts
-├── resume-uploader.ts
-├── signal-weights.ts
-└── ats-detector.ts
+apps/extension/src/features/  ← Chrome adapter layer (thin, DOM-touching)
+├── scanning/                  ← DOM reader (uses @jobswyft/engine)
+│   ├── dom-collector.ts       ← Shadow DOM traversal (ADR-REV-SE7)
+│   ├── scanner.ts
+│   ├── frame-aggregator.ts
+│   ├── extraction-validator.ts
+│   ├── html-cleaner.ts
+│   └── job-detector.ts
+├── autofill/                  ← DOM writer (uses @jobswyft/engine)
+│   ├── field-detector.ts      ← opid assignment (ADR-REV-SE8)
+│   ├── field-filler.ts        ← Native setter execution (ADR-REV-SE6)
+│   ├── resume-uploader.ts     ← DataTransfer API for file inputs
+│   ├── undo-manager.ts        ← Persistent undo (ADR-REV-AUTOFILL-FIX)
+│   └── ats-detector.ts
 ```
 
 ## Autofill Engine Pipeline
 
 ```
-1. DETECTION (field-detector.ts)
-   Scan DOM for <input>, <textarea>, <select>, [contenteditable]
-   Record: elementRef, fieldType, currentValue, confidence, label
+1. COLLECTION (dom-collector.ts — extension adapter)
+   Deep-scan DOM including Shadow DOM (ADR-REV-SE7)
+   Use TreeWalker + browser-specific shadow root access
+   Find: <input>, <textarea>, <select>, [contenteditable]
+   Assign opid to each field via data-jf-opid attribute (ADR-REV-SE8)
+   Extract 26+ attributes per field (Bitwarden-inspired):
+     Core IDs: htmlID, htmlName, htmlClass, opid
+     Labels: <label> text, placeholder, aria-label, data-label, positional labels
+     Functional: type, autocomplete, maxLength, tabindex, title
+   200-field limit with priority-based filtering
 
-2. MAPPING (field-mapper.ts)
-   Map detected fields to user data using registry (mode: "write")
-   Confidence: exact match (0.95), autocomplete (0.90),
+2. CLASSIFICATION (field-classifier.ts — packages/engine)
+   Three-tier classification (research-aligned):
+     Known (compile-time): firstName, email, resumeUpload → pre-registered handlers
+     Inferrable (runtime): "Years of React experience" → fuzzy match to closest known type
+     Unknown (fallback): "Why do you want this role?" → customQuestion, low confidence
+
+3. MAPPING (field-mapper.ts — packages/engine)
+   Map classified fields to user data using registry (mode: "write")
+   Confidence: autocomplete (0.95), exact name match (0.90),
    placeholder (0.75), label (0.70), aria-label (0.65), heuristic (0.40)
 
-3. REVIEW (Autofill UI in Side Panel)
+4. REVIEW (Autofill UI in Side Panel)
    Detected fields grouped by category, low-confidence flagged
+   Fields referenced by opid for stable sidebar ↔ DOM mapping
    Option to use element picker for unmapped fields
 
-4. FILL (field-filler.ts via content script, sequential 600ms stagger)
-   Snapshot current value → set value → dispatch input/change/blur events
-   → green border flash → report status
+5. FILL (field-filler.ts — extension adapter, sequential 600ms stagger)
+   Lookup field by opid: document.querySelector('[data-jf-opid="..."]')
+   If null → field removed from DOM, skip + report in trace
+   Snapshot current value for undo
+   Apply native setter pattern (PATTERN-SE9 / ADR-REV-SE6):
+     Native descriptor setter → input event → change event → blur event
+   For <select>: set selectedIndex → change event
+   Green border flash → report status per field
    File uploads: DataTransfer API on file input
    Cover letter: paste into textarea/contenteditable
 
-5. UNDO (undo-manager.ts, 10s window)
-   Restore all fields from snapshot, remove highlights, record telemetry
+6. UNDO (undo-manager.ts — persistent, ADR-REV-AUTOFILL-FIX)
+   Snapshots stored in chrome.storage.session (auto-clears on extension disable)
+   Restore all fields from snapshot by opid lookup, remove highlights
+   Undo persists with NO timeout — removed only on:
+     (a) Page refresh/navigation
+     (b) External DOM mutation changing a filled field's value
+     (c) User explicitly clicks "Undo"
+   MutationObserver on filled fields detects external changes → removes from snapshot
+   Record telemetry on undo action
 ```
 
 ## Performance Strategy

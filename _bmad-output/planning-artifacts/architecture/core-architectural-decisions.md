@@ -3,13 +3,19 @@
 ## Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
+- Engine Package Extraction to `packages/engine/` (ADR-REV-D4) ← NEW
+- Middleware Extraction Pipeline with confidence gates (ADR-REV-SE5) ← NEW
 - Selector Registry Storage (Hybrid: shipped defaults + API delta sync)
-- Extraction Pipeline Escalation (Config hints + confidence threshold)
 - Config-Driven Site Support (Config with escape hatches)
 - Content Script Communication (Zustand state + typed messages for commands)
 - Extension Update vs Config Update Separation (Bundled defaults + runtime overlay)
 
 **Important Decisions (Shape Architecture):**
+- React Controlled Form Bypass — native setter pattern (ADR-REV-SE6) ← NEW
+- Shadow DOM Traversal (ADR-REV-SE7) ← NEW
+- Operation ID (opid) Field Addressing (ADR-REV-SE8) ← NEW
+- Service Worker Lifecycle Management (ADR-REV-EX5) ← NEW
+- Admin Dashboard — Role-Based in apps/web/ (ADR-REV-EX6) ← NEW
 - Confidence Scoring (Weighted multi-signal, Similo-inspired)
 - Self-Healing Selectors (Fallback chain + heuristic repair)
 - DOM Readiness Detection (Multi-signal with config hints)
@@ -21,7 +27,9 @@
 **Deferred Decisions (Post-MVP):**
 - ML-based confidence scoring (collect data first via weighted multi-signal)
 - Task-based AI provider routing (collect usage data first via circuit breaker)
-- Admin dashboard for config authoring (git-managed with fast-path sufficient for MVP)
+- Admin config authoring dashboard (git-managed with fast-path sufficient for MVP)
+- Cross-ATS API integration (Greenhouse/Lever/SmartRecruiters public APIs complement DOM extraction)
+- Web Push API for critical config updates (Supabase Realtime sufficient for MVP)
 
 ## Data Architecture
 
@@ -123,28 +131,88 @@
 - Rationale: Per-surface speed for daily development; integration confidence for cross-surface concerns (config sync, telemetry)
 - Affects: CI configuration, test organization, merge policies
 
+## Engine & Autofill Architecture (Revision 2)
+
+**ADR-REV-D4: Engine Package Extraction — `packages/engine/`**
+- Decision: Extract core detection/autofill logic from `apps/extension/src/features/engine/` to `packages/engine/` as `@jobswyft/engine`. Zero Chrome API dependencies — enforced at package level.
+- Rationale: Hexagonal boundary enforced by package dependencies (not just convention). Testable with JSDOM/happy-dom without browser. CI isolation. Future reuse potential (web dashboard preview, API config validation).
+- Affects: Extension imports change to `@jobswyft/engine`; `apps/extension/src/features/` becomes thin Chrome adapter layer; monorepo gains new package; CI gets dedicated engine pipeline.
+- Migration: Existing `features/engine/` pure functions move to package. DOM-touching code stays in extension as adapters.
+
+**ADR-REV-SE5: Middleware Extraction Pipeline — Confidence-Gated**
+- Decision: Replace sequential 5-layer pipeline with Koa-style middleware pipeline featuring `DetectionContext`, inline confidence gates, and dynamic layer insertion via site config.
+- Pipeline: BoardDetector → JsonLd → ConfidenceGate(0.85) → CssSelector → ConfidenceGate(0.75) → OgMeta → Heuristic → ConfidenceGate(0.70) → AiFallback → PostProcess
+- Rationale: Research validates as dominant pattern (Express.js, Scrapy, uBlock Origin). Confidence gates act as circuit breakers — skip expensive layers when accumulated confidence is sufficient. Each middleware independently testable. Site configs can customize layer ordering. Onion model enables timing/tracing in same middleware.
+- Affects: `packages/engine/src/pipeline/` new directory; each extraction layer becomes standalone middleware; site config schema gains optional `pipelineHints`; replaces current sequential extraction code.
+
+**ADR-REV-SE6: React Controlled Form Bypass — Native Setter (PATTERN-SE9)**
+- Decision: All autofill field writes MUST use native property descriptor setter followed by synthetic event dispatch (`input` → `change` → `blur`). Mandatory pattern, not optional.
+- Rationale: React, Vue, Angular all ignore `element.value = x`. Native setter bypasses framework synthetic event systems. Confirmed by React issue #10135, Bitwarden fill scripts. Required for 80%+ of modern ATS platforms (Greenhouse, Workday, Lever). PRD "Project Scoping" explicitly requires native setter patterns.
+- Affects: `packages/engine/src/autofill/fill-script-builder.ts` generates fill instructions using this pattern; content script adapter executes them.
+
+**ADR-REV-SE7: Shadow DOM Traversal — TreeWalker + Browser APIs**
+- Decision: Engine adapter layer handles open and closed Shadow DOM using TreeWalker for deep traversal with browser-specific shadow root access (`chrome.dom.openOrClosedShadowRoot` for Chrome, `element.openOrClosedShadowRoot` for Firefox, `element.shadowRoot` for Safari open-only).
+- Rationale: SmartRecruiters uses multi-layered nested Shadow DOM with `<slot>` elements. Shadow DOM adoption growing across ATS platforms. Bitwarden's TreeWalker approach is the proven pattern. 200-field limit with priority filtering prevents performance issues.
+- Affects: `apps/extension/src/features/scanning/dom-collector.ts` (new file); field detection receives flattened field list; content sentinel's MutationObserver observes Shadow DOM subtrees.
+
+**ADR-REV-SE8: Operation ID (opid) Field Addressing — Fill Resilience**
+- Decision: Assign unique operation ID (`opid`) to every detected form field at collection time via `data-jf-opid` attribute. Fill scripts reference fields by `opid`, not live DOM references. Use `WeakRef<Element>` for in-memory references.
+- Rationale: DOM can change between field detection (sidebar review) and fill execution (user clicks autofill) — React re-renders, SPA transitions, lazy-loaded fields. Bitwarden's proven `opid` pattern decouples detection from execution. Fill script becomes declarative `{ opid, value }` instructions.
+- Affects: Field detection pipeline assigns opids; autofill store references fields by opid; fill execution uses `document.querySelector('[data-jf-opid="..."]')` lookup; undo manager snapshots by opid.
+
+## Extension Architecture (Revision 2)
+
+**ADR-REV-EX5: Service Worker Lifecycle Management**
+- Decision: Use `chrome.alarms` for ALL periodic tasks (config sync every 5min, telemetry flush every 2min, health check every 30min). No `setTimeout`/`setInterval` for recurring work. All fetch calls use `AbortSignal.timeout(10000)`. Content scripts implement port reconnection with exponential backoff.
+- Rationale: MV3 service worker terminates after 30s idle. `setTimeout`/`setInterval` die with it. Only `chrome.alarms` survives across restarts. Fetch >30s triggers SW termination. Research confirms `chrome.alarms` is the only reliable periodic mechanism.
+- Affects: Background script alarm registration on install/startup; API client fetch wrapper enforces 10s timeout; content script port reconnection; telemetry store dual flush strategy (alarm + threshold).
+
+**ADR-REV-EX6: Admin Dashboard — Role-Based Routing in apps/web/**
+- Decision: Admin dashboard is part of `apps/web/` using Next.js route groups and middleware-based auth gate. `/admin/*` routes check `profiles.is_admin` flag via Supabase. NOT a separate app.
+- Route structure: `(user)/` group for user dashboard, `(admin)/` group for admin pages (dashboard, users, tiers, feedback, analytics, config).
+- Rationale: Avoids monorepo complexity of separate app. Next.js route groups provide clean separation. Shared `@jobswyft/ui` library. Single Vercel deployment. Admin auth is a middleware concern.
+- Affects: `apps/web/` directory structure with route groups; Next.js middleware for admin gate; API gains `/v1/admin/*` endpoints; `profiles` table gains `is_admin` boolean.
+
+## Autofill Architecture Fix (Revision 2)
+
+**ADR-REV-AUTOFILL-FIX: Undo Duration — Persistent**
+- Decision: Undo is **persistent** with no timeout. Undo state removed only on: (a) page refresh/navigation, (b) external DOM mutation changing a previously-filled field's value, (c) user explicitly clicks "Undo." Snapshots stored in `chrome.storage.session`.
+- Previous: 10-second undo window (incorrect — contradicted PRD FR45).
+- Rationale: PRD FR45 is authoritative: "undo persists with no timeout and is removed only on page refresh or DOM field change." Persistent undo removes time pressure from user reviewing autofill results.
+- Affects: Undo manager snapshot persistence; MutationObserver on filled fields for external change detection; sidebar undo button visibility; `chrome.storage.session` for snapshot storage (auto-clears on extension disable).
+
 ## Decision Impact Analysis
 
-**Implementation Sequence:**
-1. Config schema + Zod validation (ADR-REV-D3) — foundation for all config-driven decisions
-2. Selector registry storage + bundled defaults (ADR-REV-D1, I2) — enables extraction pipeline
-3. Extraction pipeline escalation + confidence scoring (ADR-REV-SE1, SE2) — core Smart Engine
-4. Communication refactor (ADR-REV-EX1) — Zustand state + typed commands
-5. DOM readiness + Content Sentinel revision (ADR-REV-EX2) — improved detection
-6. Self-healing selectors + fallback chains (ADR-REV-SE3) — resilience layer
-7. Telemetry batch endpoint + extraction traces (ADR-REV-A1, D2) — observability
-8. Config sync API + push notifications (ADR-REV-A2) — remote config delivery
-9. Correction feedback loop + element picker (ADR-REV-EX3, EX4) — user feedback
-10. AI circuit breaker (ADR-REV-A3) — AI resilience
-11. Config pipeline + fast-path (ADR-REV-I1) — operational config management
-12. Monitoring dashboard + alerts (ADR-REV-I3) — operational observability
-13. CI/CD per-surface + integration (ADR-REV-I4) — deployment infrastructure
+**Implementation Sequence (Updated):**
+1. Engine package extraction (ADR-REV-D4) — structural foundation for all engine work
+2. Config schema + Zod validation (ADR-REV-D3) — foundation for all config-driven decisions
+3. Middleware pipeline infrastructure (ADR-REV-SE5) — core engine backbone
+4. Selector registry storage + bundled defaults (ADR-REV-D1, I2) — enables extraction middleware
+5. Extraction middleware layers + confidence scoring (ADR-REV-SE1, SE2) — Smart Engine layers
+6. Native setter + opid addressing (ADR-REV-SE6, SE8) — autofill reliability foundation
+7. Shadow DOM traversal (ADR-REV-SE7) — ATS compatibility
+8. Communication refactor (ADR-REV-EX1) — Zustand state + typed commands
+9. Service worker lifecycle (ADR-REV-EX5) — operational reliability
+10. DOM readiness + Content Sentinel revision (ADR-REV-EX2) — improved detection
+11. Self-healing selectors + fallback chains (ADR-REV-SE3) — resilience layer
+12. Telemetry batch endpoint + extraction traces (ADR-REV-A1, D2) — observability
+13. Config sync API + push notifications (ADR-REV-A2) — remote config delivery
+14. Correction feedback loop + element picker (ADR-REV-EX3, EX4) — user feedback
+15. AI circuit breaker (ADR-REV-A3) — AI resilience
+16. Admin dashboard routing (ADR-REV-EX6) — web surface
+17. Config pipeline + fast-path (ADR-REV-I1) — operational config management
+18. Monitoring dashboard + alerts (ADR-REV-I3) — operational observability
+19. CI/CD per-surface + integration (ADR-REV-I4) — deployment infrastructure
 
 **Cross-Component Dependencies:**
+- ADR-REV-D4 (engine package) → ADR-REV-SE5, SE6, SE7, SE8 (all engine internals depend on package structure)
+- ADR-REV-SE5 (middleware pipeline) → ADR-REV-SE1, SE2, SE3 (extraction layers plug into pipeline)
+- ADR-REV-SE8 (opid) → ADR-REV-SE6 (fill execution uses opid lookup) → Undo manager (snapshots by opid)
+- ADR-REV-EX5 (SW lifecycle) → ADR-REV-A1 (telemetry flush), ADR-REV-A2 (config sync) — both use alarms
 - ADR-REV-D3 (Zod configs) → ADR-REV-D1, SE1, SE4, EX2, I1, I2 (all config consumers)
 - ADR-REV-SE3 (self-healing) ↔ ADR-REV-EX4 (correction feedback) — bidirectional data flow
 - ADR-REV-A1 (telemetry) → ADR-REV-I3 (monitoring) → ADR-REV-I1 (config fast-path) — alert-driven config updates
-- ADR-REV-EX1 (communication) → ADR-REV-EX2, EX3, EX4 (all extension features depend on communication layer)
+- ADR-REV-EX1 (communication) → ADR-REV-EX2, EX3, EX4, EX5 (all extension features depend on communication layer)
 - ADR-REV-D1 (hybrid storage) ↔ ADR-REV-A2 (config sync) ↔ ADR-REV-I2 (bundled + overlay) — config delivery chain
 
 ## Database Schema (Confirmed from Original Architecture)

@@ -116,6 +116,34 @@ These patterns were established in the original architecture and remain unchange
   ```
 - Rationale: Exhaustive TypeScript matching catches missing states; composable across all stores; consistent error shape
 
+**PATTERN-SE9: React Controlled Form Bypass (ADR-REV-SE6)**
+- Convention: All autofill field writes use native property descriptor setter + synthetic event dispatch
+- Sequence: Native setter → `input` event → `change` event → `blur` event (all with `{ bubbles: true }`)
+- For `<select>`: Set `selectedIndex` → dispatch `change` event
+- Implementation:
+  ```typescript
+  function setFieldValue(el: HTMLInputElement | HTMLTextAreaElement, value: string): void {
+    const descriptor = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(el), 'value');
+    if (descriptor?.set) {
+      descriptor.set.call(el, value);
+    } else {
+      el.value = value;
+    }
+    el.dispatchEvent(new Event('input', { bubbles: true }));
+    el.dispatchEvent(new Event('change', { bubbles: true }));
+    el.dispatchEvent(new Event('blur', { bubbles: true }));
+  }
+  ```
+- Rationale: React, Vue, Angular ignore `element.value = x`. Native setter bypasses framework synthetic event systems. Required for Greenhouse, Workday, Lever, and 80%+ of modern ATS platforms. Confirmed by React issue #10135 and Bitwarden fill scripts.
+
+**PATTERN-SE10: Operation ID (opid) Field Addressing (ADR-REV-SE8)**
+- Convention: Every detected form field gets a unique `data-jf-opid` attribute at collection time
+- Format: `jf-field-{counter}` (e.g., `jf-field-0`, `jf-field-1`)
+- Lookup at fill time: `document.querySelector('[data-jf-opid="jf-field-0"]')`
+- In-memory: `WeakRef<Element>` to avoid preventing garbage collection
+- Null check: If `findFieldByOpid` returns null, field was removed from DOM — skip gracefully and report in fill trace
+- Rationale: Decouples detection from execution. DOM can change between sidebar review and autofill click (React re-renders, SPA transitions). Bitwarden's proven fill resilience pattern.
+
 ## Enforcement Guidelines
 
 **All AI Agents MUST:**
@@ -126,6 +154,9 @@ These patterns were established in the original architecture and remain unchange
 5. Use dot-namespaced strings for any new extension message types
 6. Keep selector static config separate from runtime health data
 7. Represent confidence as 0-1 float internally, convert to percentage only at display
+8. Use native setter pattern (PATTERN-SE9) for ALL form field writes — never `element.value = x` alone
+9. Assign opid (PATTERN-SE10) to every detected form field — fill scripts reference by opid, not live DOM
+10. Use `chrome.alarms` for all periodic tasks — never `setTimeout`/`setInterval` for recurring work in service worker
 
 **Pattern Enforcement:**
 - TypeScript compiler catches `AsyncState` exhaustiveness violations
@@ -143,6 +174,11 @@ These patterns were established in the original architecture and remain unchange
 | Selector health fields in site config JSON | Separate runtime health store (PATTERN-SE3) |
 | `config_v2.json` filename for versioning | Monotonic integer in config payload, domain-based filename |
 | Single massive Zustand store | Domain-sliced stores (PATTERN-SE7) |
+| `element.value = 'text'` for form filling | Native setter + event dispatch (PATTERN-SE9) |
+| Live DOM references for fill targets | opid-based addressing with `data-jf-opid` (PATTERN-SE10) |
+| `setTimeout`/`setInterval` in service worker | `chrome.alarms` for all periodic tasks (ADR-REV-EX5) |
+| `document.querySelector` ignoring Shadow DOM | `deepQuerySelectorAll` with TreeWalker (ADR-REV-SE7) |
+| 10-second undo timeout | Persistent undo — removed only on page refresh or external DOM change |
 
 ## Error Handling Patterns
 

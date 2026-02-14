@@ -123,36 +123,30 @@ jobswyft/
 │   │       │   └── picker/                  ← NEW (ADR-REV-EX3)
 │   │       │       ├── picker-overlay.tsx    ← NEW (highlight injection)
 │   │       │       └── picker-panel.tsx      ← NEW (side panel controls)
-│   │       ├── features/
-│   │       │   ├── autofill/
+│   │       ├── features/                    # Chrome adapter layer (thin, DOM-touching)
+│   │       │   ├── autofill/                # DOM writer (uses @jobswyft/engine)
 │   │       │   │   ├── ats-detector.ts
 │   │       │   │   ├── autofill-data-service.ts
-│   │       │   │   ├── field-detector.ts
-│   │       │   │   ├── field-filler.ts
+│   │       │   │   ├── field-detector.ts        # opid assignment (ADR-REV-SE8)
+│   │       │   │   ├── field-filler.ts          # Native setter execution (ADR-REV-SE6)
 │   │       │   │   ├── field-registry.ts
 │   │       │   │   ├── field-types.ts
-│   │       │   │   ├── resume-uploader.ts
+│   │       │   │   ├── resume-uploader.ts       # DataTransfer API
+│   │       │   │   ├── undo-manager.ts          # Persistent undo (ADR-REV-AUTOFILL-FIX)
 │   │       │   │   ├── signal-weights.ts
 │   │       │   │   └── __tests__/
-│   │       │   ├── scanning/
+│   │       │   ├── scanning/                # DOM reader (uses @jobswyft/engine)
+│   │       │   │   ├── dom-collector.ts         ← NEW (Shadow DOM traversal, ADR-REV-SE7)
 │   │       │   │   ├── job-detector.ts
-│   │       │   │   ├── scanner.ts
-│   │       │   │   ├── selector-registry.ts
+│   │       │   │   ├── scanner.ts               # Calls engine pipeline via @jobswyft/engine
 │   │       │   │   ├── extraction-validator.ts
 │   │       │   │   ├── frame-aggregator.ts
 │   │       │   │   ├── html-cleaner.ts
 │   │       │   │   └── *.test.ts
-│   │       │   └── engine/                  ← NEW (Smart Engine core)
-│   │       │       ├── extraction-pipeline.ts   ← NEW (ADR-REV-SE1)
-│   │       │       ├── confidence-scorer.ts     ← NEW (ADR-REV-SE2)
-│   │       │       ├── selector-health.ts       ← NEW (ADR-REV-SE3)
-│   │       │       ├── heuristic-repair.ts      ← NEW (ADR-REV-SE3)
-│   │       │       ├── config-loader.ts         ← NEW (ADR-REV-D1, I2)
-│   │       │       ├── config-schema.ts         ← NEW (ADR-REV-D3)
-│   │       │       ├── extraction-trace.ts      ← NEW (ADR-REV-D2)
-│   │       │       ├── dom-readiness.ts         ← NEW (ADR-REV-EX2)
-│   │       │       ├── constants.ts             ← NEW (thresholds)
-│   │       │       └── __tests__/               ← NEW
+│   │       │   └── adapters/                ← NEW (Chrome-specific adapters for engine ports)
+│   │       │       ├── config-loader.ts         # chrome.storage → engine config
+│   │       │       ├── dom-readiness.ts         # Content Sentinel (ADR-REV-EX2)
+│   │       │       └── ai-relay.ts              # Port-based AI call relay to background
 │   │       ├── lib/
 │   │       │   ├── api-client.ts
 │   │       │   ├── auth.ts
@@ -179,10 +173,75 @@ jobswyft/
 │   │           ├── telemetry.ts             ← NEW
 │   │           └── extraction.ts            ← NEW
 │   │
-│   └── web/                                # Scaffolded, not yet initialized
-│       └── README.md
+│   └── web/                                # Next.js — User + Admin Dashboard (ADR-REV-EX6)
+│       ├── package.json
+│       ├── next.config.ts
+│       ├── middleware.ts                   ← NEW (admin auth gate)
+│       └── src/
+│           └── app/
+│               ├── (user)/                 # User dashboard routes
+│               │   ├── jobs/
+│               │   ├── resumes/
+│               │   ├── account/
+│               │   └── privacy/
+│               ├── (admin)/                # Admin routes (middleware-protected)
+│               │   ├── dashboard/
+│               │   ├── users/
+│               │   ├── tiers/
+│               │   ├── feedback/
+│               │   ├── analytics/
+│               │   └── config/
+│               ├── layout.tsx
+│               └── page.tsx
 │
 ├── packages/
+│   ├── engine/                             ← NEW (ADR-REV-D4)
+│   │   ├── package.json                    # @jobswyft/engine
+│   │   ├── tsup.config.ts
+│   │   ├── vitest.config.ts
+│   │   └── src/
+│   │       ├── pipeline/                   ← NEW (ADR-REV-SE5)
+│   │       │   ├── middleware.ts           # Koa-style pipeline runner
+│   │       │   ├── confidence-gate.ts      # Inline confidence gates
+│   │       │   └── types.ts               # DetectionContext, ExtractionMiddleware
+│   │       ├── extraction/                 # Scan middleware layers
+│   │       │   ├── json-ld.ts
+│   │       │   ├── css-selector.ts
+│   │       │   ├── og-meta.ts
+│   │       │   ├── heuristic.ts
+│   │       │   ├── ai-fallback.ts
+│   │       │   └── board-detector.ts
+│   │       ├── autofill/                   # Autofill core logic
+│   │       │   ├── field-classifier.ts     # Three-tier classification
+│   │       │   ├── field-mapper.ts
+│   │       │   ├── signal-aggregator.ts    # Similo-inspired scoring
+│   │       │   └── fill-script-builder.ts  # opid-based fill instructions
+│   │       ├── registry/                   # Selector registry + health
+│   │       │   ├── selector-registry.ts
+│   │       │   ├── selector-health.ts
+│   │       │   ├── heuristic-repair.ts
+│   │       │   └── config-schema.ts        # Zod schemas
+│   │       ├── scoring/
+│   │       │   ├── confidence-scorer.ts
+│   │       │   ├── signal-weights.ts
+│   │       │   └── constants.ts
+│   │       ├── trace/
+│   │       │   └── extraction-trace.ts
+│   │       ├── types/
+│   │       │   ├── detection-context.ts
+│   │       │   ├── site-config.ts
+│   │       │   ├── extraction.ts
+│   │       │   ├── autofill.ts
+│   │       │   └── telemetry.ts
+│   │       └── index.ts
+│   │   └── test/
+│   │       ├── fixtures/                   # HTML snapshots per ATS
+│   │       │   ├── greenhouse/
+│   │       │   ├── lever/
+│   │       │   ├── workday/
+│   │       │   └── smartrecruiters/
+│   │       └── setup.ts
+│   │
 │   └── ui/
 │       ├── package.json
 │       ├── vite.config.ts
@@ -244,11 +303,17 @@ jobswyft/
 - **Side Panel** (`entrypoints/sidepanel/`) — React UI. Reads from Zustand stores. Dispatches typed commands to background. No direct DOM or Chrome API calls (except storage).
 - **Stores** bridge all three contexts via `chrome.storage` sync (ADR-REV-EX1)
 
-**Smart Engine Boundaries:**
-- `features/engine/` — Pure functional core (hexagonal). No Chrome APIs, no DOM access. Testable in Node/Vitest.
-- `features/scanning/` — DOM reader. Uses engine functions for extraction logic.
-- `features/autofill/` — DOM writer. Uses engine functions for field mapping/filling.
-- `configs/sites/` — Data only. No code. Validated by Zod schema at build time (CI) and runtime (config-loader).
+**Smart Engine Boundaries (ADR-REV-D4):**
+- `packages/engine/` — Pure functional core (hexagonal). Zero Chrome API dependencies enforced at package level. Testable in Node/Vitest with JSDOM/happy-dom fixtures. Includes: pipeline infrastructure, extraction middleware, autofill core logic, registry, scoring, trace, types.
+- `apps/extension/src/features/scanning/` — DOM reader (Chrome adapter). Uses `@jobswyft/engine` for extraction logic. Contains Shadow DOM traversal (`dom-collector.ts`).
+- `apps/extension/src/features/autofill/` — DOM writer (Chrome adapter). Uses `@jobswyft/engine` for field mapping/fill script building. Contains native setter execution (`field-filler.ts`), opid assignment (`field-detector.ts`), persistent undo (`undo-manager.ts`).
+- `apps/extension/src/features/adapters/` — Chrome-specific adapters bridging engine ports to Chrome APIs (config loading, AI relay, DOM readiness).
+- `configs/sites/` — Data only. No code. Validated by Zod schema at build time (CI) and runtime (engine config-schema).
+
+**Web Dashboard Boundaries (ADR-REV-EX6):**
+- `apps/web/src/app/(user)/` — User dashboard routes. Supabase auth required.
+- `apps/web/src/app/(admin)/` — Admin dashboard routes. Next.js middleware checks `profiles.is_admin`. Separate auth gate — regular users get 403.
+- Shared: `@jobswyft/ui` components, Supabase client, API client.
 
 **Data Boundaries:**
 - Supabase PostgreSQL — all tables accessed via `db/` layer
@@ -259,10 +324,13 @@ jobswyft/
 ## Requirements to Structure Mapping
 
 **Scanning Engine** (FR: job detection, field extraction)
-→ `features/scanning/` + `features/engine/` + `stores/scan-store.ts`
+→ `packages/engine/src/extraction/` + `packages/engine/src/pipeline/` + `features/scanning/` + `stores/scan-store.ts`
 
 **Autofill Engine** (FR: form filling, resume upload)
-→ `features/autofill/` + `features/engine/` + `stores/autofill-store.ts`
+→ `packages/engine/src/autofill/` + `features/autofill/` + `stores/autofill-store.ts`
+
+**Admin Dashboard** (FR86-92: admin role management, tier config, analytics, feedback review)
+→ `apps/web/src/app/(admin)/` + `apps/web/middleware.ts` + `api/routers/admin.py` ← NEW
 
 **Config-Driven Site Support** (ADR-REV-SE4)
 → `configs/sites/` + `features/engine/config-loader.ts` + `stores/config-store.ts` + `api/routers/configs.py`

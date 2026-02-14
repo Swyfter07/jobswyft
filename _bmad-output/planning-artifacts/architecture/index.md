@@ -1,3 +1,11 @@
+---
+stepsCompleted: [1, 2, 3, 4, 5, 6, 7, 8]
+workflowType: 'architecture'
+lastStep: 8
+status: 'complete'
+completedAt: '2026-02-14'
+---
+
 # Architecture Decision Document — Revision
 
 ## Table of Contents
@@ -9,6 +17,7 @@
     - [Technical Constraints & Dependencies](./project-context-analysis.md#technical-constraints-dependencies)
     - [Cross-Cutting Concerns Identified](./project-context-analysis.md#cross-cutting-concerns-identified)
     - [Revision Delta (New Since 2026-01-30)](./project-context-analysis.md#revision-delta-new-since-2026-01-30)
+    - [Revision Delta 2 (New Since 2026-02-13)](./project-context-analysis.md#revision-delta-2-new-since-2026-02-13)
   - [Starter Template Evaluation](./starter-template-evaluation.md)
     - [Primary Technology Domain](./starter-template-evaluation.md#primary-technology-domain)
     - [Starter Options Considered](./starter-template-evaluation.md#starter-options-considered)
@@ -22,6 +31,9 @@
     - [Extension Architecture](./core-architectural-decisions.md#extension-architecture)
     - [API & Communication Patterns](./core-architectural-decisions.md#api-communication-patterns)
     - [Infrastructure & Deployment](./core-architectural-decisions.md#infrastructure-deployment)
+    - [Engine & Autofill Architecture — Revision 2](./core-architectural-decisions.md#engine-autofill-architecture-revision-2)
+    - [Extension Architecture — Revision 2](./core-architectural-decisions.md#extension-architecture-revision-2)
+    - [Autofill Architecture Fix — Revision 2](./core-architectural-decisions.md#autofill-architecture-fix-revision-2)
     - [Decision Impact Analysis](./core-architectural-decisions.md#decision-impact-analysis)
     - [Database Schema (Confirmed from Original Architecture)](./core-architectural-decisions.md#database-schema-confirmed-from-original-architecture)
     - [API Response Format (Confirmed)](./core-architectural-decisions.md#api-response-format-confirmed)
@@ -40,10 +52,10 @@
     - [Accessibility (WCAG 2.1 AA)](./implementation-patterns-consistency-rules.md#accessibility-wcag-21-aa)
   - [Core Engine Implementation Detail](./core-engine-implementation-detail.md)
     - [System Overview](./core-engine-implementation-detail.md#system-overview)
-    - [Extraction Pipeline](./core-engine-implementation-detail.md#extraction-pipeline)
+    - [Extraction Pipeline (Middleware Architecture)](./core-engine-implementation-detail.md#extraction-pipeline)
     - [Key TypeScript Interfaces](./core-engine-implementation-detail.md#key-typescript-interfaces)
     - [Backend Telemetry Schema](./core-engine-implementation-detail.md#backend-telemetry-schema)
-    - [Shared Core: Scan + Autofill](./core-engine-implementation-detail.md#shared-core-scan-autofill)
+    - [Shared Core: packages/engine/](./core-engine-implementation-detail.md#shared-core-scan-autofill)
     - [Autofill Engine Pipeline](./core-engine-implementation-detail.md#autofill-engine-pipeline)
     - [Performance Strategy](./core-engine-implementation-detail.md#performance-strategy)
   - [Project Structure & Boundaries](./project-structure-boundaries.md)
