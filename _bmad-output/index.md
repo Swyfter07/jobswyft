@@ -4,11 +4,10 @@ This directory contains all planning and implementation artifacts for the Jobswy
 
 ## Planning Artifacts
 
-- **[architecture.md](./planning-artifacts/architecture.md)** - Technical architecture decisions and stack choices
-- **[epics.md](./planning-artifacts/epics.md)** - Epic and story breakdown (8 epics, 24 stories)
-- **[prd.md](./planning-artifacts/prd.md)** - Complete product requirements document
-- **[project-context.md](./planning-artifacts/project-context.md)** - AI agent implementation rules and patterns
-- **[validation-report-2026-01-30.md](./planning-artifacts/validation-report-2026-01-30.md)** - PRD quality validation results
+- **[architecture/](./planning-artifacts/architecture/index.md)** - Technical architecture decisions and stack choices (sharded)
+- **[epics/](./planning-artifacts/epics/)** - Epic and story breakdown (8 epics, 24 stories)
+- **[prd/](./planning-artifacts/prd/index.md)** - Complete product requirements document (sharded)
+- **[ux-design-specification.md](./planning-artifacts/ux-design-specification.md)** - UX design specification
 
 ## Implementation Artifacts
 
