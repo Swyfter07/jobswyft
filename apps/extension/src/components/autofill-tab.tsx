@@ -473,7 +473,7 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
         ? "text-warning"
         : "text-destructive";
 
-  return <span className={`text-[10px] font-mono ${color}`}>{pct}%</span>;
+  return <span className={`text-micro font-mono ${color}`}>{pct}%</span>;
 }
 
 // ─── Field Group ──────────────────────────────────────────────────────────────

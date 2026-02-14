@@ -4,7 +4,7 @@ export interface ToastItem {
   id: string;
   title: string;
   description?: string;
-  variant: "default" | "success" | "error";
+  variant: "default" | "success" | "error" | "info" | "loading";
 }
 
 interface ToastContextValue {
@@ -40,7 +40,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toast, dismiss }}>
       {children}
-      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm">
+      <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2 max-w-sm" aria-live="polite" role="log">
         {toasts.map((t) => (
           <div
             key={t.id}
@@ -49,7 +49,9 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
                 : t.variant === "success"
                   ? "border-success/50 bg-success/10 text-success"
-                  : "border-border bg-card text-card-foreground"
+                  : t.variant === "info"
+                    ? "border-info/50 bg-info/10 text-info"
+                    : "border-border bg-card text-card-foreground"
             }`}
           >
             <div className="flex items-start justify-between gap-2">
@@ -62,6 +64,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               <button
                 onClick={() => dismiss(t.id)}
                 className="text-muted-foreground hover:text-foreground text-xs shrink-0"
+                aria-label="Dismiss notification"
               >
                 &times;
               </button>

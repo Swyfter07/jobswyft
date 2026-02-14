@@ -1,6 +1,6 @@
 # Story 1.1: Design System & Theme Foundation Audit
 
-Status: review
+Status: done
 
 ## Story
 
@@ -269,16 +269,41 @@ Claude Opus 4.6
 ### Change Log
 
 - 2026-02-14: Story 1.1 implemented — comprehensive design system audit, issue registry created, token-level gaps fixed, hardcoded colors replaced with semantic tokens, Storybook viewport config updated.
+- 2026-02-14: Code review (adversarial) — 10 issues found (1 critical, 3 high, 4 medium, 2 low). 7 issues auto-fixed. Critical #1 (lockfile cross-contamination from Story 2-1) acknowledged — will resolve when engine package is committed. Low issues #9-10 deferred.
+
+### Senior Developer Review (AI)
+
+**Reviewer:** Claude Opus 4.6 (adversarial review)
+**Date:** 2026-02-14
+**Outcome:** Changes Requested → Auto-Fixed → Approve
+
+**Issues Found (10):** 1 Critical, 3 High, 4 Medium, 2 Low
+
+**Fixed (7):**
+- [FIXED] #2 HIGH — Gradient depth buttons missing `transition` → added `transition: box-shadow 200ms ease`
+- [FIXED] #3 HIGH — Gradient depth buttons missing `:focus-visible` → added outline styles using `var(--ring)`
+- [FIXED] #4 HIGH — toast-context.tsx dismiss button missing `aria-label` → added `aria-label="Dismiss notification"`
+- [FIXED] #5 MEDIUM — Duplicate `:root` blocks in globals.css → consolidated `--motion-duration/--motion-enabled` into main block
+- [FIXED] #6 MEDIUM — Toast container missing ARIA live region → added `aria-live="polite" role="log"`
+- [FIXED] #7 MEDIUM — Extension ToastItem type missing "info"/"loading" variants → added to type union + rendering
+- [FIXED] #8 MEDIUM — autofill-tab.tsx ConfidenceBadge `text-[10px]` → replaced with `.text-micro`
+
+**Acknowledged (1):**
+- [ACK] #1 CRITICAL — pnpm-lock.yaml includes `packages/engine` deps from Story 2-1. Cannot fix without affecting active 2-1 development. Will resolve when engine package is committed.
+
+**Deferred (2):**
+- [DEFER] #9 LOW — `--scan-accent` and `--info` tokens identical (by design, both blue ~245)
+- [DEFER] #10 LOW — toast.stories.tsx hardcoded colors (assigned to Story 1.5 in registry)
 
 ### File List
 
-- `packages/ui/src/styles/globals.css` — Modified: added 24 functional area tokens (light/dark), destructive-foreground, info/info-foreground, @theme inline mappings, 4 gradient depth button utilities, reduced motion support (276 → 403 lines)
+- `packages/ui/src/styles/globals.css` — Modified: added 24 functional area tokens (light/dark), destructive-foreground, info/info-foreground, @theme inline mappings, 4 gradient depth button utilities, reduced motion support. **[Review fix]** added `transition` + `:focus-visible` to gradient buttons, consolidated duplicate `:root` block.
 - `packages/ui/src/components/ui/toast.tsx` — Modified: replaced hardcoded green/red/blue color classes with semantic tokens (success/destructive/info) in CVA variants
-- `apps/extension/src/components/autofill-tab.tsx` — Modified: replaced 7 hardcoded color instances (green-600/400, amber-600/400, red-600/400, green-500, amber-500) with semantic tokens
+- `apps/extension/src/components/autofill-tab.tsx` — Modified: replaced 7 hardcoded color instances with semantic tokens. **[Review fix]** replaced `text-[10px]` with `.text-micro` in ConfidenceBadge.
 - `apps/extension/src/components/ai-studio-tab.tsx` — Modified: replaced 3 hardcoded color instances (green, amber, blue) with semantic tokens
-- `apps/extension/src/components/toast-context.tsx` — Modified: replaced 1 hardcoded green color with semantic success token
+- `apps/extension/src/components/toast-context.tsx` — Modified: replaced 1 hardcoded green color with semantic success token. **[Review fix]** added `aria-label` on dismiss button, `aria-live="polite" role="log"` on container, added "info"/"loading" variants to ToastItem type + info variant rendering.
 - `packages/ui/.storybook/preview.tsx` — Modified: changed viewport from "Extension Popup: 400x600" to "Extension Default: 360x600" + added "Extension Wide: 500x600"
 - `_bmad-output/implementation-artifacts/1-1-issue-registry.md` — New: comprehensive issue registry with 34 issues grouped by target story
 - `_bmad-output/implementation-artifacts/1-1-design-system-theme-foundation-audit.md` — New: this story file (created via create-story, updated throughout implementation)
-- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: story status updated (ready-for-dev → in-progress → review)
-- `pnpm-lock.yaml` — Modified: lockfile updated during build/test verification
+- `_bmad-output/implementation-artifacts/sprint-status.yaml` — Modified: story status updated (ready-for-dev → in-progress → review → done)
+- `pnpm-lock.yaml` — Modified: lockfile updated during build/test verification (note: includes packages/engine deps from Story 2-1 cross-contamination)

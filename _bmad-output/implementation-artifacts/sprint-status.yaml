@@ -116,7 +116,7 @@ development_status:
   # Phase 0 (Foundation) — parallel with Epic 2
   # Surfaces: packages/ui/, apps/extension/
   epic-1: in-progress
-  1-1-design-system-theme-foundation-audit: review
+  1-1-design-system-theme-foundation-audit: done
   1-2-shell-layout-navigation-fixes: backlog
   1-3-card-block-component-standardization: backlog
   1-4-ai-studio-feature-view-fixes: backlog

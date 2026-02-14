@@ -94,6 +94,10 @@
   --sidebar-accent-foreground: oklch(0.99 0.02 95);
   --sidebar-border: oklch(0.923 0.003 48.717);
   --sidebar-ring: oklch(0.709 0.01 56.259);
+
+  /* ─── Motion defaults ─────────────────────────────────────────────── */
+  --motion-duration: 200ms;
+  --motion-enabled: 1;
 }
 
 .dark {
@@ -339,9 +343,14 @@
   border-top: 1px solid oklch(1 0 0 / 0.2);
   box-shadow: 0 4px 12px oklch(from var(--scan-accent) l c h / 0.3);
   color: var(--scan-accent-foreground);
+  transition: box-shadow 200ms ease;
 }
 .btn-gradient-depth-scan:hover {
   box-shadow: 0 6px 16px oklch(from var(--scan-accent) l c h / 0.4);
+}
+.btn-gradient-depth-scan:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .btn-gradient-depth-studio {
@@ -349,9 +358,14 @@
   border-top: 1px solid oklch(1 0 0 / 0.2);
   box-shadow: 0 4px 12px oklch(from var(--studio-accent) l c h / 0.3);
   color: var(--studio-accent-foreground);
+  transition: box-shadow 200ms ease;
 }
 .btn-gradient-depth-studio:hover {
   box-shadow: 0 6px 16px oklch(from var(--studio-accent) l c h / 0.4);
+}
+.btn-gradient-depth-studio:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .btn-gradient-depth-autofill {
@@ -359,9 +373,14 @@
   border-top: 1px solid oklch(1 0 0 / 0.2);
   box-shadow: 0 4px 12px oklch(from var(--autofill-accent) l c h / 0.3);
   color: var(--autofill-accent-foreground);
+  transition: box-shadow 200ms ease;
 }
 .btn-gradient-depth-autofill:hover {
   box-shadow: 0 6px 16px oklch(from var(--autofill-accent) l c h / 0.4);
+}
+.btn-gradient-depth-autofill:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
 .btn-gradient-depth-coach {
@@ -369,17 +388,17 @@
   border-top: 1px solid oklch(1 0 0 / 0.2);
   box-shadow: 0 4px 12px oklch(from var(--coach-accent) l c h / 0.3);
   color: var(--coach-accent-foreground);
+  transition: box-shadow 200ms ease;
 }
 .btn-gradient-depth-coach:hover {
   box-shadow: 0 6px 16px oklch(from var(--coach-accent) l c h / 0.4);
 }
-
-/* ─── Reduced motion support ─────────────────────────────────────── */
-:root {
-  --motion-duration: 200ms;
-  --motion-enabled: 1;
+.btn-gradient-depth-coach:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
 }
 
+/* ─── Reduced motion support ─────────────────────────────────────── */
 @media (prefers-reduced-motion: reduce) {
   :root {
     --motion-duration: 0s;
