@@ -3,12 +3,16 @@
  *
  * Provides createDetectionContext() for initializing a zeroed pipeline context,
  * updateCompleteness() for recomputing weighted completeness after field writes,
- * and recordLayerExecution() for standardized trace recording.
+ * recordLayerExecution() for standardized trace recording,
+ * addSignal() for accumulating extraction signals, and
+ * resolveSignals() for combining signals into final field values.
  */
 
 import { computeCompleteness } from "../scoring/extraction-validator";
+import { combineSignals } from "../scoring/confidence-scorer";
 import type {
   DetectionContext,
+  ExtractionSignal,
   FieldExtraction,
   LayerName,
   TraceAttempt,
@@ -38,6 +42,7 @@ export function createDetectionContext(
       aiTriggered: false,
       completeness: 0,
     },
+    signals: {},
     metadata: {},
   };
 }
@@ -149,6 +154,70 @@ export function recordFieldTraces(
           finalValue: attempt.cleanedValue ?? "",
           finalSource: defaultSource,
           attempts: [attempt],
+        });
+      }
+    }
+  }
+}
+
+/**
+ * Accumulate an extraction signal for later resolution.
+ *
+ * Signals are stored per-field in ctx.signals. After all extraction layers
+ * have run, resolveSignals() combines them into final field values.
+ */
+export function addSignal(
+  ctx: DetectionContext,
+  field: string,
+  signal: ExtractionSignal
+): void {
+  if (!ctx.signals[field]) {
+    ctx.signals[field] = [];
+  }
+  ctx.signals[field].push(signal);
+}
+
+/**
+ * Resolve accumulated signals into final ctx.fields values.
+ *
+ * For each field with accumulated signals, runs combineSignals() and writes
+ * the result to ctx.fields if the combined confidence exceeds the current
+ * field value's confidence (or no current value exists).
+ */
+export function resolveSignals(ctx: DetectionContext): void {
+  const fieldNames = Object.keys(ctx.signals) as Array<
+    keyof DetectionContext["fields"]
+  >;
+
+  for (const field of fieldNames) {
+    const fieldSignals = ctx.signals[field as string];
+    if (!fieldSignals || fieldSignals.length === 0) continue;
+
+    const resolved = combineSignals(fieldSignals);
+    if (!resolved) continue;
+
+    const existing = ctx.fields[field];
+
+    // Write if no existing value or combined confidence exceeds current
+    if (!existing || resolved.confidence > existing.confidence) {
+      ctx.fields[field] = {
+        value: resolved.value,
+        source: resolved.source,
+        confidence: resolved.confidence,
+      };
+
+      // Update trace to reflect resolved output
+      const traceEntry = ctx.trace.fields.find((f) => f.field === field);
+      if (traceEntry) {
+        traceEntry.finalValue = resolved.value;
+        traceEntry.finalSource = resolved.source;
+      } else {
+        // Create trace entry for fields resolved purely via signals
+        ctx.trace.fields.push({
+          field: field as string,
+          finalValue: resolved.value,
+          finalSource: resolved.source,
+          attempts: [],
         });
       }
     }

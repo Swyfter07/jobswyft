@@ -11,34 +11,37 @@ export type { AggregatedResult } from "./extraction/frame-aggregator";
 export { SELECTOR_REGISTRY } from "./registry/selector-registry";
 export type { SelectorEntry } from "./registry/selector-registry";
 
+export type { SelectorHealthRecord, SelectorHealthStore } from "./registry/selector-health";
+export { InMemorySelectorHealthStore } from "./registry/selector-health";
+
+export type { RepairResult } from "./registry/heuristic-repair";
+export { attemptHeuristicRepair } from "./registry/heuristic-repair";
+
 // ─── Scoring ─────────────────────────────────────────────────────────────────
-// Note: Both extraction-validator and signal-weights export `computeFieldConfidence`.
-// Re-exported with distinct names to avoid collision:
-//   computeExtractionFieldConfidence → extraction-validator.ts:computeFieldConfidence (source-based scoring)
-//   computeSignalFieldConfidence     → signal-weights.ts:computeFieldConfidence (multi-signal voting)
 export {
-  computeFieldConfidence as computeExtractionFieldConfidence,
+  combineSignals,
+  computeDiminishingScore,
+  computeExtractionFieldConfidence,
   computeCompleteness,
   validateExtraction,
-} from "./scoring/extraction-validator";
+  SIGNAL_WEIGHTS,
+  computeSignalFieldConfidence,
+  resolveFieldType,
+} from "./scoring/index";
 export type {
   ExtractionSource,
   ExtractionConfidence,
   ValidationIssue,
   ValidationResult,
-} from "./scoring/extraction-validator";
-
-export {
-  SIGNAL_WEIGHTS,
-  computeFieldConfidence as computeSignalFieldConfidence,
-  resolveFieldType,
-} from "./scoring/signal-weights";
+} from "./scoring/index";
 
 // ─── Pipeline ───────────────────────────────────────────────────────────────
 export {
   createDetectionContext,
   updateCompleteness,
   recordLayerExecution,
+  addSignal,
+  resolveSignals,
   compose,
   boardDetector,
   jsonLd,
@@ -53,6 +56,8 @@ export {
 export type {
   LayerName,
   FieldExtraction,
+  ExtractionSignal,
+  SelectorRepairProposal,
   TraceAttempt,
   FieldTrace,
   ExtractionTrace,

@@ -15,6 +15,7 @@ export type ExtractionSource =
   | "css-generic"
   | "og-meta"
   | "heuristic"
+  | "heuristic-repair"
   | "ai-llm"
   | "user-edit";
 
@@ -53,6 +54,7 @@ const SOURCE_CONFIDENCE: Record<ExtractionSource, number> = {
   "css-generic": 0.60,
   "og-meta": 0.40,
   "heuristic": 0.30,
+  "heuristic-repair": 0.40,
   "ai-llm": 0.90,
   "user-edit": 1.0,
 };

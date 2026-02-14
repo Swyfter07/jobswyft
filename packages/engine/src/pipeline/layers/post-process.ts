@@ -1,8 +1,9 @@
 /**
  * PostProcess Layer — Normalizes, validates, and finalizes extraction data.
  *
- * Trims whitespace, decodes HTML entities, validates title+company required
- * using existing validateExtraction(), and computes final completeness.
+ * Resolves accumulated signals, trims whitespace, decodes HTML entities,
+ * validates title+company required using existing validateExtraction(),
+ * and computes final completeness.
  *
  * Architecture reference: ADR-REV-SE2 (Post-Processing)
  */
@@ -11,7 +12,7 @@ import {
   validateExtraction,
 } from "../../scoring/extraction-validator";
 import type { ExtractionSource } from "../../scoring/extraction-validator";
-import { recordLayerExecution, updateCompleteness } from "../create-context";
+import { recordLayerExecution, resolveSignals, updateCompleteness } from "../create-context";
 import type { DetectionContext, ExtractionMiddleware } from "../types";
 
 /**
@@ -38,6 +39,10 @@ function normalizeWhitespace(text: string): string {
 
 export const postProcess: ExtractionMiddleware = async (ctx, next) => {
   recordLayerExecution(ctx, "post-process");
+
+  // Resolve accumulated signals into final field values
+  resolveSignals(ctx);
+  updateCompleteness(ctx);
 
   // Normalize all field values
   const fieldKeys = Object.keys(ctx.fields) as Array<

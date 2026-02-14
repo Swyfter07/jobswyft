@@ -8,6 +8,7 @@
  */
 
 import type { ExtractionSource } from "../scoring/extraction-validator";
+import type { SelectorHealthStore } from "../registry/selector-health";
 
 // ─── Layer Names ─────────────────────────────────────────────────────────────
 
@@ -25,6 +26,26 @@ export type LayerName =
 export interface FieldExtraction {
   value: string;
   source: ExtractionSource;
+  confidence: number;
+}
+
+// ─── Extraction Signal (Story 2.3 — Multi-Signal Combination) ───────────────
+
+export interface ExtractionSignal {
+  value: string;
+  source: ExtractionSource;
+  confidence: number;
+  layer: LayerName;
+}
+
+// ─── Selector Repair Proposal (Story 2.3 — Self-Healing) ────────────────────
+
+export interface SelectorRepairProposal {
+  board: string;
+  field: string;
+  failedSelectors: string[];
+  repairedSelector: string;
+  strategy: string;
   confidence: number;
 }
 
@@ -66,12 +87,26 @@ export interface ExtractionTrace {
   completeness: number;
 }
 
-// ─── Site Config ─────────────────────────────────────────────────────────────
+// ─── Site Config (Story 2.3 — Enhanced for Config-Driven Extraction) ────────
 
 export interface SiteConfig {
   board: string;
+  name: string;
   urlPatterns: string[];
-  pipelineHints?: Record<string, unknown>;
+  selectors: {
+    [field: string]: {
+      primary: string[];
+      secondary?: string[];
+      tertiary?: string[];
+    };
+  };
+  pipelineHints?: {
+    skipLayers?: LayerName[];
+    layerOrder?: LayerName[];
+    gateOverrides?: Record<string, number>;
+  };
+  customExtractor?: string;
+  version: number;
 }
 
 // ─── Detection Context ───────────────────────────────────────────────────────
@@ -91,6 +126,9 @@ export interface DetectionContext {
   completeness: number;
   trace: ExtractionTrace;
   siteConfig?: SiteConfig;
+  signals: Record<string, ExtractionSignal[]>;
+  selectorRepairs?: SelectorRepairProposal[];
+  healthStore?: SelectorHealthStore;
   metadata: Record<string, unknown>;
 }
 

@@ -8,6 +8,7 @@
  */
 
 import {
+  addSignal,
   recordFieldTraces,
   recordLayerExecution,
   trySetField,
@@ -123,6 +124,16 @@ function setField(
   attempts: TraceAttempt[]
 ): void {
   trySetField(ctx, field, value, "json-ld", JSON_LD_CONFIDENCE, "json-ld", attempts);
+
+  // Also accumulate signal for later resolution
+  if (value && value.trim().length > 0) {
+    addSignal(ctx, field, {
+      value: value.trim(),
+      source: "json-ld",
+      confidence: JSON_LD_CONFIDENCE,
+      layer: "json-ld",
+    });
+  }
 }
 
 export const jsonLd: ExtractionMiddleware = async (ctx, next) => {

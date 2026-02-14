@@ -8,6 +8,7 @@
  */
 
 import {
+  addSignal,
   recordFieldTraces,
   recordLayerExecution,
   trySetField,
@@ -49,6 +50,16 @@ function setField(
   attempts: TraceAttempt[]
 ): void {
   trySetField(ctx, field, value, "heuristic", HEURISTIC_CONFIDENCE, "heuristic", attempts);
+
+  // Also accumulate signal for later resolution
+  if (value && value.trim().length > 0) {
+    addSignal(ctx, field, {
+      value: value.trim(),
+      source: "heuristic",
+      confidence: HEURISTIC_CONFIDENCE,
+      layer: "heuristic",
+    });
+  }
 }
 
 function matchesPatterns(text: string, patterns: RegExp[]): boolean {

@@ -24,6 +24,32 @@ export const SIGNAL_WEIGHTS: Record<SignalType, number> = {
   "section-context": 0.30,
 };
 
+// ─── Shared Diminishing Returns Algorithm ────────────────────────────────────
+
+/**
+ * Compute a combined confidence score from a pre-sorted (descending) array of weights.
+ *
+ * Algorithm: base = first (highest) weight, then diminishing bonuses for each
+ * additional corroborating weight. Capped at 0.99.
+ *
+ * Shared by both autofill signal computation (SignalEvaluation[]) and
+ * extraction signal combination (ExtractionSignal[]).
+ */
+export function computeDiminishingScore(sortedWeights: number[]): number {
+  if (sortedWeights.length === 0) return 0;
+
+  // Base = highest weight signal
+  let confidence = sortedWeights[0];
+
+  // Diminishing bonus for each additional corroborating signal
+  for (let i = 1; i < sortedWeights.length; i++) {
+    const bonus = sortedWeights[i] * 0.1 * Math.pow(0.5, i - 1);
+    confidence += bonus;
+  }
+
+  return Math.min(confidence, 0.99);
+}
+
 // ─── Confidence Computation ───────────────────────────────────────────────────
 
 /**
@@ -38,16 +64,7 @@ export function computeFieldConfidence(signals: SignalEvaluation[]): number {
 
   if (matched.length === 0) return 0;
 
-  // Base = highest weight signal
-  let confidence = matched[0].weight;
-
-  // Diminishing bonus for each additional corroborating signal
-  for (let i = 1; i < matched.length; i++) {
-    const bonus = matched[i].weight * 0.1 * Math.pow(0.5, i - 1);
-    confidence += bonus;
-  }
-
-  return Math.min(confidence, 0.99);
+  return computeDiminishingScore(matched.map((s) => s.weight));
 }
 
 // ─── Field Type Resolution ────────────────────────────────────────────────────

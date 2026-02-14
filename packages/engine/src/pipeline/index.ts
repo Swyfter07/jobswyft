@@ -2,6 +2,8 @@
 export type {
   LayerName,
   FieldExtraction,
+  ExtractionSignal,
+  SelectorRepairProposal,
   TraceAttempt,
   FieldTrace,
   ExtractionTrace,
@@ -17,6 +19,8 @@ export {
   recordLayerExecution,
   trySetField,
   recordFieldTraces,
+  addSignal,
+  resolveSignals,
 } from "./create-context";
 
 // ─── Compose ─────────────────────────────────────────────────────────────────
