@@ -15,6 +15,8 @@ export {
   createDetectionContext,
   updateCompleteness,
   recordLayerExecution,
+  trySetField,
+  recordFieldTraces,
 } from "./create-context";
 
 // ─── Compose ─────────────────────────────────────────────────────────────────

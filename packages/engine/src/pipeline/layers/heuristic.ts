@@ -7,11 +7,15 @@
  * Architecture reference: ADR-REV-SE2 (Confidence Scores Per Layer)
  */
 
-import { recordLayerExecution, updateCompleteness } from "../create-context";
+import {
+  recordFieldTraces,
+  recordLayerExecution,
+  trySetField,
+  updateCompleteness,
+} from "../create-context";
 import type {
   DetectionContext,
   ExtractionMiddleware,
-  FieldExtraction,
   TraceAttempt,
 } from "../types";
 
@@ -38,56 +42,13 @@ const LOCATION_PATTERNS = [
   /remote/i,
 ];
 
-function trySetField(
+function setField(
   ctx: DetectionContext,
   field: keyof DetectionContext["fields"],
   value: string | undefined,
   attempts: TraceAttempt[]
 ): void {
-  if (!value || value.trim().length === 0) {
-    attempts.push({
-      layer: "heuristic",
-      attempted: true,
-      matched: false,
-      field,
-      accepted: false,
-      rejectionReason: "empty-value",
-    });
-    return;
-  }
-
-  const trimmed = value.trim();
-  const existing = ctx.fields[field];
-
-  if (existing && existing.confidence >= HEURISTIC_CONFIDENCE) {
-    attempts.push({
-      layer: "heuristic",
-      attempted: true,
-      matched: true,
-      field,
-      rawValue: trimmed,
-      accepted: false,
-      rejectionReason: "higher-confidence-exists",
-    });
-    return;
-  }
-
-  const extraction: FieldExtraction = {
-    value: trimmed,
-    source: "heuristic",
-    confidence: HEURISTIC_CONFIDENCE,
-  };
-
-  ctx.fields[field] = extraction;
-  attempts.push({
-    layer: "heuristic",
-    attempted: true,
-    matched: true,
-    field,
-    rawValue: trimmed,
-    cleanedValue: trimmed,
-    accepted: true,
-  });
+  trySetField(ctx, field, value, "heuristic", HEURISTIC_CONFIDENCE, "heuristic", attempts);
 }
 
 function matchesPatterns(text: string, patterns: RegExp[]): boolean {
@@ -162,39 +123,22 @@ export const heuristic: ExtractionMiddleware = async (ctx, next) => {
   // Title: try first h1 on the page
   if (!ctx.fields.title) {
     const h1Title = extractFirstH1(ctx.dom);
-    trySetField(ctx, "title", h1Title, attempts);
+    setField(ctx, "title", h1Title, attempts);
   }
 
   // Company: look for heading patterns
   const companyValue = findHeadingValue(ctx.dom, COMPANY_PATTERNS);
-  trySetField(ctx, "company", companyValue, attempts);
+  setField(ctx, "company", companyValue, attempts);
 
   // Description: search main content areas
   const descValue = extractDescription(ctx.dom);
-  trySetField(ctx, "description", descValue, attempts);
+  setField(ctx, "description", descValue, attempts);
 
   // Location: look for heading patterns
   const locationValue = findHeadingValue(ctx.dom, LOCATION_PATTERNS);
-  trySetField(ctx, "location", locationValue, attempts);
+  setField(ctx, "location", locationValue, attempts);
 
-  // Record traces
-  for (const attempt of attempts) {
-    if (attempt.accepted && attempt.field) {
-      const existing = ctx.trace.fields.find((f) => f.field === attempt.field);
-      if (existing) {
-        existing.attempts.push(attempt);
-        existing.finalValue = attempt.cleanedValue ?? "";
-        existing.finalSource = "heuristic";
-      } else {
-        ctx.trace.fields.push({
-          field: attempt.field,
-          finalValue: attempt.cleanedValue ?? "",
-          finalSource: "heuristic",
-          attempts: [attempt],
-        });
-      }
-    }
-  }
+  recordFieldTraces(ctx, attempts, "heuristic");
 
   updateCompleteness(ctx);
   await next();

@@ -7,11 +7,15 @@
  * Architecture reference: ADR-REV-SE2 (Confidence Scores Per Layer)
  */
 
-import { recordLayerExecution, updateCompleteness } from "../create-context";
+import {
+  recordFieldTraces,
+  recordLayerExecution,
+  trySetField,
+  updateCompleteness,
+} from "../create-context";
 import type {
   DetectionContext,
   ExtractionMiddleware,
-  FieldExtraction,
   TraceAttempt,
 } from "../types";
 
@@ -112,57 +116,13 @@ function extractLocation(posting: JsonLdObject): string | undefined {
   return parts.length > 0 ? parts.join("; ") : undefined;
 }
 
-function trySetField(
+function setField(
   ctx: DetectionContext,
   field: keyof DetectionContext["fields"],
   value: string | undefined,
   attempts: TraceAttempt[]
 ): void {
-  if (!value || value.trim().length === 0) {
-    attempts.push({
-      layer: "json-ld",
-      attempted: true,
-      matched: false,
-      field,
-      accepted: false,
-      rejectionReason: "empty-value",
-    });
-    return;
-  }
-
-  const trimmed = value.trim();
-  const existing = ctx.fields[field];
-
-  // Only write if not already set or new confidence is higher
-  if (existing && existing.confidence >= JSON_LD_CONFIDENCE) {
-    attempts.push({
-      layer: "json-ld",
-      attempted: true,
-      matched: true,
-      field,
-      rawValue: trimmed,
-      accepted: false,
-      rejectionReason: "higher-confidence-exists",
-    });
-    return;
-  }
-
-  const extraction: FieldExtraction = {
-    value: trimmed,
-    source: "json-ld",
-    confidence: JSON_LD_CONFIDENCE,
-  };
-
-  ctx.fields[field] = extraction;
-  attempts.push({
-    layer: "json-ld",
-    attempted: true,
-    matched: true,
-    field,
-    rawValue: trimmed,
-    cleanedValue: trimmed,
-    accepted: true,
-  });
+  trySetField(ctx, field, value, "json-ld", JSON_LD_CONFIDENCE, "json-ld", attempts);
 }
 
 export const jsonLd: ExtractionMiddleware = async (ctx, next) => {
@@ -193,48 +153,31 @@ export const jsonLd: ExtractionMiddleware = async (ctx, next) => {
     const postings = findJobPostings(parsed);
     for (const posting of postings) {
       // Title
-      trySetField(ctx, "title", posting.title ?? posting.name, attempts);
+      setField(ctx, "title", posting.title ?? posting.name, attempts);
 
       // Company
       const org = posting.hiringOrganization;
       const companyName =
         typeof org === "string" ? org : org?.name;
-      trySetField(ctx, "company", companyName, attempts);
+      setField(ctx, "company", companyName, attempts);
 
       // Description
-      trySetField(ctx, "description", posting.description, attempts);
+      setField(ctx, "description", posting.description, attempts);
 
       // Location
-      trySetField(ctx, "location", extractLocation(posting), attempts);
+      setField(ctx, "location", extractLocation(posting), attempts);
 
       // Salary
-      trySetField(ctx, "salary", extractSalary(posting), attempts);
+      setField(ctx, "salary", extractSalary(posting), attempts);
 
       // Employment Type
       const empType = posting.employmentType;
       const empStr = Array.isArray(empType) ? empType.join(", ") : empType;
-      trySetField(ctx, "employmentType", empStr, attempts);
+      setField(ctx, "employmentType", empStr, attempts);
     }
   }
 
-  // Record field traces for accepted extractions
-  for (const attempt of attempts) {
-    if (attempt.accepted && attempt.field) {
-      const existing = ctx.trace.fields.find((f) => f.field === attempt.field);
-      if (existing) {
-        existing.attempts.push(attempt);
-        existing.finalValue = attempt.cleanedValue ?? "";
-        existing.finalSource = "json-ld";
-      } else {
-        ctx.trace.fields.push({
-          field: attempt.field,
-          finalValue: attempt.cleanedValue ?? "",
-          finalSource: "json-ld",
-          attempts: [attempt],
-        });
-      }
-    }
-  }
+  recordFieldTraces(ctx, attempts, "json-ld");
 
   updateCompleteness(ctx);
   await next();

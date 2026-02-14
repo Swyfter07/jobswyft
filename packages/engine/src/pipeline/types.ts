@@ -56,7 +56,7 @@ export interface ExtractionTrace {
   url: string;
   timestamp: number;
   totalTimeMs: number;
-  layersExecuted: string[];
+  layersExecuted: LayerName[];
   gateDecisions: Array<{
     gate: number;
     completeness: number;

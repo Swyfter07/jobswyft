@@ -1,6 +1,6 @@
 # Story 2.2: Middleware Extraction Pipeline
 
-Status: review
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -495,6 +495,12 @@ No debug issues encountered.
 ### Change Log
 
 - 2026-02-14: Story 2.2 implementation complete — Koa-style middleware extraction pipeline with 7 layers, 3 confidence gates, and 73 tests.
+- 2026-02-14: **Code review fixes applied (AI):**
+  - **H1 (compose crash bug):** Fixed error recovery in `compose.ts` to check if `next()` was already called before dispatching `i+1` — prevents "next() called multiple times" cascade when middleware throws after calling `next()`.
+  - **M1+M2 (code duplication):** Extracted shared `trySetField()` and `recordFieldTraces()` helpers into `create-context.ts`. Removed 3 duplicate `trySetField` implementations from json-ld.ts, og-meta.ts, heuristic.ts. Removed 3 duplicate trace recording blocks. Build shrunk from 40KB to 38KB.
+  - **M3 (type safety):** Changed `ExtractionTrace.layersExecuted` from `string[]` to `LayerName[]` for compile-time validation.
+  - **M4 (error tracking):** Added `ctx.metadata.errors: string[]` array alongside `lastError` so multiple middleware failures are all recorded.
+  - **M5 (weak tests):** Replaced conditional `if (field) { expect(...) }` assertions in css-selector.test.ts and heuristic.test.ts with concrete `expect(field).toBeDefined()` assertions.
 
 ### File List
 

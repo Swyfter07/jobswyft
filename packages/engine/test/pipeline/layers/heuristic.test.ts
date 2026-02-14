@@ -36,10 +36,10 @@ describe("heuristic layer", () => {
 
     await heuristic(ctx, async () => {});
 
-    // May extract from details if no main content area found first
-    if (ctx.fields.description) {
-      expect(ctx.fields.description.source).toBe("heuristic");
-    }
+    // details element has 200+ chars of content, should be extracted
+    expect(ctx.fields.description).toBeDefined();
+    expect(ctx.fields.description?.source).toBe("heuristic");
+    expect(ctx.fields.description?.confidence).toBe(0.30);
   });
 
   it("does not overwrite higher-confidence title", async () => {

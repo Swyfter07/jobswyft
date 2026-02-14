@@ -43,9 +43,15 @@ export function compose(
         ctx.metadata.degraded = true;
         const errorMessage =
           err instanceof Error ? err.message : String(err);
+        if (!Array.isArray(ctx.metadata.errors)) ctx.metadata.errors = [];
+        (ctx.metadata.errors as string[]).push(errorMessage);
         ctx.metadata.lastError = errorMessage;
-        // Continue pipeline despite error
-        await dispatch(i + 1);
+        // Only continue to next middleware if it hasn't been dispatched yet.
+        // If middleware called next() before throwing, index > i and
+        // dispatching i+1 again would trigger "next() called multiple times".
+        if (index === i) {
+          await dispatch(i + 1);
+        }
       }
     }
 

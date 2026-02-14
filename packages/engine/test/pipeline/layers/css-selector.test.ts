@@ -66,10 +66,9 @@ describe("cssSelector layer", () => {
 
     await cssSelector(ctx, async () => {});
 
-    // If a field was extracted, completeness should be > 0
-    if (ctx.fields.title) {
-      expect(ctx.completeness).toBeGreaterThan(0);
-    }
+    // Board-specific selector should have matched the title field
+    expect(ctx.fields.title).toBeDefined();
+    expect(ctx.completeness).toBeGreaterThan(0);
   });
 
   it("calls next()", async () => {

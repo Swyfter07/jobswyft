@@ -137,19 +137,20 @@ export const cssSelector: ExtractionMiddleware = async (ctx, next) => {
     }
   }
 
-  // Record field traces
+  // Record field traces — CSS uses selectorId-based source for accepted attempts
   for (const attempt of attempts) {
     if (attempt.accepted && attempt.field) {
+      const source = attempt.selectorId ? `css:${attempt.selectorId}` : "css";
       const existing = ctx.trace.fields.find((f) => f.field === attempt.field);
       if (existing) {
         existing.attempts.push(attempt);
         existing.finalValue = attempt.cleanedValue ?? "";
-        existing.finalSource = attempt.selectorId ? `css:${attempt.selectorId}` : "css";
+        existing.finalSource = source;
       } else {
         ctx.trace.fields.push({
           field: attempt.field,
           finalValue: attempt.cleanedValue ?? "",
-          finalSource: attempt.selectorId ? `css:${attempt.selectorId}` : "css",
+          finalSource: source,
           attempts: [attempt],
         });
       }

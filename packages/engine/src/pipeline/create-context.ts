@@ -7,7 +7,12 @@
  */
 
 import { computeCompleteness } from "../scoring/extraction-validator";
-import type { DetectionContext, LayerName } from "./types";
+import type {
+  DetectionContext,
+  FieldExtraction,
+  LayerName,
+  TraceAttempt,
+} from "./types";
 
 /**
  * Create a fresh DetectionContext with zeroed fields and initialized trace.
@@ -63,4 +68,89 @@ export function recordLayerExecution(
   layer: LayerName
 ): void {
   ctx.trace.layersExecuted.push(layer);
+}
+
+/**
+ * Try to set a field on the context, respecting the field override rule:
+ * only write if the field is not already set or the new confidence is higher.
+ *
+ * Pushes a TraceAttempt describing the outcome (accepted/rejected/empty).
+ */
+export function trySetField(
+  ctx: DetectionContext,
+  field: keyof DetectionContext["fields"],
+  value: string | undefined,
+  layer: LayerName,
+  confidence: number,
+  source: FieldExtraction["source"],
+  attempts: TraceAttempt[]
+): void {
+  if (!value || value.trim().length === 0) {
+    attempts.push({
+      layer,
+      attempted: true,
+      matched: false,
+      field,
+      accepted: false,
+      rejectionReason: "empty-value",
+    });
+    return;
+  }
+
+  const trimmed = value.trim();
+  const existing = ctx.fields[field];
+
+  if (existing && existing.confidence >= confidence) {
+    attempts.push({
+      layer,
+      attempted: true,
+      matched: true,
+      field,
+      rawValue: trimmed,
+      accepted: false,
+      rejectionReason: "higher-confidence-exists",
+    });
+    return;
+  }
+
+  ctx.fields[field] = { value: trimmed, source, confidence };
+  attempts.push({
+    layer,
+    attempted: true,
+    matched: true,
+    field,
+    rawValue: trimmed,
+    cleanedValue: trimmed,
+    accepted: true,
+  });
+}
+
+/**
+ * Record accepted field trace attempts into ctx.trace.fields.
+ *
+ * For each accepted attempt, either updates an existing FieldTrace entry
+ * or creates a new one.
+ */
+export function recordFieldTraces(
+  ctx: DetectionContext,
+  attempts: TraceAttempt[],
+  defaultSource: string
+): void {
+  for (const attempt of attempts) {
+    if (attempt.accepted && attempt.field) {
+      const existing = ctx.trace.fields.find((f) => f.field === attempt.field);
+      if (existing) {
+        existing.attempts.push(attempt);
+        existing.finalValue = attempt.cleanedValue ?? "";
+        existing.finalSource = defaultSource;
+      } else {
+        ctx.trace.fields.push({
+          field: attempt.field,
+          finalValue: attempt.cleanedValue ?? "",
+          finalSource: defaultSource,
+          attempts: [attempt],
+        });
+      }
+    }
+  }
 }
