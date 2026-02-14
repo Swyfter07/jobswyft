@@ -195,8 +195,8 @@ describe("useSidebarStore - State Preservation Matrix", () => {
       useSidebarStore.getState().setActiveTab("ai-studio");
       expect(useSidebarStore.getState().activeTab).toBe("ai-studio");
 
-      useSidebarStore.getState().setActiveTab("coach");
-      expect(useSidebarStore.getState().activeTab).toBe("coach");
+      useSidebarStore.getState().setActiveTab("autofill");
+      expect(useSidebarStore.getState().activeTab).toBe("autofill");
     });
 
     it("should preserve AI Studio sub-tab when switching", () => {

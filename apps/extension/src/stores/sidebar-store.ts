@@ -9,7 +9,7 @@ export type SidebarState =
   | "job-detected"
   | "full-power";
 
-export type MainTab = "scan" | "ai-studio" | "autofill" | "coach";
+export type MainTab = "scan" | "ai-studio" | "autofill";
 export type AIStudioSubTab = "match" | "cover-letter" | "chat" | "outreach";
 
 export interface AIStudioOutputs {

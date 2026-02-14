@@ -6,6 +6,7 @@ import { ResumeCard } from "@/components/features/resume/resume-card"
 import { JobCard } from "@/components/features/job-card"
 import { ScanEmptyState } from "@/components/features/scan-empty-state"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Button } from "@/components/ui/button"
 import { LoginView } from "@/components/features/login-view"
 import type { JobData } from "@/lib/mappers"
 
@@ -35,6 +36,7 @@ const meta = {
     component: ExtensionSidebar,
     parameters: {
         layout: "fullscreen",
+        viewport: { defaultViewport: "extensionDefault" },
     },
     tags: ["autodocs"],
 } satisfies Meta<typeof ExtensionSidebar>
@@ -44,126 +46,202 @@ type Story = StoryObj<typeof meta>
 
 const CenteredLayout = (Story: React.ComponentType) => (
     <div className="flex items-center justify-center min-h-screen bg-muted p-8">
-        <div className="relative w-[400px]" style={{ height: '85vh' }}>
+        <div className="relative w-[360px]" style={{ height: '600px' }}>
             <Story />
         </div>
     </div>
 )
 
-// Shared header + resume context for authenticated stories (children pattern)
-function AuthenticatedShell({ scanContent }: { scanContent: React.ReactNode }) {
-    return (
-        <div className="flex flex-col h-full">
-            <div className="p-2 bg-background z-10 shrink-0">
-                <AppHeader appName="JobSwyft" />
+const DarkCenteredLayout = (Story: React.ComponentType) => (
+    <div className="dark flex items-center justify-center min-h-screen bg-background p-8">
+        <div className="relative w-[360px]" style={{ height: '600px' }}>
+            <Story />
+        </div>
+    </div>
+)
+
+// Shared header + resume context for authenticated stories
+const defaultHeader = <AppHeader appName="JobSwyft" autoScanEnabled onAutoScanToggle={() => {}} autoAnalysisEnabled onAutoAnalysisToggle={() => {}} resetButton />
+const defaultResumeContext = (
+    <ResumeCard
+        resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
+        activeResumeId="1"
+        resumeData={MOCK_RESUME_DATA}
+        isCollapsible
+    />
+)
+
+// ─── Tab-Based Stories (3-Tab Navigation) ────────────────────────────
+
+/** Default view — Scan tab active, empty state */
+export const ScanTabEmpty: Story = {
+    name: "Scan Tab: Empty State",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "scan",
+    },
+}
+
+/** Scan tab — Loading skeleton */
+export const ScanTabLoading: Story = {
+    name: "Scan Tab: Loading",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: (
+            <div className="w-full space-y-3 rounded-lg border-2 border-card-accent-border p-4">
+                <div className="flex items-start gap-3">
+                    <Skeleton className="size-10 rounded-lg" />
+                    <div className="flex-1 space-y-2">
+                        <Skeleton className="h-4 w-3/4" />
+                        <Skeleton className="h-3 w-1/2" />
+                    </div>
+                </div>
+                <div className="flex gap-1.5">
+                    <Skeleton className="h-5 w-20 rounded-full" />
+                    <Skeleton className="h-5 w-16 rounded-full" />
+                </div>
+                <Skeleton className="h-px w-full" />
+                <div className="space-y-2">
+                    <Skeleton className="h-3 w-full" />
+                    <Skeleton className="h-3 w-5/6" />
+                    <Skeleton className="h-3 w-4/6" />
+                </div>
+                <Skeleton className="h-9 w-full rounded-md" />
             </div>
-            <div className="bg-muted/30 dark:bg-muted/50 overflow-y-auto overflow-x-hidden shrink-0 scroll-fade-y scrollbar-hidden">
-                <div className="px-2 py-1">
-                    <ResumeCard
-                        resumes={[{ id: "1", fileName: "Senior_Product_Designer.pdf" }]}
-                        activeResumeId="1"
-                        resumeData={MOCK_RESUME_DATA}
-                        isCollapsible
-                    />
+        ),
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "scan",
+    },
+}
+
+/** Scan tab — Job detected */
+export const ScanTabSuccess: Story = {
+    name: "Scan Tab: Job Detected",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "scan",
+    },
+}
+
+/** Scan tab — Error state */
+export const ScanTabError: Story = {
+    name: "Scan Tab: Error",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: (
+            <div className="space-y-4 rounded-lg border-2 border-card-accent-border p-6 flex flex-col items-center">
+                <p className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2 w-full text-center">
+                    Failed to scan job page
+                </p>
+                <Button variant="ghost" size="sm" className="text-sm text-primary font-medium">
+                    Retry Scan
+                </Button>
+                <Button variant="ghost" size="sm" className="text-xs text-muted-foreground">
+                    Or paste a job description
+                </Button>
+            </div>
+        ),
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "scan",
+    },
+}
+
+/** AI Studio tab active */
+export const AIStudioTab: Story = {
+    name: "AI Studio Tab: Active",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: (
+            <div className="space-y-3">
+                <div className="rounded-lg border p-4 bg-card">
+                    <h3 className="text-sm font-semibold mb-2">Match Analysis</h3>
+                    <div className="flex items-center gap-2 mb-2">
+                        <div className="text-2xl font-bold text-primary">85%</div>
+                        <span className="text-xs text-muted-foreground">match score</span>
+                    </div>
+                    <p className="text-xs text-muted-foreground">Strong match based on React, TypeScript, and Design Systems experience.</p>
+                </div>
+                <div className="rounded-lg border p-4 bg-card">
+                    <h3 className="text-sm font-semibold mb-2">Cover Letter</h3>
+                    <p className="text-xs text-muted-foreground">Generate a tailored cover letter for this position.</p>
+                </div>
+                <div className="rounded-lg border p-4 bg-card">
+                    <h3 className="text-sm font-semibold mb-2">Outreach</h3>
+                    <p className="text-xs text-muted-foreground">Draft a networking message for a hiring manager.</p>
                 </div>
             </div>
-            <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 bg-muted/20 dark:bg-muted/40 scroll-fade-y scrollbar-hidden">
-                {scanContent}
+        ),
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "ai-studio",
+    },
+}
+
+/** Autofill tab active */
+export const AutofillTab: Story = {
+    name: "Autofill Tab: Active",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: (
+            <div className="space-y-3">
+                <div className="rounded-lg border p-4 bg-card">
+                    <h3 className="text-sm font-semibold mb-2">Detected Fields</h3>
+                    <p className="text-xs text-muted-foreground">No application form detected. Navigate to a job application page to start autofilling.</p>
+                </div>
             </div>
-        </div>
-    )
-}
-
-/** Empty state — no job page detected, shows scan button + paste fallback */
-export const ScanEmpty: Story = {
-    name: "Scan: Empty State",
-    decorators: [CenteredLayout],
-    args: {
-        className: "border shadow-2xl rounded-xl",
-        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
-            <AuthenticatedShell
-                scanContent={<ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />}
-            />
         ),
+        defaultTab: "autofill",
     },
 }
 
-/** Loading state — skeleton while scanning the page */
-export const ScanLoading: Story = {
-    name: "Scan: Loading",
+/** Locked tabs — AI Studio and Autofill disabled (no job scanned) */
+export const LockedTabs: Story = {
+    name: "Locked Tabs (No Job Data)",
     decorators: [CenteredLayout],
     args: {
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
-            <AuthenticatedShell
-                scanContent={
-                    <div className="w-full space-y-3 rounded-lg border-2 border-card-accent-border p-4">
-                        <div className="flex items-start gap-3">
-                            <Skeleton className="size-10 rounded-lg" />
-                            <div className="flex-1 space-y-2">
-                                <Skeleton className="h-4 w-3/4" />
-                                <Skeleton className="h-3 w-1/2" />
-                            </div>
-                        </div>
-                        <div className="flex gap-1.5">
-                            <Skeleton className="h-5 w-20 rounded-full" />
-                            <Skeleton className="h-5 w-16 rounded-full" />
-                        </div>
-                        <Skeleton className="h-px w-full" />
-                        <div className="space-y-2">
-                            <Skeleton className="h-3 w-full" />
-                            <Skeleton className="h-3 w-5/6" />
-                            <Skeleton className="h-3 w-4/6" />
-                        </div>
-                        <Skeleton className="h-9 w-full rounded-md" />
-                    </div>
-                }
-            />
-        ),
-    },
-}
-
-/** Scanned job — JobCard with extracted data */
-export const ScanSuccess: Story = {
-    name: "Scan: Job Detected",
-    decorators: [CenteredLayout],
-    args: {
-        className: "border shadow-2xl rounded-xl",
-        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
-            <AuthenticatedShell
-                scanContent={<JobCard job={MOCK_JOB} />}
-            />
-        ),
-    },
-}
-
-/** Error state — scan failed with retry option */
-export const ScanError: Story = {
-    name: "Scan: Error",
-    decorators: [CenteredLayout],
-    args: {
-        className: "border shadow-2xl rounded-xl",
-        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
-            <AuthenticatedShell
-                scanContent={
-                    <div className="space-y-4 rounded-lg border-2 border-card-accent-border p-6 flex flex-col items-center">
-                        <p className="text-xs text-destructive bg-destructive/10 rounded-md px-3 py-2 w-full text-center">
-                            Failed to scan job page
-                        </p>
-                        <button type="button" className="text-sm text-primary hover:underline font-medium">
-                            Retry Scan
-                        </button>
-                        <button type="button" className="text-xs text-muted-foreground hover:text-primary hover:underline">
-                            Or paste a job description
-                        </button>
-                    </div>
-                }
-            />
-        ),
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        isLocked: true,
+        defaultTab: "scan",
     },
 }
 
@@ -191,33 +269,28 @@ const MOCK_MAXED_RESUME_DATA = {
 
 /** Maxed out resume + job card for stress testing scrolling */
 export const MaxedOut: Story = {
-    name: "Stress: Maxed Content",
+    name: "Stress: Maxed Content (Overflow)",
     decorators: [CenteredLayout],
     args: {
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
-        children: (
-            <div className="flex flex-col h-full">
-                <div className="p-2 bg-background z-10 shrink-0">
-                    <AppHeader appName="JobSwyft" />
-                </div>
-                <div className="bg-muted/30 dark:bg-muted/50 overflow-y-auto overflow-x-hidden shrink-0 scroll-fade-y scrollbar-hidden">
-                    <div className="px-2 py-1">
-                        <ResumeCard
-                            resumes={[{ id: "1", fileName: "Senior_Product_Designer_Long.pdf" }]}
-                            activeResumeId="1"
-                            resumeData={MOCK_MAXED_RESUME_DATA}
-                            isCollapsible
-                        />
-                    </div>
-                </div>
-                <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 space-y-3 bg-muted/20 dark:bg-muted/40 scroll-fade-y scrollbar-hidden">
-                    <JobCard job={MOCK_JOB} />
-                </div>
-            </div>
+        header: defaultHeader,
+        contextContent: (
+            <ResumeCard
+                resumes={[{ id: "1", fileName: "Senior_Product_Designer_Long.pdf" }]}
+                activeResumeId="1"
+                resumeData={MOCK_MAXED_RESUME_DATA}
+                isCollapsible
+            />
         ),
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "scan",
     },
 }
+
+// ─── Special States ─────────────────────────────────────────────────
 
 /** Login view before authentication */
 export const Login: Story = {
@@ -225,8 +298,72 @@ export const Login: Story = {
     args: {
         className: "border shadow-2xl rounded-xl",
         style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: (
+            <div className="flex items-center gap-2 px-1">
+                <span className="text-lg font-bold text-foreground tracking-tight">
+                    Jobswyft
+                </span>
+            </div>
+        ),
         children: (
             <LoginView />
         ),
+    },
+}
+
+/** With footer slot (CreditBar placeholder) */
+export const WithFooter: Story = {
+    name: "With Footer Slot",
+    decorators: [CenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: defaultHeader,
+        contextContent: defaultResumeContext,
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        footer: (
+            <div className="flex items-center justify-between px-4 py-2 border-t bg-muted/30 text-xs text-muted-foreground">
+                <span>3 / 10 credits remaining</span>
+                <Button variant="ghost" size="sm" className="text-primary font-medium">Upgrade</Button>
+            </div>
+        ),
+        defaultTab: "scan",
+    },
+}
+
+// ─── Dark Mode ──────────────────────────────────────────────────────
+
+/** Dark mode — Scan tab with job detected */
+export const DarkMode: Story = {
+    name: "Dark Mode: Scan Tab",
+    decorators: [DarkCenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: <AppHeader appName="JobSwyft" isDarkMode autoScanEnabled onAutoScanToggle={() => {}} autoAnalysisEnabled onAutoAnalysisToggle={() => {}} resetButton />,
+        contextContent: defaultResumeContext,
+        scanContent: <JobCard job={MOCK_JOB} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        defaultTab: "scan",
+    },
+}
+
+/** Dark mode — Locked tabs state */
+export const DarkModeLocked: Story = {
+    name: "Dark Mode: Locked Tabs",
+    decorators: [DarkCenteredLayout],
+    args: {
+        className: "border shadow-2xl rounded-xl",
+        style: { position: 'absolute', inset: 0, height: '100%', width: '100%' } as React.CSSProperties,
+        header: <AppHeader appName="JobSwyft" isDarkMode autoScanEnabled onAutoScanToggle={() => {}} autoAnalysisEnabled onAutoAnalysisToggle={() => {}} resetButton />,
+        contextContent: defaultResumeContext,
+        scanContent: <ScanEmptyState canManualScan onManualScan={() => {}} onManualEntry={() => {}} />,
+        studioContent: <div className="text-sm text-muted-foreground p-4">AI Studio content placeholder</div>,
+        autofillContent: <div className="text-sm text-muted-foreground p-4">Autofill content placeholder</div>,
+        isLocked: true,
+        defaultTab: "scan",
     },
 }

@@ -7,6 +7,7 @@ const meta = {
     component: AppHeader,
     parameters: {
         layout: "fullscreen",
+        viewport: { defaultViewport: "extensionDefault" },
     },
     tags: ["autodocs"],
     argTypes: {
@@ -15,6 +16,8 @@ const meta = {
         onThemeToggle: { action: "theme toggled" },
         onOpenDashboard: { action: "dashboard opened" },
         onReset: { action: "reset clicked" },
+        onAutoScanToggle: { action: "auto-scan toggled" },
+        onAutoAnalysisToggle: { action: "auto-analysis toggled" },
     },
 } satisfies Meta<typeof AppHeader>
 
@@ -55,5 +58,76 @@ export const CustomBranding: Story = {
         appName: "CareerCoach AI",
         logo: <Sparkles className="size-5 text-ai-accent" />,
         isDarkMode: false,
+    },
+}
+
+/** Auto-scan ON, Auto-analysis OFF */
+export const AutoScanEnabled: Story = {
+    name: "Auto-Scan: ON",
+    args: {
+        isDarkMode: false,
+        autoScanEnabled: true,
+        onAutoScanToggle: () => {},
+        autoAnalysisEnabled: false,
+        onAutoAnalysisToggle: () => {},
+        resetButton: true,
+        onOpenDashboard: () => {},
+    },
+}
+
+/** Auto-scan OFF, Auto-analysis ON */
+export const AutoAnalysisEnabled: Story = {
+    name: "Auto-Analysis: ON",
+    args: {
+        isDarkMode: false,
+        autoScanEnabled: false,
+        onAutoScanToggle: () => {},
+        autoAnalysisEnabled: true,
+        onAutoAnalysisToggle: () => {},
+        resetButton: true,
+        onOpenDashboard: () => {},
+    },
+}
+
+/** Both Auto-scan and Auto-analysis ON */
+export const BothAutoFeaturesEnabled: Story = {
+    name: "Both Auto Features: ON",
+    args: {
+        isDarkMode: false,
+        autoScanEnabled: true,
+        onAutoScanToggle: () => {},
+        autoAnalysisEnabled: true,
+        onAutoAnalysisToggle: () => {},
+        resetButton: true,
+        onOpenDashboard: () => {},
+    },
+}
+
+/** Both Auto-scan and Auto-analysis ON, dark mode */
+export const BothAutoFeaturesDark: Story = {
+    name: "Both Auto Features: ON (Dark)",
+    args: {
+        isDarkMode: true,
+        autoScanEnabled: true,
+        onAutoScanToggle: () => {},
+        autoAnalysisEnabled: true,
+        onAutoAnalysisToggle: () => {},
+        resetButton: true,
+        onOpenDashboard: () => {},
+    },
+}
+
+/** Full header with all actions visible */
+export const FullHeader: Story = {
+    name: "Full Header (All Actions)",
+    args: {
+        isDarkMode: false,
+        autoScanEnabled: true,
+        onAutoScanToggle: () => {},
+        autoAnalysisEnabled: true,
+        onAutoAnalysisToggle: () => {},
+        resetButton: true,
+        onOpenDashboard: () => {},
+        onProfileClick: () => {},
     },
 }

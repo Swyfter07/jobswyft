@@ -55,7 +55,7 @@ export function AppHeader({
                 {/* Left: Branding */}
                 <div className="flex items-center gap-2">
                     {logo || <Briefcase className="size-5 text-primary" />}
-                    <span className="font-bold text-base tracking-tight">{appName}</span>
+                    <span className="text-xl font-bold tracking-tight">{appName}</span>
                 </div>
 
                 {/* Right: Actions */}
@@ -125,6 +125,7 @@ export function AppHeader({
                             <Button
                                 variant="ghost"
                                 size="icon"
+                                aria-label="Settings"
                                 title="Settings"
                                 className="size-8 text-muted-foreground hover:text-foreground"
                             >
@@ -144,7 +145,7 @@ export function AppHeader({
                                     Profile
                                 </DropdownMenuItem>
                             )}
-                            <DropdownMenuSeparator />
+                            {(onOpenDashboard || onProfileClick) && <DropdownMenuSeparator />}
                             <DropdownMenuItem onClick={onSignOut}>
                                 <LogOut className="mr-2 size-4" />
                                 Sign out
