@@ -1,19 +1,6 @@
-## Revision Context
+# Project Context Analysis
 
-**Original Architecture:** Completed 2026-01-30 (8 steps, all validated)
-**New Inputs Since Original:**
-- Smart Engine Architecture Vision (2026-02-13)
-- Technical Research: Detection & Autofill Patterns (2026-02-13)
-- Core Engine Architecture addendum (2026-02-08)
-- Scan Engine Architecture addendum (2026-02-08)
-- Implementation experience from EXT-5, EXT-5.5 stories
-- UX Design Specification (2026-02-07)
-
-**Revision Goal:** Update architectural decisions to reflect implementation learnings, incorporate Smart Engine vision, and align with the latest research findings.
-
-## Project Context Analysis
-
-### Requirements Overview
+## Requirements Overview
 
 **Functional Requirements:**
 85 FRs spanning three surfaces:
@@ -35,7 +22,7 @@
 - Complexity level: HIGH
 - Estimated architectural components: 15-20 major modules (detection engine, extraction pipeline, autofill engine, selector registry, config sync, content sentinel, side panel UI, web dashboard, API services, auth layer, telemetry, storage adapters, AI integration, resume parser, match engine)
 
-### Technical Constraints & Dependencies
+## Technical Constraints & Dependencies
 
 - **Chrome MV3:** Service worker lifecycle, content script sandboxing, message passing APIs, storage quotas
 - **400px Side Panel:** All extension UI must fit within constrained viewport
@@ -44,7 +31,7 @@
 - **Bundle Size:** Extension must remain performant; heavy AI libraries must be API-side
 - **Content Security Policy:** Extension CSP restricts inline scripts, eval, and external resource loading
 
-### Cross-Cutting Concerns Identified
+## Cross-Cutting Concerns Identified
 
 1. **Authentication & Session Management** — Supabase JWT flows across extension (background ↔ content script ↔ side panel), web (Next.js middleware), and API (FastAPI dependency injection)
 2. **State Synchronization** — Extension local state (Zustand) ↔ API persistence ↔ Web dashboard views; conflict resolution for offline-to-online transitions
@@ -53,7 +40,7 @@
 5. **Config Management** — Site selector configs (JSON), feature flags, remote sync with delta updates, versioned config schema
 6. **Security Boundaries** — Content script isolation, CSP compliance, credential handling, PII minimization in telemetry
 
-### Revision Delta (New Since 2026-01-30)
+## Revision Delta (New Since 2026-01-30)
 
 | Input | Architectural Impact |
 |-------|---------------------|
@@ -63,4 +50,3 @@
 | Scan Engine Addendum | Refines 5-layer extraction pipeline, content sentinel, delayed verification |
 | UX Design Spec | Constrains UI architecture: 400px panel, four-state unlock, functional area colors |
 | EXT-5/5.5 Learnings | Real implementation feedback on detection timing, DOM readiness, state management |
-

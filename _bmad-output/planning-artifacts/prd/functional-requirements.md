@@ -27,6 +27,7 @@
 - **FR14:** System automatically scans job posting pages when detected via URL pattern matching
 - **FR14a:** System detects job pages using configurable URL patterns for major job boards
 - **FR14b:** Users can manually enter job details when automatic detection fails, including pasting a full job description for AI analysis
+- **FR14c:** System can extract job data from job boards not in its preconfigured support list using AI-powered fallback analysis
 - **FR15:** System extracts job title from job posting pages
 - **FR16:** System extracts company name from job posting pages
 - **FR17:** System extracts full job description from job posting pages
@@ -35,15 +36,21 @@
 - **FR20:** Users can manually correct extracted fields using an element picker
 - **FR21:** Users can manually edit any extracted field directly
 - **FR22:** System indicates which required fields are missing after a scan
+- **FR22a:** System indicates extraction confidence level to the user, distinguishing high-confidence extractions from partial or uncertain results
+- **FR22b:** System adapts extraction and autofill behavior based on detected application tracking system (ATS) platform
 
 ## AI Generation Tools
 
-**Match Analysis:**
+**Quick Match Analysis:**
 
 - **FR23:** System automatically generates high-level match analysis upon successful job scan
 - **FR23a:** Auto match analysis is free for all users with rate limits: 20 per day for free tier, unlimited for paid tiers
 - **FR23b:** Auto match displays match score (0-100%), skills strengths as green visual indicators, skill gaps as yellow visual indicators
 - **FR23c:** Auto match layout presents strengths and gaps side-by-side within job card
+- **FR23d:** Job Details Card displays two action buttons: "Deep Analysis" (navigates to Match tool for detailed analysis) and "Ask Coach" (navigates to Coach tab)
+
+**Detailed Match:**
+
 - **FR24:** Users can trigger detailed match analysis (costs 1 AI credit)
 - **FR25:** Detailed match analysis provides comprehensive strengths, gaps, and recommendations beyond high-level view
 
@@ -55,14 +62,6 @@
 - **FR28:** Users can provide custom instructions for cover letter generation
 - **FR29:** Users can regenerate cover letter with feedback on what to change
 - **FR30:** Users can export generated cover letters as PDF
-
-**Chat:**
-
-- **FR31:** Users can open chat interface from AI Studio
-- **FR32:** System generates question suggestions based on extracted job posting content
-- **FR33:** Users can ask questions via chat (costs 1 AI credit per message)
-- **FR34:** Chat displays conversation history within current session
-- **FR35:** Users can start new chat session to clear history
 
 **Outreach Messages:**
 
@@ -80,12 +79,23 @@
 - **FR37d:** Coach conversations cost 1 AI credit per message
 - **FR37e:** Coach conversation resets when user switches to a different job (new job = new coaching context)
 - **FR37f:** System generates contextual coaching prompts based on match analysis results (e.g., "How do I address the Kubernetes gap?")
+- **FR37g:** Coach displays conversation history within the current session
+- **FR37h:** Users can start a new Coach conversation to clear history
+
+**Model Selection:**
+
+- **FR38a:** Users can select which AI model to use for any paid AI generation request
+- **FR38b:** System displays per-operation cost (based on selected model) before generation execution
+- **FR38c:** System charges credits based on the selected model's pricing multiplier
 
 **Common AI Capabilities:**
 
 - **FR38:** Users can edit any AI-generated output before using it
 - **FR39:** AI outputs and extracted application questions are ephemeral and not stored on the server
 - **FR40:** Users can copy any AI-generated output to clipboard with a single click
+- **FR40a:** System ensures all AI-generated content is grounded in the user's actual resume data — no fabrication of experience, skills, or qualifications
+- **FR40b:** Match analysis transparently surfaces skill gaps rather than hiding or minimizing them
+- **FR40c:** Coach provides honest, grounded advice based on actual resume-job fit analysis
 - **FR41:** System provides visual feedback when AI output is copied
 
 ## Form Autofill
@@ -96,7 +106,7 @@
 - **FR43:** System maps user data to appropriate form fields automatically
 - **FR44:** System highlights fields that were autofilled
 - **FR44a:** System shows visual tick-off state in sidebar for successfully filled fields
-- **FR45:** Users can undo the last autofill action
+- **FR45:** Users can undo the last autofill action; undo persists with no timeout and is removed only on page refresh or DOM field change
 - **FR46:** Autofill includes resume upload when a file upload field is detected
 - **FR47:** Autofill includes generated cover letter when available
 
@@ -123,34 +133,53 @@
 - **FR61:** Users can upgrade to a paid subscription tier (Post-MVP)
 - **FR62:** Users can manage their subscription (upgrade, downgrade, cancel) (Post-MVP)
 - **FR63:** Users earn additional free generations through referrals
-- **FR64:** System blocks paid AI generation features (detailed match, cover letter, outreach, chat) when user has no remaining balance
+- **FR64:** System blocks paid AI generation features (detailed match, cover letter, outreach, coach) when user has no remaining balance
 - **FR65:** System displays "upgrade coming soon" message when user is out of paid credits
 - **FR66:** System blocks auto match analysis when free tier user exceeds daily limit (20/day)
+- **FR66a:** System supports configurable token-to-credit conversion ratios for flexible pricing (Post-MVP)
+- **FR66b:** System applies per-model credit multipliers so different AI models consume credits at different rates (Post-MVP)
+- **FR66c:** System calculates credit cost for Coach conversations based on actual token consumption (Post-MVP)
 
 ## Extension Sidebar Experience
 
 - **FR67:** Users can open the extension sidebar (Chrome Side Panel) from any webpage
 - **FR67a:** Sidebar navigation uses a 4-tab structure: Scan | AI Studio | Autofill | Coach
-- **FR67b:** AI Studio contains 4 sub-tabs: Match | Cover Letter | Chat | Outreach
+- **FR67b:** AI Studio contains 3 sub-tabs: Match | Cover Letter | Outreach
 - **FR68:** Users can close the extension sidebar
-- **FR69:** Sidebar displays one of four states: Logged Out (feature showcase + sign-in CTA), Non-Job Page (resume management + waiting state), Job Detected (auto-scanned job details + match analysis), Full Power (all tabs: Scan, AI Studio, Autofill, Coach)
-- **FR69a:** AI Studio tools (detailed match, cover letter, outreach, chat) and Coach tab unlock when a job is detected AND user has available credits
+- **FR69:** Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked: scan results, quick match, AI Studio, autofill, Coach)
+- **FR69a:** AI Studio tools (detailed match, cover letter, outreach) and Coach tab unlock when a job is detected AND user has available credits
 - **FR69b:** Autofill functionality enables only when user is on a page with form fields (application page)
 - **FR70:** Sidebar displays resume tray for resume access when user is authenticated
-- **FR71:** AI Studio tools are locked until a job is scanned and user has available credits; Coach tab follows the same unlock condition
+- **FR71:** AI Studio tools and Coach tab are available when a job is detected and user has available credits (Job Detected = Full Power state)
 - **FR72:** Users can navigate to the web dashboard from the sidebar
 - **FR72a:** When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
 - **FR72b:** When user navigates to a non-job page, sidebar preserves the last job context (user can continue working with previous job data)
 - **FR72c:** Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs, chat; preserves resume, auth, credits)
 - **FR72d:** Sidebar tab switching preserves state within each tab (switching Scan → Coach → Scan does not re-trigger scan)
 
-## Web Dashboard
+## Web Dashboard (User-Facing)
 
 - **FR73:** Users can access a dedicated jobs management page
 - **FR74:** Users can access a dedicated resume management page
 - **FR75:** Users can access an account management page
 - **FR76:** Users can access a data and privacy controls page
 - **FR77:** Dashboard displays user's current usage and subscription status
+
+## Admin Dashboard
+
+- **FR86:** Admin users can access the admin dashboard via a separate auth gate (Supabase admin role required)
+- **FR87:** Admin users can view and search user accounts with engagement metrics
+- **FR88:** Admin users can configure tier definitions (names, generation limits, auto match limits, pricing, feature flags)
+- **FR89:** Admin users can view platform usage analytics (installs, scans, generations, conversion funnel)
+- **FR90:** Admin users can review, categorize, and tag user feedback submissions
+- **FR91:** Admin users can manage system-wide configuration settings (rate limits, model pricing, global parameters)
+- **FR92:** Admin users can assign or revoke admin roles for other users
+
+## Backend Configuration System
+
+- **FR93:** System stores all tier definitions, rate limits, and model pricing as configurable records in the backend database
+- **FR94:** Configuration changes made via admin dashboard propagate to all surfaces (extension, API, dashboards) without code deploys
+- **FR95:** All surfaces read tier and credit configuration from backend on startup and respond to configuration updates
 
 ## Data Privacy & Controls
 
@@ -167,3 +196,5 @@
 - **FR84:** System captures feedback with context: current page URL, sidebar state, last action performed, browser version
 - **FR84a:** Users can optionally attach a screenshot with their feedback
 - **FR85:** Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
+
+**Totals:** 100 FRs across 14 capability areas.

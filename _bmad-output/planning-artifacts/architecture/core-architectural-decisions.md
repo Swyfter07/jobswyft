@@ -1,6 +1,6 @@
-## Core Architectural Decisions
+# Core Architectural Decisions
 
-### Decision Priority Analysis
+## Decision Priority Analysis
 
 **Critical Decisions (Block Implementation):**
 - Selector Registry Storage (Hybrid: shipped defaults + API delta sync)
@@ -23,7 +23,7 @@
 - Task-based AI provider routing (collect usage data first via circuit breaker)
 - Admin dashboard for config authoring (git-managed with fast-path sufficient for MVP)
 
-### Data Architecture
+## Data Architecture
 
 **ADR-REV-D1: Selector Registry Storage — Hybrid**
 - Decision: Ship base selectors with extension, sync health updates and new selectors from API via delta sync
@@ -40,7 +40,7 @@
 - Rationale: Type-safe configs that survive remote sync; version field enables graceful migration when schema evolves
 - Affects: Config authoring, extension config loader, API config endpoints
 
-### Smart Engine Architecture
+## Smart Engine Architecture
 
 **ADR-REV-SE1: Extraction Pipeline Escalation — Hybrid Config + Confidence**
 - Decision: Site configs hint the optimal starting layer; confidence-threshold escalation determines when to stop or escalate further
@@ -62,7 +62,7 @@
 - Rationale: 90%+ of sites covered by pure config; clean extension point for unusual platforms without sacrificing config-driven updatability
 - Affects: Site config schema, extraction pipeline, extension build process
 
-### Extension Architecture
+## Extension Architecture
 
 **ADR-REV-EX1: Communication — Zustand State + Typed Commands**
 - Decision: State synchronization via Zustand stores backed by chrome.storage (job data, UI state, configs); explicit typed messages (TypeScript discriminated unions) only for imperative commands (trigger scan, start autofill, open picker)
@@ -84,7 +84,7 @@
 - Rationale: Closes the full feedback loop (user correction → selector improvement → config sync); complements self-healing strategy (ADR-REV-SE3)
 - Affects: Correction UI, telemetry pipeline, config pipeline, selector registry
 
-### API & Communication Patterns
+## API & Communication Patterns
 
 **ADR-REV-A1: Telemetry Ingestion — Batch Endpoint**
 - Decision: Single `POST /v1/telemetry/batch` endpoint; extension buffers events locally, ships in batches (every 30s or on idle); API returns 202 Accepted, processes asynchronously
@@ -101,7 +101,7 @@
 - Rationale: Adds resilience to existing dual-provider setup without task-routing complexity; task-based routing can be layered on later with usage data
 - Affects: AI service layer, provider adapters, health monitoring
 
-### Infrastructure & Deployment
+## Infrastructure & Deployment
 
 **ADR-REV-I1: Config Pipeline — Git-Managed with Fast-Path Override**
 - Decision: Site configs in repo as JSON (source of truth), CI validates schema on PR, merge refreshes API cache; emergency override API endpoint bypasses PR cycle for urgent selector fixes; overrides merged back to repo
@@ -123,7 +123,7 @@
 - Rationale: Per-surface speed for daily development; integration confidence for cross-surface concerns (config sync, telemetry)
 - Affects: CI configuration, test organization, merge policies
 
-### Decision Impact Analysis
+## Decision Impact Analysis
 
 **Implementation Sequence:**
 1. Config schema + Zod validation (ADR-REV-D3) — foundation for all config-driven decisions
@@ -147,7 +147,7 @@
 - ADR-REV-EX1 (communication) → ADR-REV-EX2, EX3, EX4 (all extension features depend on communication layer)
 - ADR-REV-D1 (hybrid storage) ↔ ADR-REV-A2 (config sync) ↔ ADR-REV-I2 (bundled + overlay) — config delivery chain
 
-### Database Schema (Confirmed from Original Architecture)
+## Database Schema (Confirmed from Original Architecture)
 
 **Tables Overview**
 
@@ -258,7 +258,7 @@ Match analyses are tracked separately from AI credits. The `usage_events.operati
 | Subscription Status | active, canceled, past_due | From Stripe webhooks |
 | AI Provider | claude, gpt | User preference + system default |
 
-### API Response Format (Confirmed)
+## API Response Format (Confirmed)
 
 **Envelope Pattern**
 
@@ -309,7 +309,7 @@ Match analyses are tracked separately from AI credits. The `usage_events.operati
 | `VALIDATION_ERROR` | 400 | Dynamic based on field |
 | `RATE_LIMITED` | 429 | "Too many requests. Please wait." |
 
-### AI Provider Architecture (Confirmed)
+## AI Provider Architecture (Confirmed)
 
 | Setting | Value |
 |---------|-------|
@@ -356,4 +356,3 @@ data: {"code": "AI_GENERATION_FAILED", "message": "..."}
 - Cursor/caret blink at insertion point while streaming
 - "Stop generating" cancel button available throughout
 - On `prefers-reduced-motion`: show final text immediately (no progressive reveal)
-

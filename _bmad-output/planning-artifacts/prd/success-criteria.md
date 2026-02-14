@@ -10,6 +10,7 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 | Moment | Target Feeling |
 |--------|----------------|
 | First successful scan | "Wow, it just *got* the job posting" |
+| Quick match insight | "Instant signal — I know if this job is worth my time" |
 | Generated cover letter | "This sounds like me, but better" |
 | Autofill completion | "I just saved 15 minutes of copy-paste hell" |
 | After 5 applications | "I'm never going back to the old way" |
@@ -18,6 +19,7 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 
 - **Speed**: Users complete job applications **5x faster** than manual process (target: <3 min from landing on page to submitted application)
 - **Confidence**: **90%+ of users** report feeling "more confident" in their application quality
+- **Quick Match Signal**: Users see high-level match analysis within **<2 seconds** of scan, giving instant signal before diving deeper
 - **Stickiness**: After **3 successful applications**, users reach "habit formation" threshold
 - **Delight metric**: **4.8+ star rating** in Chrome Web Store within first 6 months
 - **Word of mouth**: **40%+ of users** voluntarily recommend Jobswyft to a friend
@@ -31,9 +33,11 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 
 ## Business Success
 
-**North Star Metric:** Monthly Active Appliers (MAA) - users who complete at least 1 AI-assisted application per month
+**North Star Metric:** Monthly Active Appliers (MAA) — users who complete at least 1 AI-assisted application per month
 
-**MVP Success Gate:** Working end-to-end flow deployed - user can install extension, authenticate, scan a job, generate content, and apply.
+**MVP Success Gate:** Working end-to-end flow deployed — user can install extension, authenticate, scan a job with instant quick match analysis, use Coach for questions, generate a cover letter, autofill an application, track the job, and provide feedback — end to end.
+
+**Tier Configuration:** All tier definitions (names, generation limits, pricing, features) are stored in the backend database. Changes propagate to extension + API + dashboards. MVP ships with free tier only; paid tiers activated post-MVP via config.
 
 **3-Month Targets (Post-MVP):**
 
@@ -61,16 +65,6 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 - **Viral coefficient**: 0.4+ (each user brings 0.4 new users)
 - **Organic install share**: 60%+ from word-of-mouth and organic search
 
-**Revenue Mix Target:**
-
-| Tier | Price | % of Paid Users | Contribution |
-|------|-------|-----------------|--------------|
-| Starter | $4.99 | 50% | Base volume |
-| Pro | $9.99 | 35% | Core revenue |
-| Power | $19.99 | 15% | High-value users |
-
-**Average Revenue Per Paid User (ARPPU):** $8.50/month
-
 ## Technical Success
 
 **Scan Engine Performance:**
@@ -81,17 +75,17 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 | Fallback scan success | **85%+** on unknown sites | AI extraction handles edge cases |
 | Required fields extraction | **99%+** accuracy | Title, company, description |
 | Scan speed | **<2 seconds** | Feel instant |
-| Auto match generation | **<2 seconds** post-scan | High-level analysis (score, skills, gaps) |
-| Auto match accuracy | **90%+** relevance | Match insights align with user perception |
+| Quick match generation | **<2 seconds** post-scan | GPT-4.0 primary, Claude fallback |
+| Quick match relevance | **90%+** | Insights align with user perception |
 
 **AI Studio Performance:**
 
 | Metric | Target | Notes |
 |--------|--------|-------|
-| Auto match latency | **<2 seconds** | High-level analysis on scan |
 | Detailed match latency | **<5 seconds** | Deep analysis on demand |
-| Generation latency | **<5 seconds** | Cover letter, outreach, chat |
-| Chat response time | **<5 seconds** | Per message |
+| Generation latency | **<5 seconds** | Cover letter, outreach |
+| Coach response time | **<5 seconds** | Per message |
+| Model selection | Supported | User can select model per request, differential pricing |
 | Output quality rating | **4.5+/5** user satisfaction | "Sounds like me" test |
 | AI failure rate | **<1%** | Graceful degradation |
 | Token efficiency | **<$0.02/generation** average | Sustainable unit economics |
@@ -102,7 +96,7 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 |--------|--------|-------|
 | Field mapping accuracy | **90%+** on standard forms | Personal info, resume upload |
 | Complex form handling | **75%+** | Multi-page, conditional fields |
-| Undo reliability | **100%** | Never lose user data |
+| Undo reliability | **100%** | Persistent until page refresh/DOM change |
 
 **System Reliability:**
 
@@ -123,13 +117,13 @@ Jobswyft transforms job applications from a soul-crushing grind into a streamlin
 
 ## Measurable Outcomes
 
-**The "Jobswyft Effect" - Quantified:**
+**The "Jobswyft Effect" — Quantified:**
 
 | Outcome | Baseline (Manual) | With Jobswyft | Improvement |
 |---------|-------------------|---------------|-------------|
 | Time per application | 15-30 min | 3-5 min | **5-6x faster** |
 | Applications per session | 2-3 | 8-12 | **4x more volume** |
-| Cover letter quality | Generic/skipped | Personalized | **∞ improvement** |
+| Cover letter quality | Generic/skipped | Personalized | **qualitative leap** |
 | Application completion rate | 60% start→submit | 90%+ | **50% lift** |
 | User confidence score | 3/5 | 4.5/5 | **50% lift** |
 

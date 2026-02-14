@@ -1,6 +1,6 @@
-## Architecture Validation Results
+# Architecture Validation Results
 
-### Coherence Validation ✅
+## Coherence Validation ✅
 
 **Decision Compatibility:** All 16 ADR-REV decisions validated for mutual compatibility. No contradictions found. Config delivery chain (D1 ↔ A2 ↔ I2) and self-healing loop (SE3 ↔ EX4 ↔ A1 ↔ I3) form coherent feedback systems. All technology versions verified as compatible.
 
@@ -8,7 +8,7 @@
 
 **Structure Alignment:** Project structure maps every ADR to specific files/directories. Hexagonal boundary for features/engine/ enforced by convention (no Chrome API imports). New API files follow existing router/service patterns.
 
-### Requirements Coverage Validation ✅
+## Requirements Coverage Validation ✅
 
 **Functional Requirements:** 85 FRs across Extension, Web Dashboard, and API surfaces — all architecturally supported. Web Dashboard FRs partially covered (scaffolded, initialization deferred).
 
@@ -19,7 +19,7 @@
 - Accessibility: WCAG 2.1 AA via UI package patterns
 - Maintainability: Config-driven sites, Zod schemas, domain stores, typed messages
 
-### Implementation Readiness Validation ✅
+## Implementation Readiness Validation ✅
 
 **Decision Completeness:** 16 ADRs with Decision/Rationale/Affects + 8 implementation patterns with code examples + anti-patterns table + enforcement guidelines.
 
@@ -27,7 +27,7 @@
 
 **Pattern Completeness:** AsyncState<T>, typed messages, telemetry envelope, config schema — all async operations, communication, events, and configs have standardized patterns.
 
-### Gap Analysis Results
+## Gap Analysis Results
 
 **Critical Gaps:** None
 
@@ -41,7 +41,7 @@
 2. Selector health alert thresholds — tune based on telemetry data
 3. Config authoring admin dashboard — deferred to post-MVP
 
-### Architecture Completeness Checklist
+## Architecture Completeness Checklist
 
 **✅ Requirements Analysis**
 - [x] Project context thoroughly analyzed (85 FRs, 44 NFRs)
@@ -67,7 +67,7 @@
 - [x] Integration points mapped (6 data flows)
 - [x] Requirements to structure mapping complete (9 feature mappings)
 
-### Architecture Readiness Assessment
+## Architecture Readiness Assessment
 
 **Overall Status:** READY FOR IMPLEMENTATION
 
@@ -86,7 +86,7 @@
 - Admin dashboard for config authoring (after MVP validation)
 - Extension E2E testing with Playwright
 
-### Implementation Handoff
+## Implementation Handoff
 
 **AI Agent Guidelines:**
 - Follow all 16 ADR-REV decisions exactly as documented

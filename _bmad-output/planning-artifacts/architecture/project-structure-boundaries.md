@@ -1,6 +1,6 @@
-## Project Structure & Boundaries
+# Project Structure & Boundaries
 
-### Complete Project Directory Structure
+## Complete Project Directory Structure
 
 ```
 jobswyft/
@@ -230,7 +230,7 @@ jobswyft/
     └── implementation-artifacts/
 ```
 
-### Architectural Boundaries
+## Architectural Boundaries
 
 **API Boundaries:**
 - External: REST endpoints via FastAPI routers (`/v1/auth/*`, `/v1/resumes/*`, `/v1/jobs/*`, `/v1/ai/*`, `/v1/autofill/*`, `/v1/telemetry/*` ← NEW, `/v1/configs/*` ← NEW)
@@ -256,7 +256,7 @@ jobswyft/
 - In-memory — extraction traces during active session
 - Config boundary: static configs (shipped + synced) vs runtime health (local-only)
 
-### Requirements to Structure Mapping
+## Requirements to Structure Mapping
 
 **Scanning Engine** (FR: job detection, field extraction)
 → `features/scanning/` + `features/engine/` + `stores/scan-store.ts`
@@ -285,7 +285,7 @@ jobswyft/
 **AI Services** (FR: matching, autofill data, coaching)
 → `api/services/ai/` (provider abstraction + circuit breaker) + `api/services/match_service.py` + `api/services/coach_service.py`
 
-### Integration Points
+## Integration Points
 
 **Internal Communication:**
 - Extension ↔ API: REST via `lib/api-client.ts` (authenticated with Supabase JWT)
@@ -308,4 +308,3 @@ jobswyft/
 4. **Telemetry:** `extraction-trace.ts` → `telemetry-store.ts` (buffer) → batch POST → API → Supabase
 5. **Config Sync:** API push notification → `config-store.ts` → delta pull → `config-loader.ts` → Zod validate → chrome.storage
 6. **Self-Healing:** Low health score → `heuristic-repair.ts` → repair attempt → success? → propose new selector → telemetry → API → config pipeline
-

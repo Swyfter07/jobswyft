@@ -5,13 +5,13 @@
 **Response Time Requirements:**
 
 - **NFR1:** Page scan completes within 2 seconds on standard job boards
-- **NFR2:** AI generation (cover letter, outreach, chat messages) completes within 5 seconds
+- **NFR2:** AI generation (cover letter, outreach, coach messages) completes within 5 seconds
 - **NFR3a:** Auto match analysis completes within 2 seconds of successful scan
 - **NFR3b:** Detailed match analysis completes within 5 seconds of user request
 - **NFR4:** Autofill executes within 1 second
 - **NFR5:** Sidebar opens within 500ms of user click
 - **NFR6:** Resume parsing completes within 10 seconds of upload
-- **NFR6a:** AI generation endpoints (cover letter, outreach, chat, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
+- **NFR6a:** AI generation endpoints (cover letter, outreach, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
 - **NFR6b:** Match analysis and resume parsing return complete JSON responses (non-streaming)
 
 **Accuracy Requirements:**
@@ -19,6 +19,10 @@
 - **NFR7:** Auto-scan successfully extracts required fields on 95%+ of top 50 job boards
 - **NFR8:** Fallback AI scan succeeds on 85%+ of unknown job sites
 - **NFR9:** Autofill correctly maps 90%+ of standard form fields
+
+**Rate Limiting UX:**
+
+- **NFR52:** API rate limiting returns clear error responses with rate limit status and retry timing information
 
 ## Security
 
@@ -35,6 +39,8 @@
 - **NFR15:** Users can only access their own data (row-level security)
 - **NFR16:** API endpoints require valid authentication
 - **NFR17:** Session tokens expire after reasonable inactivity period
+- **NFR45:** Admin Dashboard requires Supabase admin role for access — separate auth gate from User Dashboard
+- **NFR46:** Admin actions (tier config changes, role assignments) are logged with timestamp and admin user ID
 
 **Privacy Compliance:**
 
@@ -56,6 +62,12 @@
 - **NFR25:** Scan failures display partial results with clear error indication
 - **NFR26:** Network errors provide clear, actionable user feedback
 
+**Stability & Sync:**
+
+- **NFR47:** Extension crash rate below 0.1% across supported Chrome versions
+- **NFR48:** OAuth authentication success rate of 99.5%+
+- **NFR49:** Local extension state and backend data maintain 99.9% synchronization reliability
+
 ## Scalability (Post-MVP)
 
 **Capacity Planning (Post-MVP Targets):**
@@ -76,7 +88,12 @@
 **Browser Compatibility:**
 
 - **NFR34:** Extension functions on Chrome version 88+ (Manifest V3 baseline)
-- **NFR35:** Dashboard supports modern browsers (Chrome, Firefox, Safari, Edge - latest 2 versions)
+- **NFR35:** User Dashboard and Admin Dashboard support modern browsers (Chrome, Firefox, Safari, Edge — latest 2 versions)
+
+**Configuration Propagation:**
+
+- **NFR50:** Configuration changes made via Admin Dashboard propagate to all surfaces within 5 minutes without code deploys or restarts
+- **NFR51:** AI provider abstraction supports user-selectable model per request; model switching adds no latency beyond model-specific inference time
 
 ## Maintainability
 
@@ -84,7 +101,7 @@
 
 - **NFR36:** Codebase supports LLM-assisted development with clear module boundaries
 - **NFR37:** API contract enables independent frontend/backend development
-- **NFR38:** Each app (api, web, extension) is independently deployable
+- **NFR38:** Each surface (API, User Dashboard, Admin Dashboard, Extension) is independently deployable
 
 **Testing (MVP):**
 
@@ -92,17 +109,18 @@
 - **NFR40:** Production code must be thorough with comprehensive error handling
 - **NFR41:** Backend API must handle all edge cases and failure scenarios
 
-**Accessibility:**
+## Accessibility
 
-- **NFR44a:** Extension and dashboard target WCAG 2.1 AA compliance for color contrast (4.5:1 normal text, 3:1 large text/UI components), keyboard navigation, and screen reader support
+- **NFR44a:** Extension and dashboards target WCAG 2.1 AA compliance for color contrast (4.5:1 normal text, 3:1 large text/UI components), keyboard navigation, and screen reader support
 - **NFR44b:** All interactive elements are reachable via keyboard (Tab, Arrow keys, Enter, Escape)
 - **NFR44c:** All icon-only buttons include descriptive ARIA labels for screen readers
 - **NFR44d:** Color is never the sole indicator of information — always paired with text, icons, or numeric values
 - **NFR44e:** All animations respect the `prefers-reduced-motion` system preference; users who enable reduced motion see instant state changes instead of animated transitions
 
-**Logging & Observability (MVP):**
+## Logging & Observability (MVP)
 
 - **NFR42:** Backend API includes comprehensive application logging
 - **NFR43:** Logs viewable directly on Railway dashboard (no streaming required for MVP)
 - **NFR44:** Log levels: ERROR, WARN, INFO for key operations
 
+**Totals:** 52 NFRs across 8 quality areas.

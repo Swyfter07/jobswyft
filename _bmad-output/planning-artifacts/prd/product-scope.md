@@ -1,67 +1,100 @@
 # Product Scope
 
-## MVP - Minimum Viable Product
+## MVP — Minimum Viable Product
 
 **Core Extension (Must Ship):**
 
-- [ ] Google OAuth authentication
-- [ ] Resume upload + AI parsing (up to 5 resumes)
-- [ ] Active resume selection
-- [ ] Scan Page functionality (hybrid: rules + AI fallback)
-- [ ] Auto match analysis (instant, high-level, rate-limited for free users)
-- [ ] All 4 AI Studio tools: Match (detailed analysis), Cover Letter, Outreach, Chat
-- [ ] Autofill with single-step undo
-- [ ] Usage balance display
-- [ ] Free tier (5 generations + 20 auto matches/day) + paid tier integration
+- Google OAuth authentication
+- Resume upload + AI parsing (up to 5 resumes)
+- Active resume selection
+- Scan Page (hybrid: rules + AI fallback)
+- **Job Details Card** with quick match analysis (GPT-4.0 → Claude fallback, <2s)
+  - Two action buttons: **Deep Analysis** → Match tool, **Ask Coach** → Coach/Chat
+- 4 AI Studio tools: **Match** (detailed analysis), **Cover Letter**, **Outreach**, **Coach** (skills UI + free-form chat)
+- Model selection per request (user chooses AI model, differential pricing)
+- Autofill with **persistent undo** (no timeout; removed only on page refresh or DOM field change)
+- Usage balance display (config-driven from backend)
+- Free tier with backend-configurable limits
 
-**Core Dashboard (Must Ship):**
+**Sidebar State Model (Simplified, 3 states):**
 
-- [ ] Jobs list with status tracking
-- [ ] Resume management (view/upload/delete)
-- [ ] Account management (profile, free tier status)
-- [ ] Data & privacy controls with delete flow
-- [ ] User feedback capture (UI placement TBD)
+1. **Logged Out** — Sign-in only
+2. **Non-Job Page** — Resume tray, dashboard link
+3. **Job Detected = Full Power** — All features unlocked (scan, quick match, AI Studio, autofill)
 
-**MVP Monetization:** Free tier only (5 generations + referral bonus). Paid subscriptions deferred to post-MVP.
+**Core User Dashboard (Must Ship — Vercel, Next.js):**
 
-**Planned Pricing Tiers (Post-MVP):**
+- Jobs list with status tracking
+- Resume management (view/upload/delete)
+- Account management (profile, tier status)
+- Data & privacy controls with delete flow
+- Feedback capture
+
+**Core Admin Dashboard (Must Ship — Vercel, Next.js):**
+
+- Admin role management via Supabase
+- Tier configuration management (names, limits, pricing, features)
+- User management / overview
+- Usage analytics
+- System configuration controls
+- Feedback review
+
+**Backend Configuration System:**
+
+- Tier definitions stored in database (name, generation limits, auto match limits, pricing, features)
+- Changes propagate to extension + API + all dashboards
+- All tier logic reads from config (no hardcoded tier values)
+- Model pricing configuration (per-model cost multipliers)
+- Global configuration table for system-wide settings
+
+**Feedback System (MVP — Basic):**
+
+- Page support requests
+- Page/extraction/autofill not working reports
+- AI output satisfaction (good/bad)
+- Feature-specific feedback opportunities
+
+**MVP Monetization:** Free tier only. All users = "free." Paid tier infrastructure ready but not activated.
+
+**Planned Pricing Tiers (Post-MVP, Config-Driven):**
+
+Tier names, limits, and pricing stored in database. Example configuration:
 
 | Tier | Price | Generations/Month | Notes |
 |------|-------|-------------------|-------|
-| Free | $0 | 5 lifetime | +5 per referral signup |
-| Starter | $4.99/mo | 300 | Entry-level paid |
-| Pro | $9.99/mo | 1,000 | Core revenue tier |
-| Power | $19.99/mo | 3,000 | High-volume users |
+| Free | $0 | Configurable (default: 5) | +bonus per referral |
+| Tier 2 | TBD | TBD | Names finalized later |
+| Tier 3 | TBD | TBD | Names finalized later |
+| Tier 4 | TBD | TBD | Names finalized later |
 
-Unused generations roll over to next billing period.
-
-**MVP Success Gate:** A user can install, authenticate, scan a job with instant match analysis, use chat for questions, generate a cover letter, autofill an application, track the job, and provide feedback - end to end.
+Auto matches counted separately from AI generations. Both limits configurable per tier.
 
 ## Growth Features (Post-MVP)
 
-**Phase 2 - Power Features (Months 2-4):**
+**Phase 2 — Power Features (Months 2-4):**
 
-- [ ] Subscription & billing (Stripe integration)
-- [ ] Browser support expansion (Firefox, Edge)
-- [ ] Bulk application mode (queue multiple jobs)
-- [ ] Application templates (save/reuse customizations)
-- [ ] Enhanced job board integrations (LinkedIn Easy Apply, Indeed)
-- [ ] Chrome extension keyboard shortcuts
+- Subscription & billing activation (Stripe integration)
+- Paid tier configuration and launch
+- Browser support expansion (Firefox, Edge)
+- Bulk application mode (queue multiple jobs)
+- Application templates (save/reuse customizations)
+- Enhanced job board integrations (LinkedIn Easy Apply, Indeed)
+- Chrome extension keyboard shortcuts
 
-**Phase 3 - Intelligence Layer (Months 4-6):**
+**Phase 3 — Intelligence Layer (Months 4-6):**
 
-- [ ] Smart job recommendations based on resume
-- [ ] Application success tracking (got interview? got offer?)
-- [ ] AI-powered resume suggestions
-- [ ] Company research integration
-- [ ] Salary insights
+- Smart job recommendations based on resume
+- Application success tracking (got interview? got offer?)
+- AI-powered resume suggestions
+- Company research integration
+- Salary insights
 
-**Phase 4 - Network Effects (Months 6-9):**
+**Phase 4 — Network Effects (Months 6-9):**
 
-- [ ] Team/enterprise accounts
-- [ ] Recruiter/coach mode
-- [ ] Public API for integrations
-- [ ] White-label partnerships
+- Team/enterprise accounts
+- Recruiter/coach mode
+- Public API for integrations
+- White-label partnerships
 
 ## Vision (Future)
 
@@ -90,4 +123,4 @@ Unused generations roll over to next billing period.
 - Salary benchmarking
 - Career trajectory modeling
 
-**Vision Statement:** Jobswyft becomes the AI-powered career platform that doesn't just help you apply - it helps you land your dream job and grow your career.
+**Vision Statement:** Jobswyft becomes the AI-powered career platform that doesn't just help you apply — it helps you land your dream job and grow your career.

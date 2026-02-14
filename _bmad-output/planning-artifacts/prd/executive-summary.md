@@ -1,24 +1,24 @@
 # Executive Summary
 
-**Product:** Jobswyft - AI-powered job application assistant
+**Product:** Jobswyft — AI-powered job application assistant
 
-**Vision:** Transform job applications from a soul-crushing grind into a streamlined, confident experience.
+**Vision:** Transform job applications from a soul-crushing grind into a streamlined, confident experience. Users should feel in control and empowered, not just faster.
 
-**Differentiator:** Apply 5x faster without leaving the job posting page. Automatic job detection, scanning, and instant match analysis—no manual steps. Privacy-first AI that never stores your generated content.
+**Differentiator:** An intelligence layer on top of the job application process. Automatic job detection → instant match analysis → contextual coaching → tailored content generation → one-click autofill. Privacy-first AI that never stores generated content. Config-driven operations that scale without deploys.
 
-**Target Users:** Job seekers across all career stages (students to executives) and industries.
+**Target Users:** Job seekers across all career stages (new grads to executives) and industries.
 
-**Surfaces:** Chrome Extension (primary) + Web Dashboard + Backend API
+**4-Surface Architecture:**
 
-**Tech Stack:**
-- **Extension:** WXT (TypeScript) - modern extension framework, cross-browser support
-- **Dashboard:** Next.js 14+ (App Router, UI-only) - deployed on Vercel
-- **Backend:** FastAPI (Python) - async native, OpenAPI auto-docs - deployed on Railway
-- **Database:** PostgreSQL via Supabase (auth + storage + database)
-- **AI:** Claude 3.5 Sonnet (primary), GPT-4o-mini (fallback)
+| Surface | Stack | Hosting |
+|---------|-------|---------|
+| Chrome Extension (primary) | WXT, React, Zustand | Chrome Web Store |
+| User Dashboard | Next.js, TypeScript | Vercel |
+| Admin Dashboard | Next.js, TypeScript | Vercel |
+| Backend API | FastAPI, Python 3.11+, Supabase | Railway |
 
-**Architecture:** API contract-first monorepo enabling parallel development through generated TypeScript clients from OpenAPI spec.
+**Shared Infrastructure:** `@jobswyft/ui` component library, Supabase (Auth, PostgreSQL, Storage), config-driven tier system.
 
-**MVP Deployment:** Railway (backend API) + Vercel (dashboard) + Local unpacked extension for Chrome.
+**AI Providers:** Claude (primary generation, quick match fallback), GPT-4.0 (primary quick match). User-selectable model per request with differential pricing.
 
----
+**MVP Strategy:** Free tier only. Core Engine (scan + autofill) is #1 priority. Admin Dashboard phased to 1.5 (weeks 2-4 post-launch). Paid tiers activated post-MVP via backend config.

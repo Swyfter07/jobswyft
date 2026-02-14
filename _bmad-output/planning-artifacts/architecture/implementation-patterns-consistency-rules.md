@@ -1,10 +1,10 @@
-## Implementation Patterns & Consistency Rules
+# Implementation Patterns & Consistency Rules
 
-### Pattern Categories Defined
+## Pattern Categories Defined
 
 **Critical Conflict Points Identified:** 8 new pattern areas for Smart Engine, plus confirmation of all existing conventions.
 
-### Existing Patterns (Confirmed)
+## Existing Patterns (Confirmed)
 
 These patterns were established in the original architecture and remain unchanged:
 
@@ -20,7 +20,7 @@ These patterns were established in the original architecture and remain unchange
 | Components | ui/ + custom/ | `components/ui/button.tsx`, `components/custom/match-score.tsx` |
 | Styling | Tokens → Tailwind | Semantic CSS tokens first, utility classes second |
 
-### New Patterns for Smart Engine
+## New Patterns for Smart Engine
 
 **PATTERN-SE1: Site Config File Naming**
 - Convention: Domain-based flat naming
@@ -116,7 +116,7 @@ These patterns were established in the original architecture and remain unchange
   ```
 - Rationale: Exhaustive TypeScript matching catches missing states; composable across all stores; consistent error shape
 
-### Enforcement Guidelines
+## Enforcement Guidelines
 
 **All AI Agents MUST:**
 1. Follow naming conventions from the table above — no exceptions for "temporary" code
@@ -133,7 +133,7 @@ These patterns were established in the original architecture and remain unchange
 - CI linting for file naming conventions
 - PR review checklist for new telemetry events and message types
 
-### Anti-Patterns
+## Anti-Patterns
 
 | Don't | Do Instead |
 |-------|-----------|
@@ -144,7 +144,7 @@ These patterns were established in the original architecture and remain unchange
 | `config_v2.json` filename for versioning | Monotonic integer in config payload, domain-based filename |
 | Single massive Zustand store | Domain-sliced stores (PATTERN-SE7) |
 
-### Error Handling Patterns
+## Error Handling Patterns
 
 **Three-Tier Error Escalation:**
 
@@ -167,7 +167,7 @@ These patterns were established in the original architecture and remain unchange
 - Errors are inline, actionable, and honest — never dead ends
 - Every error state has a next action ("Could not scan" → "Paste description")
 
-### Loading State Patterns
+## Loading State Patterns
 
 **Never use generic spinners.** All loading states have purposeful visual feedback:
 
@@ -186,7 +186,7 @@ These patterns were established in the original architecture and remain unchange
 
 **Button Loading State:** `<Loader2 className="mr-2 size-4 animate-spin" />` replaces icon, text changes to gerund ("Signing in...", "Analyzing...")
 
-### Button Hierarchy
+## Button Hierarchy
 
 **Three-Tier System:**
 
@@ -215,7 +215,7 @@ These patterns were established in the original architecture and remain unchange
 - Icon + label: icon `size-4` with `mr-2`, always left of text
 - Disabled state: `opacity-50 cursor-not-allowed` (shadcn default)
 
-### Extension Shell Layout Contract
+## Extension Shell Layout Contract
 
 The sidebar shell layout is defined once in `<ExtensionSidebar>` and never reinvented:
 
@@ -245,7 +245,7 @@ The sidebar shell layout is defined once in `<ExtensionSidebar>` and never reinv
 
 Active tab indicator uses functional area accent color. Tab switch animation: `animate-tab-content` (slideInFromRight 200ms ease-out).
 
-### Animation Strategy
+## Animation Strategy
 
 **Dependency:** `framer-motion` (~30 kB gzip) — **dynamic import** via `<AnimatedMatchScore>` since it only renders in job-detected state.
 
@@ -273,7 +273,7 @@ Active tab indicator uses functional area accent color. Tab switch animation: `a
 - Framer Motion components read `--motion-enabled` or `useReducedMotion()` hook to skip orchestrated transitions
 - Streaming text: shows full text immediately instead of word-by-word reveal
 
-### Accessibility (WCAG 2.1 AA)
+## Accessibility (WCAG 2.1 AA)
 
 **Color & Contrast:**
 - All text: 4.5:1 contrast ratio against background (OKLCH tokens tuned)
@@ -313,4 +313,3 @@ Active tab indicator uses functional area accent color. Tab switch animation: `a
 3. Never use `div`/`span` for interactive elements — use `button`, `a`, or Radix primitives
 4. Never suppress focus outlines without visible alternative
 5. Test with keyboard before marking any component story as complete
-

@@ -1,6 +1,6 @@
-## Core Engine Implementation Detail
+# Core Engine Implementation Detail
 
-### System Overview
+## System Overview
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────┐
@@ -44,7 +44,7 @@
 └─────────────────────────────────────────────────────────────────────────┘
 ```
 
-### Extraction Pipeline
+## Extraction Pipeline
 
 Per-field, layers execute top-to-bottom. Stop on first accepted match per field.
 
@@ -89,7 +89,7 @@ Post-extraction: Delayed verification if completeness < 0.8 (re-scan after 5s, r
 
 **Success Validation:** `title && company` required. Missing description triggers warning, not block.
 
-### Key TypeScript Interfaces
+## Key TypeScript Interfaces
 
 **Selector Registry Entry (ADR-REV-D1, PATTERN-SE3):**
 
@@ -191,7 +191,7 @@ interface CorrectionEvent {
 }
 ```
 
-### Backend Telemetry Schema
+## Backend Telemetry Schema
 
 ```sql
 -- Telemetry events table (append-only)
@@ -231,7 +231,7 @@ WHERE event_type = 'scan_complete' AND created_at > now() - interval '7 days'
 GROUP BY 1;
 ```
 
-### Shared Core: Scan + Autofill
+## Shared Core: Scan + Autofill
 
 | Capability | Scan Engine | Autofill Engine |
 |-----------|-------------|-----------------|
@@ -275,7 +275,7 @@ features/autofill/        ← DOM writer (uses engine functions)
 └── ats-detector.ts
 ```
 
-### Autofill Engine Pipeline
+## Autofill Engine Pipeline
 
 ```
 1. DETECTION (field-detector.ts)
@@ -301,7 +301,7 @@ features/autofill/        ← DOM writer (uses engine functions)
    Restore all fields from snapshot, remove highlights, record telemetry
 ```
 
-### Performance Strategy
+## Performance Strategy
 
 | Metric | Target | Strategy |
 |--------|--------|----------|
@@ -318,4 +318,3 @@ features/autofill/        ← DOM writer (uses engine functions)
 - Generic CSS + heuristics cover ~10%
 - AI fallback handles remaining ~15%
 - User corrections feed back → improve CSS layer → fewer AI calls over time
-

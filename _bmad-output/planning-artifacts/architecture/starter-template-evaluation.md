@@ -1,14 +1,14 @@
-## Starter Template Evaluation
+# Starter Template Evaluation
 
-### Primary Technology Domain
+## Primary Technology Domain
 
 Full-stack monorepo with Chrome extension specialization — established and actively developed.
 
-### Starter Options Considered
+## Starter Options Considered
 
 This is a **brownfield revision**. All primary starters were selected during original architecture (2026-01-30) and remain current. No starter changes recommended.
 
-### Selected Stack (Confirmed)
+## Selected Stack (Confirmed)
 
 **Rationale:** All frameworks are actively maintained with recent releases. Version audit shows no critical gaps. The existing starter choices align well with Smart Engine requirements.
 
@@ -20,7 +20,7 @@ This is a **brownfield revision**. All primary starters were selected during ori
 | Web | Next.js (scaffolded, not yet initialized) | TBD | Dashboard surface pending |
 | Monorepo | pnpm workspaces | — | Cross-package linking |
 
-### Architectural Decisions Provided by Starters
+## Architectural Decisions Provided by Starters
 
 **Language & Runtime:** TypeScript 5.7 (extension/UI/web), Python 3.11+ (API)
 **Styling:** Tailwind v4 + OKLCH design tokens via globals.css, shadcn/ui primitives
@@ -29,7 +29,7 @@ This is a **brownfield revision**. All primary starters were selected during ori
 **State Management:** Zustand 5 (extension), server state via Supabase
 **Code Organization:** Monorepo with `apps/` (surfaces) + `packages/` (shared libraries)
 
-### Gaps for Smart Engine Evolution
+## Gaps for Smart Engine Evolution
 
 1. **Web Dashboard initialization** — `apps/web/` needs Next.js scaffold when dashboard stories begin
 2. **Extension E2E testing** — Consider Playwright with Chrome extension support for integration testing
@@ -37,4 +37,3 @@ This is a **brownfield revision**. All primary starters were selected during ori
 4. **Real-time config push** — Lightweight SSE/WebSocket client if server-driven config sync adopted
 
 **Note:** These gaps are non-blocking for current development and can be addressed incrementally as Smart Engine stories progress.
-
