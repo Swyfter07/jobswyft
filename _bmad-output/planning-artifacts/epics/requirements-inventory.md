@@ -22,10 +22,11 @@
 - FR13b: Users can expand individual resume blocks to view full content (skills, experience, education, etc.)
 - FR13c: Users can copy resume block content to clipboard with single click
 
-**Job Page Scanning (11):**
+**Job Page Scanning (14):**
 - FR14: System automatically scans job posting pages when detected via URL pattern matching
 - FR14a: System detects job pages using configurable URL patterns for major job boards
 - FR14b: Users can manually enter job details when automatic detection fails, including pasting a full job description for AI analysis
+- FR14c: System can extract job data from job boards not in its preconfigured support list using AI-powered fallback analysis
 - FR15: System extracts job title from job posting pages
 - FR16: System extracts company name from job posting pages
 - FR17: System extracts full job description from job posting pages
@@ -34,12 +35,17 @@
 - FR20: Users can manually correct extracted fields using an element picker
 - FR21: Users can manually edit any extracted field directly
 - FR22: System indicates which required fields are missing after a scan
+- FR22a: System indicates extraction confidence level to the user, distinguishing high-confidence extractions from partial or uncertain results
+- FR22b: System adapts extraction and autofill behavior based on detected application tracking system (ATS) platform
 
-**Match Analysis (6):**
+**Quick Match Analysis (5):**
 - FR23: System automatically generates high-level match analysis upon successful job scan
 - FR23a: Auto match analysis is free for all users with rate limits: 20 per day for free tier, unlimited for paid tiers
 - FR23b: Auto match displays match score (0-100%), skills strengths as green visual indicators, skill gaps as yellow visual indicators
 - FR23c: Auto match layout presents strengths and gaps side-by-side within job card
+- FR23d: Job Details Card displays two action buttons: "Deep Analysis" (navigates to Match tool for detailed analysis) and "Ask Coach" (navigates to Coach tab)
+
+**Detailed Match (2):**
 - FR24: Users can trigger detailed match analysis (costs 1 AI credit)
 - FR25: Detailed match analysis provides comprehensive strengths, gaps, and recommendations beyond high-level view
 
@@ -58,8 +64,8 @@
 - FR36c: Users can provide custom instructions for outreach message generation
 - FR37: Users can regenerate outreach messages with feedback on what to change
 
-**Coach — Conversational AI Chat (AI Studio Sub-Tab) (10):**
-- FR37a: Users can access Coach as an AI Studio sub-tab (alongside Match, Cover Letter, and Outreach) — Coach is the primary chat interface for conversational AI interactions
+**Coach — Conversational AI Chat (10):**
+- FR37a: Users can access Coach as a sub-tab within AI Studio (alongside Match, Cover Letter, and Outreach) — Coach is the primary chat interface for conversational AI interactions
 - FR37b: Coach provides conversational AI responses personalized to the user's active resume and current scanned job
 - FR37c: Coach can advise on application strategy, interview preparation, and skill gap analysis for the current role
 - FR37d: Coach conversations cost 1 AI credit per message
@@ -70,10 +76,18 @@
 - FR37g: Coach displays conversation history within the current session
 - FR37h: Users can start a new Coach conversation to clear history
 
-**Common AI Capabilities (4):**
+**Model Selection (3):**
+- FR38a: Users can select which AI model to use for any paid AI generation request
+- FR38b: System displays per-operation cost (based on selected model) before generation execution
+- FR38c: System charges credits based on the selected model's pricing multiplier
+
+**Common AI Capabilities (7):**
 - FR38: Users can edit any AI-generated output before using it
 - FR39: AI outputs and extracted application questions are ephemeral and not stored on the server
 - FR40: Users can copy any AI-generated output to clipboard with a single click
+- FR40a: System ensures all AI-generated content is grounded in the user's actual resume data — no fabrication of experience, skills, or qualifications
+- FR40b: Match analysis transparently surfaces skill gaps rather than hiding or minimizing them
+- FR40c: Coach provides honest, grounded advice based on actual resume-job fit analysis
 - FR41: System provides visual feedback when AI output is copied
 
 **Form Autofill (9):**
@@ -83,7 +97,7 @@
 - FR43: System maps user data to appropriate form fields automatically
 - FR44: System highlights fields that were autofilled
 - FR44a: System shows visual tick-off state in sidebar for successfully filled fields
-- FR45: Users can undo the last autofill action
+- FR45: Users can undo the last autofill action; undo persists with no timeout and is removed only on page refresh or DOM field change
 - FR46: Autofill includes resume upload when a file upload field is detected
 - FR47: Autofill includes generated cover letter when available
 
@@ -98,7 +112,7 @@
 - FR55: Users can edit notes on a saved job
 - FR56: Users can view notes when reviewing a saved job
 
-**Usage & Subscription Management (12):**
+**Usage & Subscription Management (15):**
 - FR57: Users can view their current AI generation balance
 - FR58: Users can view their remaining auto match analyses for the day (free tier only)
 - FR59: Users can view their account tier status (Free Tier in MVP)
@@ -111,29 +125,46 @@
 - FR64: System blocks paid AI generation features (detailed match, cover letter, outreach, coach) when user has no remaining balance
 - FR65: System displays "upgrade coming soon" message when user is out of paid credits
 - FR66: System blocks auto match analysis when free tier user exceeds daily limit (20/day)
+- FR66a: System supports configurable token-to-credit conversion ratios for flexible pricing (Post-MVP)
+- FR66b: System applies per-model credit multipliers so different AI models consume credits at different rates (Post-MVP)
+- FR66c: System calculates credit cost for Coach conversations based on actual token consumption (Post-MVP)
 
 **Extension Sidebar Experience (14):**
 - FR67: Users can open the extension sidebar (Chrome Side Panel) from any webpage
 - FR67a: Sidebar navigation uses a 3-tab structure: Scan | AI Studio | Autofill
 - FR67b: AI Studio contains 4 sub-tabs: Match | Cover Letter | Outreach | Coach
 - FR68: Users can close the extension sidebar
-- FR69: Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked: scan results, quick match, AI Studio with Coach, autofill)
+- FR69: Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked)
 - FR69a: AI Studio tools (detailed match, cover letter, outreach, coach) unlock when a job is detected AND user has available credits
 - FR69b: Autofill functionality enables only when user is on a page with form fields (application page)
 - FR70: Sidebar displays resume tray for resume access when user is authenticated
-- FR71: All AI Studio tools (including Coach) are locked until a job is scanned and user has available credits
+- FR71: All AI Studio tools (including Coach) are available when a job is detected and user has available credits
 - FR72: Users can navigate to the web dashboard from the sidebar
-- FR72a: When user navigates to a new job page, sidebar resets job data, match data, and Coach chat history while preserving resume selection, auth session, and credits
-- FR72b: When user navigates to a non-job page, sidebar preserves the last job context (user can continue working with previous job data)
-- FR72c: Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs including Coach chat; preserves resume, auth, credits)
-- FR72d: Sidebar tab switching preserves state within each tab (switching Scan → AI Studio → Scan does not re-trigger scan; switching between AI Studio sub-tabs preserves each sub-tab's state)
+- FR72a: When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
+- FR72b: When user navigates to a non-job page, sidebar preserves the last job context
+- FR72c: Users can manually reset job context via a reset button in the sidebar header
+- FR72d: Sidebar tab switching preserves state within each tab
 
-**Web Dashboard (5):**
+**Web Dashboard — User-Facing (5):**
 - FR73: Users can access a dedicated jobs management page
 - FR74: Users can access a dedicated resume management page
 - FR75: Users can access an account management page
 - FR76: Users can access a data and privacy controls page
 - FR77: Dashboard displays user's current usage and subscription status
+
+**Admin Dashboard (7):**
+- FR86: Admin users can access the admin dashboard via a separate auth gate (Supabase admin role required)
+- FR87: Admin users can view and search user accounts with engagement metrics
+- FR88: Admin users can configure tier definitions (names, generation limits, auto match limits, pricing, feature flags)
+- FR89: Admin users can view platform usage analytics (installs, scans, generations, conversion funnel)
+- FR90: Admin users can review, categorize, and tag user feedback submissions
+- FR91: Admin users can manage system-wide configuration settings (rate limits, model pricing, global parameters)
+- FR92: Admin users can assign or revoke admin roles for other users
+
+**Backend Configuration System (3):**
+- FR93: System stores all tier definitions, rate limits, and model pricing as configurable records in the backend database
+- FR94: Configuration changes made via admin dashboard propagate to all surfaces (extension, API, dashboards) without code deploys
+- FR95: All surfaces read tier and credit configuration from backend on startup and respond to configuration updates
 
 **Data Privacy & Controls (5):**
 - FR78: Users can view explanation of what data is stored and where
@@ -149,9 +180,11 @@
 - FR84a: Users can optionally attach a screenshot with their feedback
 - FR85: Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
 
+**Totals: 140 FRs across 19 capability areas.**
+
 ## NonFunctional Requirements
 
-**Performance - Response Times (7):**
+**Performance — Response Times (9):**
 - NFR1: Page scan completes within 2 seconds on standard job boards
 - NFR2: AI generation (cover letter, outreach, coach messages) completes within 5 seconds
 - NFR3a: Auto match analysis completes within 2 seconds of successful scan
@@ -162,188 +195,265 @@
 - NFR6a: AI generation endpoints (cover letter, outreach, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
 - NFR6b: Match analysis and resume parsing return complete JSON responses (non-streaming)
 
-**Performance - Accuracy (3):**
+**Performance — Accuracy (3):**
 - NFR7: Auto-scan successfully extracts required fields on 95%+ of top 50 job boards
 - NFR8: Fallback AI scan succeeds on 85%+ of unknown job sites
 - NFR9: Autofill correctly maps 90%+ of standard form fields
 
-**Security - Data Protection (5):**
+**Performance — Rate Limiting UX (1):**
+- NFR52: API rate limiting returns clear error responses with rate limit status and retry timing information
+
+**Security — Data Protection (5):**
 - NFR10: All data transmitted between extension and API is encrypted using industry-standard transport security protocols
 - NFR11: All data stored in database is encrypted at rest
 - NFR12: Resume files are stored in encrypted file storage
 - NFR13: OAuth tokens are stored securely (not in plaintext)
 - NFR14: AI-generated outputs are never persisted to backend storage
 
-**Security - Access Control (3):**
+**Security — Access Control (5):**
 - NFR15: Users can only access their own data (row-level security)
 - NFR16: API endpoints require valid authentication
 - NFR17: Session tokens expire after reasonable inactivity period
+- NFR45: Admin Dashboard requires Supabase admin role for access — separate auth gate from User Dashboard
+- NFR46: Admin actions (tier config changes, role assignments) are logged with timestamp and admin user ID
 
 **Privacy Compliance (3):**
 - NFR18: System supports GDPR right-to-deletion requests
 - NFR19: System supports CCPA data access requests
 - NFR20: User consent is obtained before data collection
 
-**Reliability (6):**
+**Reliability — Availability (3):**
 - NFR21: Backend API maintains 99.9% uptime (excluding planned maintenance)
-- NFR22: No offline mode; extension displays clear "no connection" state when network is unavailable. All AI and data features require an active network connection.
+- NFR22: No offline mode; extension displays clear "no connection" state when network is unavailable
 - NFR23: AI provider failures are handled gracefully with user notification
+
+**Reliability — Error Handling (3):**
 - NFR24: AI generation failures do not decrement user's usage balance
 - NFR25: Scan failures display partial results with clear error indication
 - NFR26: Network errors provide clear, actionable user feedback
 
-**Scalability - Post-MVP (3):**
-- NFR27: System supports 50,000 monthly active users at 3 months post-launch (Post-MVP)
-- NFR28: System supports 150,000 monthly active users at 12 months post-launch (Post-MVP)
-- NFR29: Architecture supports scaling to handle increased concurrent user load without code changes (Post-MVP)
+**Reliability — Stability & Sync (3):**
+- NFR47: Extension crash rate below 0.1% across supported Chrome versions
+- NFR48: OAuth authentication success rate of 99.5%+
+- NFR49: Local extension state and backend data maintain 99.9% synchronization reliability
 
-**Integration (4):**
+**Scalability — Post-MVP (3):**
+- NFR27: System supports 50,000 monthly active users at 3 months post-launch
+- NFR28: System supports 150,000 monthly active users at 12 months post-launch
+- NFR29: Architecture supports scaling without code changes
+
+**Integration — External Services (4):**
 - NFR30: System maintains compatibility with Chrome Manifest V3 requirements
 - NFR31: AI provider abstraction allows switching between Claude and GPT
 - NFR32: Backend service handles auth, database, and storage operations
 - NFR33: Payment processing system handles subscription lifecycle events (Post-MVP)
 
-**Browser Compatibility (2):**
+**Integration — Browser Compatibility (2):**
 - NFR34: Extension functions on Chrome version 88+ (Manifest V3 baseline)
-- NFR35: Dashboard supports modern browsers (Chrome, Firefox, Safari, Edge - latest 2 versions)
+- NFR35: User Dashboard and Admin Dashboard support modern browsers (Chrome, Firefox, Safari, Edge — latest 2 versions)
+
+**Integration — Configuration Propagation (2):**
+- NFR50: Configuration changes made via Admin Dashboard propagate to all surfaces within 5 minutes without code deploys or restarts
+- NFR51: AI provider abstraction supports user-selectable model per request; model switching adds no latency beyond model-specific inference time
 
 **Maintainability (3):**
 - NFR36: Codebase supports LLM-assisted development with clear module boundaries
 - NFR37: API contract enables independent frontend/backend development
-- NFR38: Each app (api, web, extension) is independently deployable
+- NFR38: Each surface (API, User Dashboard, Admin Dashboard, Extension) is independently deployable
 
-**Testing - MVP (3):**
+**Testing — MVP (3):**
 - NFR39: Minimal automated testing acceptable for MVP
 - NFR40: Production code must be thorough with comprehensive error handling
 - NFR41: Backend API must handle all edge cases and failure scenarios
 
 **Accessibility (5):**
-- NFR44a: Extension and dashboard target WCAG 2.1 AA compliance for color contrast (4.5:1 normal text, 3:1 large text/UI components), keyboard navigation, and screen reader support
+- NFR44a: Extension and dashboards target WCAG 2.1 AA compliance for color contrast (4.5:1 normal text, 3:1 large text/UI components), keyboard navigation, and screen reader support
 - NFR44b: All interactive elements are reachable via keyboard (Tab, Arrow keys, Enter, Escape)
 - NFR44c: All icon-only buttons include descriptive ARIA labels for screen readers
 - NFR44d: Color is never the sole indicator of information — always paired with text, icons, or numeric values
-- NFR44e: All animations respect the `prefers-reduced-motion` system preference; users who enable reduced motion see instant state changes instead of animated transitions
+- NFR44e: All animations respect the `prefers-reduced-motion` system preference
 
 **Logging & Observability (3):**
 - NFR42: Backend API includes comprehensive application logging
 - NFR43: Logs viewable directly on Railway dashboard (no streaming required for MVP)
 - NFR44: Log levels: ERROR, WARN, INFO for key operations
 
+**Totals: 59 NFRs across 15 quality areas.**
+
 ## Additional Requirements
 
-**From Architecture - Starter Templates:**
-- Architecture specifies starter templates for project initialization:
-  - Extension: `pnpm dlx wxt@latest init apps/extension --template react`
-  - Web: `pnpm dlx create-next-app@latest apps/web --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"`
-  - API: `cd apps/api && uv init --name jobswyft-api`
+**From Architecture — Starter Stack (Confirmed, Brownfield):**
+- Extension: WXT + React 19 + Zustand 5 (MV3, ^0.20.13)
+- UI Library: Vite 7 + shadcn/ui 3 + Tailwind 4 + Storybook 10
+- API: FastAPI + uv + Supabase (Python 3.11+)
+- Web: Next.js (scaffolded, not yet initialized)
+- Monorepo: pnpm workspaces
 
-**From Architecture - Monorepo Structure:**
-- pnpm workspaces for TypeScript packages
-- uv for Python (API)
-- Package initialization order: ui → apps (extension, web)
+**From Architecture — Engine Package Extraction (ADR-REV-D4):**
+- Extract core detection/autofill logic to `packages/engine/` as `@jobswyft/engine`
+- Zero Chrome API dependencies enforced at package level
+- Hexagonal boundary: pure functional core testable with JSDOM/happy-dom
+- Extension becomes thin Chrome adapter layer importing from engine package
 
-**From Architecture - Shared Packages:**
-- `packages/ui`: Shared component library with Storybook, Tailwind v4, design tokens in globals.css
-- `packages/types`: Shared TypeScript types, generated from OpenAPI
+**From Architecture — Middleware Extraction Pipeline (ADR-REV-SE5):**
+- Koa-style middleware pipeline with shared `DetectionContext`
+- Pipeline: BoardDetector → JsonLd → Gate(0.85) → CssSelector → Gate(0.75) → OgMeta → Heuristic → Gate(0.70) → AiFallback → PostProcess
+- Inline confidence gates act as circuit breakers
+- Site configs can customize layer ordering via `pipelineHints`
 
-**From Architecture - Database Schema:**
-- 6 tables: profiles, resumes, jobs, usage_events, global_config, feedback
-- Row-Level Security (RLS) policies required
-- Supabase migrations in `supabase/migrations/`
+**From Architecture — Smart Engine Patterns:**
+- ADR-REV-SE1: Hybrid config + confidence escalation for extraction
+- ADR-REV-SE2: Weighted multi-signal confidence scoring (Similo-inspired)
+- ADR-REV-SE3: Self-healing selectors with fallback chain + heuristic repair
+- ADR-REV-SE4: Config-driven site support with JSON configs + custom extractor escape hatches
+- ADR-REV-SE6: React controlled form bypass — native property descriptor setter + synthetic events (mandatory)
+- ADR-REV-SE7: Shadow DOM traversal — TreeWalker + browser-specific shadow root access
+- ADR-REV-SE8: Operation ID (opid) field addressing via `data-jf-opid` attribute
 
-**From Architecture - API Design:**
-- OpenAPI spec at `specs/openapi.yaml` (source of truth)
-- API versioning with `/v1/` prefix
-- Response envelope pattern: `{ success: true, data: {...} }` or `{ success: false, error: {...} }`
-- 11 standardized error codes
-- snake_case JSON → camelCase TypeScript transformation at client boundary
+**From Architecture — Extension Patterns:**
+- ADR-REV-EX1: Zustand state sync via chrome.storage + typed message commands
+- ADR-REV-EX2: DOM readiness via MutationObserver + config hints + idle detection
+- ADR-REV-EX3: Element picker — side panel guided, minimal page injection
+- ADR-REV-EX4: Correction feedback — local apply + telemetry + auto-propose selectors
+- ADR-REV-EX5: Service worker lifecycle — `chrome.alarms` for all periodic tasks, no setTimeout/setInterval
+- ADR-REV-EX6: Admin Dashboard — role-based routing in apps/web/ with Next.js route groups
 
-**From Architecture - AI Provider:**
-- Claude 3.5 Sonnet as primary, GPT-4o-mini as fallback
-- Provider interface for abstraction/switching
-- User preference stored in profiles.preferred_ai_provider
-- Fallback configurable via global_config
-- SSE streaming for generative endpoints (cover letter, outreach, coach) with cancel option
+**From Architecture — API & Communication:**
+- ADR-REV-A1: Telemetry batch endpoint (`POST /v1/telemetry/batch`, fire-and-forget)
+- ADR-REV-A2: Config sync — pull with Supabase Realtime push notification
+- ADR-REV-A3: AI fallback — provider abstraction + circuit breaker (N failures in M minutes)
+- SSE streaming for generative endpoints (cover letter, outreach, coach) with cancel
 - Match analysis and resume parsing return complete JSON (non-streaming)
 
-**From Architecture - UI Package:**
-- @jobswyft/ui shared component library (shadcn/ui + Tailwind v4 + Storybook 10)
-- OKLCH color space for design tokens in globals.css (single source of truth)
-- Dark mode via .dark class on root element
-- Vite 7.x for library build
-- Consumer pattern: import '@jobswyft/ui/styles' + component imports
+**From Architecture — Infrastructure:**
+- ADR-REV-I1: Config pipeline — git-managed JSON with fast-path override for emergencies
+- ADR-REV-I2: Bundled defaults + runtime overlay for extension configs
+- ADR-REV-I3: Selector health dashboard + automated alerts
+- ADR-REV-I4: Per-surface CI/CD + integration pipeline
 
-**From Architecture - Extension:**
-- Chrome Manifest V3 (service workers, chrome.storage)
-- Chrome Side Panel API for persistent sidebar alongside job boards (NOT content script Shadow DOM)
-- Zustand stores per domain (auth, resume, job, scan)
-- Chrome permissions: sidePanel, activeTab, scripting, storage, tabs, identity, host_permissions
-- 3-state sidebar model (Logged Out, Non-Job Page, Job Detected = Full Power)
-- Sidebar tabs: 3 main (Scan | AI Studio | Autofill) + AI Studio has 4 sub-tabs (Match | Cover Letter | Outreach | Coach)
-- State preservation rules per event (tab switch, job URL change, manual reset, re-login)
+**From Architecture — Database Schema:**
+- 6 core tables: profiles, resumes, jobs, usage_events, global_config, feedback
+- New tables: scan_telemetry (ADR-REV-A1), site_configs (ADR-REV-A2), selector_health (ADR-REV-I3)
+- Row-Level Security (RLS) policies required
+- Hybrid credit system: daily match allocation + lifetime/monthly AI credits
 
-**From Architecture - Deployment:**
-- Railway CLI for API deployment
-- Vercel CLI for Dashboard deployment
-- Supabase CLI for database migrations
-- Local unpacked extension for MVP
-- No CI/CD pipeline for MVP (CLI direct deploy)
+**From Architecture — Implementation Patterns (PATTERN-SE1 through SE10):**
+- Site config naming: `{domain}.json` in `configs/sites/`
+- Extension messages: dot-namespaced discriminated unions (`scan.trigger`, `autofill.start`)
+- Selector registry: static config (synced) + runtime health (local)
+- Telemetry event envelope: type + version + timestamp + sessionId + payload
+- Confidence: 0-1 float internally, 0-100% display only
+- Config version: monotonic integer for delta sync
+- Extension stores: domain-sliced (`useCoreStore`, `useScanStore`, etc.)
+- AsyncState<T>: discriminated union for all async operations
+- Native setter pattern: mandatory for all form field writes
+- opid addressing: mandatory for all field detection/fill
 
-**From Architecture - Implementation Priority:**
-- Backend API + Database first
-- Dashboard second
-- Extension third
+**From UX Design — Visual Design:**
+- OKLCH semantic token system with functional area colors (scan/studio/autofill/coach)
+- Gradient depth buttons per functional area (`.btn-gradient-depth-{area}`)
+- Two-tone card pattern with accent-tinted sections
+- Animated SVG match score + count-up (framer-motion, dynamic import)
+- Sequential autofill animation (600ms stagger per field)
+- Dashed border empty states for incomplete/missing items
+- Credit lock pattern with blurred preview + unlock button
+- Shell layout contract: header (shrink-0) + tabs (shrink-0) + content (flex-1 scroll) + footer (shrink-0)
 
-**From Architecture - MCP Tooling:**
-- Serena: Code exploration, symbol navigation, refactoring
-- Supabase MCP: Database operations
-- Tavily: Web search for research
-- Context7: Latest library documentation
+**From UX Design — Interaction Patterns:**
+- 3-state progressive unlock: Logged Out → Non-Job Page → Job Detected = Full Power
+- Auto-scan on URL change (zero clicks)
+- Three-tier error escalation: inline retry → section degraded → full re-auth
+- Loading states by duration: <500ms none, 500ms-2s skeleton, 2s-10s animated progress, >10s streaming
+- Tab state preservation within session
+- Job switch resets: job + match + AI Studio + Coach chat; preserves resume + auth + credits
+
+**From UX Design — Accessibility:**
+- WCAG 2.1 AA target
+- Semantic HTML structure (aside > header + nav + main + footer)
+- ARIA patterns per component (live regions, role="img" for scores, role="alert" for errors)
+- Reduced motion: CSS custom property + Framer Motion useReducedMotion()
+- Minimum 32px touch targets for icon buttons, 40px for primary buttons
+- axe-core via @storybook/addon-a11y in CI
+
+## Implementation Context (Alpha Phase Carry-Forward)
+
+**Alpha Phase Status (Closed 2026-02-14):**
+- Epics 0–8 + partial Epic EXT completed (20 stories done, 4 superseded)
+- 142 extension tests + ~80 API tests in suite
+- 35 API endpoints across 10 routers implemented
+
+**Backend Tech Debt (11 items, all Open):**
+
+| ID | Description | Priority | Affects |
+|----|-------------|----------|---------|
+| AUTH-01 | E2E token exchange verification (extension signInWithIdToken → Supabase → API JWT) | High | Auth flow |
+| AUTH-02 | GET /v1/auth/me — verify returns complete profile | High | Profile display |
+| AUTH-03 | POST /v1/auth/logout server-side invalidation verification | Medium | Security |
+| AUTH-04 | Profile auto-creation + 5 free credits on first login | High | Onboarding |
+| MATCH-01 | POST /v1/ai/match needs `match_type` param: `auto` (free) vs `detailed` (1 credit) | High | Match analysis |
+| MATCH-02 | Daily auto-match rate limiting for free tier (20/day) | High | Usage system |
+| AI-01 | Deprecate /v1/ai/answer endpoint (replaced by Chat per PRD) | Medium | API cleanup |
+| CHAT-01 | Build POST /v1/ai/chat endpoint (does not exist) | High | AI Chat feature |
+| CHAT-02 | AI prompt template for job-context chat | High | AI Chat feature |
+| CHAT-03 | Question suggestion generation | Medium | UX enhancement |
+| FEEDBACK-01 | Screenshot attachment support for feedback endpoint | Low | Feedback feature |
+
+**Additional Tech Debt from Story Planning:**
+
+| ID | Description | Priority | Affects |
+|----|-------------|----------|---------|
+| COACH-01 | AI prompt template for coaching context (strategic/advisory tone) | High | Coach feature |
+| COACH-02 | Match-analysis-based coaching prompt generation (FR37f) | Medium | Coach feature |
+| COACH-03 | Shared ChatPanel base component — Coach + AI Chat share UI | Medium | EXT.8, EXT.12 |
+
+**Superseded Alpha Backlog Stories (Redefine in New Epics):**
+
+| Story | Description | Rationale |
+|-------|-------------|-----------|
+| 2-3 | Resume parsed data extensions (highlights, certs, projects, website) | Nice-to-have, not blocking |
+| 3-3 | Job data schema enhancements (posted_at, logo, employment_type surface) | Nice-to-have, not blocking |
+| 6-3 | Credit system API/UI alignment (unified credit endpoint shape) | Needed for EXT.10 |
+
+**Key Alpha Learnings (Inform Story Acceptance Criteria):**
+
+1. Verify tool/library versions before coding — avoid v3/v4 mismatch disasters
+2. Admin client for writes, RLS client for reads — established pattern
+3. Fixture-based testing for DOM parsing — mandate for extension parsing stories
+4. Live testing catches what unit tests miss — mandate for extension stories
+5. Code review catches real bugs (race conditions, security issues) — keep rigorous process
+6. Story-to-story learning compounds — continue Dev Agent Record pattern
+7. Bundle size discipline for content scripts — set budgets, measure early
+8. Plan for API gaps during frontend work — Epic API runs parallel with Epic EXT
+9. Don't over-plan components before architecture decisions — make foundational decisions first
+10. Extension crash rate, OAuth success rate targets — NFR47 (<0.1%), NFR48 (99.5%+)
+
+**Existing Implementation State:**
+- Extension: EXT.1 done (WXT setup + login), EXT.2–EXT.5.5 done in alpha, EXT.6–EXT.12 pending
+- API: 35 endpoints across 10 routers, API.1–API.6 defined but pending
+- Web Dashboard: Scaffolded (Next.js), not yet initialized
+- UI Library: shadcn/ui 3 + Tailwind 4 + Storybook 10, official + reference components established
+- Component methodology: Atomic → Composite → Feature build order, CVA variants, semantic tokens only
 
 ## FR Coverage Map
 
-| FR | Story | Description |
-|----|-------|-------------|
-| FR1 | EXT.1 (DONE) | Google OAuth sign-in |
-| FR2 | EXT.3 | Sign out from extension |
-| FR3 | WEB | Sign out from dashboard |
-| FR4 | EXT.3 | Session persistence across browser sessions |
-| FR5 | WEB | View account profile (Dashboard) |
-| FR6 | WEB | Account deletion (Dashboard + API) |
-| FR7-FR13c | EXT.4 | Resume upload, parse, view, select, blocks, copy |
-| FR14-FR19, FR21-FR22 | EXT.5 | Auto-scan, extraction, manual entry fallback, missing fields |
-| FR20 | POST-MVP | Element picker for manual field correction (deferred) |
-| FR23-FR25 | EXT.6 | Auto match, detailed match analysis |
-| FR26-FR30 | EXT.7 | Cover letter: generate, tone, length, instructions, regenerate, PDF |
-| FR36-FR37, FR36a-c | EXT.7 | Outreach: generate, tone, length, instructions, regenerate |
-| FR37a-FR37h, FR37f-i, FR37f-ii | EXT.12 + API.2 + API.4 | Coach (AI Studio sub-tab): UI (EXT.12), chat endpoint (API.2), prompt templates (API.4) |
-| FR38-FR41 | EXT.7, EXT.12 | Common AI: edit output, ephemeral, copy, visual feedback |
-| FR42-FR47 | EXT.9 | Autofill: preview, fill, undo, resume upload, cover letter |
-| FR48-FR49 | EXT.5 | Save job from extension, auto "Applied" status |
-| FR50-FR56 | WEB | Job tracking dashboard (Dashboard) |
-| FR57-FR60 | EXT.10 | Balance view, tier status, initial credits |
-| FR60a-b, FR66 | EXT.10 | Daily auto match limits |
-| FR61-FR62 | POST-MVP | Subscription management |
-| FR63 | POST-MVP | Referral credits |
-| FR64-FR65 | EXT.10 | Credit blocking, upgrade message |
-| FR67-FR67b | EXT.3 | Sidebar tabs (3 main + 4 AI Studio sub-tabs including Coach) |
-| FR68-FR69b | EXT.3 | Sidebar states (Logged Out, Non-Job Page, Job Detected = Full Power), unlock conditions |
-| FR70-FR72 | EXT.3 | Resume tray slot, AI locked state, dashboard link |
-| FR72a-FR72d | EXT.3 | State preservation: job switch reset, non-job page persistence, manual reset, tab state |
-| FR73-FR77 | WEB | Dashboard pages |
-| FR78-FR82 | WEB | Privacy, data controls |
-| FR83-FR84a | EXT.11 | Feedback form in sidebar |
-| FR85 | WEB | Backend feedback storage (API exists) |
-| NFR6a | API.1, API.6 | SSE streaming infrastructure + endpoint migration |
-| NFR6b | API.3 | Match/resume parsing stay JSON (non-streaming) |
-| MATCH-01 | API.3 | Match type param (auto vs detailed) |
-| MATCH-02 | API.3 | Daily auto-match rate limiting (20/day free tier) |
-| CHAT-01 | API.2 | Build `POST /v1/ai/chat` endpoint (serves Coach) |
-| CHAT-02 | API.2 | Coach/chat AI prompt template |
-| COACH-01 | API.4 | Coach AI prompt template (strategic/advisory, skill-based) |
-| COACH-02 | API.4 | Match-analysis-based coaching prompt generation |
-| AI-01 | API.5 | Remove `/v1/ai/answer` dead endpoint |
+**Authentication & Account (FR1-FR6):** Implemented in Alpha (Epics 1-2). Auth tech debt (AUTH-01 to AUTH-04) resolved in Epic 3.
+**Resume Management (FR7-FR13c):** Implemented in Alpha (Epic 2 + EXT.4). Superseded story 2-3 folded into Epic 9.
+**Job Page Scanning (FR14-FR22b):** Implemented in Alpha (Epic 3 + EXT.5/5.5). Engine extraction in Epic 2. Superseded story 3-3 folded into Epic 9.
+**Quick Match Analysis (FR23-FR23d):** Epic 3 (Job Match Intelligence)
+**Detailed Match (FR24-FR25):** Epic 3 (Job Match Intelligence)
+**Cover Letter (FR26-FR30, FR26a):** Epic 4 (AI Content Studio)
+**Outreach Messages (FR36-FR37, FR36a-c):** Epic 4 (AI Content Studio)
+**Coach — AI Chat (FR37a-FR37h, FR37f-i, FR37f-ii):** Epic 5 (AI Career Coach)
+**Model Selection (FR38a-FR38c):** Epic 7 (Usage, Credits & Upgrade Flow)
+**Common AI Capabilities (FR38-FR41):** Cross-cutting across Epics 3, 4, 5 (implemented per AI feature)
+**Form Autofill (FR42-FR47, FR42a-b, FR44a):** Epic 2 (Engine — autofill core) + Epic 6 (Smart Form Autofill — UI + integration)
+**Job Tracking (FR48-FR56):** Implemented in Alpha (Epic 5). Surfaced in Epic 9 (Web Dashboard).
+**Usage & Subscription (FR57-FR66c):** FR57-FR60b implemented in Alpha (Epic 6). Advanced credits: Epic 7. Post-MVP: Epic 11. Superseded story 6-3 folded into Epic 7.
+**Extension Sidebar (FR67-FR72d):** Implemented in Alpha (EXT.1-EXT.5.5). Refined across Epics 1, 3-8.
+**Web Dashboard (FR73-FR77):** Epic 9 (Web Dashboard)
+**Admin Dashboard (FR86-FR92):** Epic 10 (Admin Dashboard)
+**Backend Configuration (FR93-FR95):** Epic 10 (Admin Dashboard)
+**Data Privacy (FR78-FR82):** Implemented in Alpha (Epic 7). Surfaced in Epic 9 (Web Dashboard privacy page).
+**User Feedback (FR83-FR85, FR83a, FR84, FR84a):** Epic 8 (User Feedback)
 
-**FR coverage updated for Coach ↔ Chat merge (v2.1). FR31-35 removed (absorbed into Coach FR37a-h). Backend tech debt mapped to Epic API.**
-
----
+**Coverage verification: All 140 FRs mapped. No orphaned requirements.**

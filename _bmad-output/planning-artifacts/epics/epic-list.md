@@ -1,117 +1,225 @@
 # Epic List
 
-## Epic 8: Deployment & Infrastructure (COMPLETE)
+## Parallel Execution Plan
 
-Deploy all Jobswyft surfaces to their production hosting platforms.
+```
+Phase 0 (Foundation — Parallel):
+  Epic 1: Extension Stabilization & UI Polish  ─────────┐
+  Epic 2: Engine Package                        ─────────┤
+                                                         ▼
+Phase 1 (4 Parallel Lanes):                       ┌──────────────┐
+  Lane 1: Epic 3 (Match) + IC-1                   │   Engine +   │
+  Lane 2: Epic 6 (Autofill) + IC-2                │   Clean UI   │
+  Lane 3: Epic 8 (Feedback)                        │  Foundation  │
+  Lane 4: Epic 9 (Web Dashboard)                   └──────────────┘
 
-**Epic Goal:** All Jobswyft services are deployed and accessible on production URLs.
+Phase 2 (Parallel):
+  Lane 1: Epic 4 (Content Studio)
+  Lane 3: Epic 7 (Usage/Credits)
+  Lane 4: Epic 10 (Admin Dashboard)
 
-**Stories:**
+Phase 3:
+  Lane 1: Epic 5 (Coach) + IC-3
+  Lane 4: IC-4
 
-- Story 8.1: Railway API Deployment (DONE)
-- _(subsequent: Vercel Dashboard deploy, Extension packaging — future)_
+Post-MVP:
+  Epic 11: Subscriptions & Growth
+```
+
+## Integration Checkpoints
+
+| Checkpoint | After | Validates | Scope |
+|------------|-------|-----------|-------|
+| **IC-1** | Epic 2 + Epic 3 | Engine extraction → Match analysis E2E | Scan a job → engine extracts → API match → score displayed in sidebar |
+| **IC-2** | Epic 6 | Engine autofill → Form fill E2E | Detect fields → engine maps → native fill → undo works across ATS platforms |
+| **IC-3** | Epic 4 + Epic 5 | Full AI Studio + Coach E2E | Cover letter + outreach + coach streaming, credit deduction, model selection |
+| **IC-4** | Epic 9 | Cross-surface integration | Same data visible in extension AND dashboard, auth shared, state consistent |
 
 ---
 
-## Epic EXT: Chrome Extension Sidepanel Build (Full-Stack Vertical Slices)
+## Epic 1: Extension Stabilization & UI Polish
 
-Build the Chrome Extension surface end-to-end, one sidepanel section at a time. Each story delivers a **complete vertical slice**: UI components (Storybook) → Extension integration (WXT + Zustand) → Backend wiring (API) → E2E verification.
+Fix bugs, inconsistent UI, missing Storybook stories, and component gaps across the existing vibecoded extension codebase. Establish a clean, reliable baseline before building new features.
 
-**Epic Goal:** Users can install and use the Jobswyft Chrome Extension with full UI/UX across all 3 sidebar states — login, navigation, resume management, job scanning, AI-powered content generation (including Coach), form autofill, usage tracking, and feedback — with complete backend API integration.
+**Epic Goal:** All existing extension components are bug-free, visually consistent across dark/light themes, have complete Storybook story coverage, and follow the established design language (semantic tokens, CVA variants, accessibility).
 
-**FRs covered:** FR1-FR4, FR7-FR30, FR36-FR37, FR36a-c, FR37a-FR37h, FR37f-i, FR37f-ii, FR38-FR47, FR57-FR60, FR60a-b, FR64-FR72d, FR83-FR84a
+**Scope:**
+- Bug fixes across existing extension components
+- UI consistency audit — enforce semantic tokens, eliminate hardcoded colors
+- Missing Storybook stories — ensure all official components have complete coverage (dark/light, 360×600 viewport)
+- Component gaps — build any missing blocks/features referenced but not implemented
+- Design language compliance (CVA variants, `.text-micro`, accent card patterns, scrollbar utilities)
+- Dark/light theme parity
+- Extension state management cleanup (Zustand store hygiene)
+- Test coverage for critical user flows
 
-**Surfaces:** packages/ui (Storybook), apps/extension (WXT Side Panel), apps/api (FastAPI)
-
-**Story approach:** All stories defined upfront. Each follows the [Component Development Methodology](#component-development-methodology).
-
-**Stories (14 total, 1 done, 1 absorbed):**
-
-| #           | Story                                        | User Value                                                                           | Status      |
-| ----------- | -------------------------------------------- | ------------------------------------------------------------------------------------ | ----------- |
-| EXT.1       | WXT Extension Setup & Login                  | Users can install extension and sign in with Google                                  | DONE        |
-| EXT.2       | Component Library Reorganization             | Clean foundation: proper categories, reference separation, consistent patterns       | Pending     |
-| EXT.3       | Authenticated Navigation & Sidebar Shell     | Users can navigate the 3-tab sidebar with state preservation                         | Pending     |
-| EXT.4       | Resume Management                            | Users can upload, view, and manage resumes in the sidebar                            | Pending     |
-| **EXT.4.5** | **Component Library Cleanup & UX Alignment** | **Developers build on official UX-compliant components, not prototype references**   | **Pending** |
-| EXT.5       | Job Page Scanning & Job Card                 | Users can scan job pages and save jobs                                               | Pending     |
-| **EXT.5.5** | **Scan Engine Hardening**                    | **Reliable extraction with confidence scoring, sentinel detection, and AI fallback** | **Pending** |
-| EXT.6       | Match Analysis (Auto + Detailed)             | Users can instantly see how they match a job                                         | Pending     |
-| EXT.7       | AI Studio — Cover Letter & Outreach          | Users can generate tailored application content (SSE streaming)                      | Pending     |
-| EXT.8       | ~~AI Studio — Chat~~ **(ABSORBED INTO EXT.12)** | ~~Users can ask questions about a job posting~~ → Merged into Coach                 | Absorbed    |
-| EXT.9       | Form Autofill                                | Users can auto-fill application forms                                                | Pending     |
-| EXT.10      | Usage, Credits & Upgrade Prompts             | Users can see their balance and understand limits                                    | Pending     |
-| EXT.11      | Feedback                                     | Users can report issues and share ideas                                              | Pending     |
-| EXT.12      | Coach — AI Studio Sub-Tab                    | Users get conversational AI coaching with skill selection for the current job         | Pending     |
-
-**Dependencies:**
-
-```
-EXT.1 (DONE) → EXT.2 (cleanup) → EXT.3 (navigation, auth store, state preservation)
-                                     ↓
-                                  EXT.4 (resume) → EXT.4.5 (component cleanup & UX alignment) → EXT.5 (scan + job card)
-                                                                                                      ↓
-                                                                                               EXT.5.5 (scan hardening) → EXT.6 (match) → EXT.7 (cover letter + outreach, SSE streaming)
-                                                                                                                 → EXT.9 (autofill)
-                                                                                                                 → EXT.12 (Coach AI Studio sub-tab, absorbs EXT.8, SSE streaming)
-                                                                                                   EXT.10 (credits — cross-cutting, retrofits into EXT.6-9, EXT.12)
-                                                                                                   EXT.11 (feedback — standalone)
-```
+**FRs covered:** No new FRs — quality improvement for existing FR implementations (FR1-FR4, FR7-FR22b, FR48-FR56, FR67-FR72d)
+**NFRs addressed:** NFR44a-e (accessibility), NFR47 (crash rate), NFR5 (sidebar open speed)
+**Surfaces:** `packages/ui/`, `apps/extension/`
+**Phase:** 0 (Foundation) — parallel with Epic 2
+**Dependencies:** None — fixes what exists
 
 ---
 
-## Epic API: Backend API Enhancements (Parallel with EXT)
+## Epic 2: Engine Package — Detection, Extraction & Autofill Core
 
-Deliver all backend API changes discovered during Chrome Extension development. Each story addresses a gap identified in Epic EXT stories, enabling frontend stories to proceed with mocked responses while real endpoints are built in parallel.
+Extract the core detection, extraction, and autofill logic into `packages/engine/` (`@jobswyft/engine`). Zero Chrome API dependencies. Testable with JSDOM/happy-dom. Extension becomes a thin Chrome adapter layer.
 
-**Epic Goal:** All API endpoints required by the Chrome Extension are production-ready — SSE streaming infrastructure, new chat/coach endpoints, match parameter additions, rate limiting, and dead endpoint cleanup.
+**Epic Goal:** A standalone, thoroughly tested engine package that powers both job scanning and form autofill across any surface, with a middleware extraction pipeline, confidence scoring, self-healing selectors, and config-driven site support.
 
-**Surfaces:** apps/api (FastAPI), supabase/migrations (if schema changes needed)
+**Scope:**
+- Extract existing scan engine from extension into `packages/engine/`
+- Middleware extraction pipeline (BoardDetector → JsonLd → Gate(0.85) → CssSelector → Gate(0.75) → OgMeta → Heuristic → Gate(0.70) → AiFallback → PostProcess)
+- Smart engine patterns: confidence scoring (SE2), self-healing selectors (SE3), config-driven site support (SE4)
+- Autofill core: field detection, native property descriptor setter (SE6), shadow DOM traversal (SE7), opid addressing (SE8)
+- Site config system (`configs/sites/{domain}.json`)
+- Extension adapter layer (thin Chrome wrapper importing from engine)
+- Comprehensive JSDOM/happy-dom test suite with job board fixtures
 
-**Relationship to Epic EXT:** Epic API runs **in parallel** with Epic EXT. Frontend stories mock API responses; when an API story ships, the corresponding EXT story wires to the real endpoint. Tech debt items from EXT stories feed directly into API stories.
-
-**Stories (initial — grows as EXT stories discover gaps):**
-
-| #                                        | Story                                   | Source Tech Debt   | Unblocks             | Priority |
-| ---------------------------------------- | --------------------------------------- | ------------------ | -------------------- | -------- |
-| API.1                                    | SSE Streaming Infrastructure            | NFR6a              | EXT.7, EXT.12         | High     |
-| API.2                                    | Chat Endpoint (`POST /v1/ai/chat`)      | CHAT-01, CHAT-02   | EXT.12                | High     |
-| API.3                                    | Match Type Param + Daily Rate Limiting  | MATCH-01, MATCH-02 | EXT.6, EXT.10        | High     |
-| API.4                                    | Coach Prompt Templates                  | COACH-01, COACH-02 | EXT.12               | High     |
-| API.5                                    | Remove `/v1/ai/answer` Endpoint         | AI-01              | EXT.7 (cleanup)      | Medium   |
-| API.6                                    | SSE Migration — Cover Letter + Outreach | NFR6a              | EXT.7                | Medium   |
-| _More discovered during EXT development_ |                                         |                    |                      |
-
-**Dependencies:**
-
-```
-API.1 (SSE infra) → API.2 (chat endpoint, uses SSE)
-                   → API.6 (cover-letter + outreach SSE migration)
-API.2 → API.4 (coach prompts, extends chat endpoint with context_type)
-API.3 (match params) — standalone
-API.5 (remove /answer) — standalone
-```
-
-**FRs covered:** FR37a-FR37h, FR37f-i, FR37f-ii (backend), NFR6a-NFR6b (streaming)
+**FRs covered (infrastructure for):** FR14-FR22b (scanning), FR42-FR47 (autofill)
+**Architecture:** ADR-REV-D4, ADR-REV-SE1-SE8, ADR-REV-SE5, PATTERN-SE1-SE10
+**NFRs addressed:** NFR1 (<2s scan), NFR4 (<1s autofill), NFR7 (95% extraction), NFR8 (85% AI fallback), NFR9 (90% autofill mapping)
+**Surfaces:** `packages/engine/`, `apps/extension/` (adapter)
+**Phase:** 0 (Foundation) — parallel with Epic 1
+**Dependencies:** None — extracts from existing alpha code
 
 ---
 
-## Epic WEB: Web Dashboard (Future)
+## Epic 3: Job Match Intelligence
 
-Build the Next.js web dashboard for job tracking, account management, and privacy controls.
+Users instantly see how well they match any scanned job — free quick analysis on every scan, paid deep analysis on demand.
 
-**Epic Goal:** Users can manage their jobs, resumes, account, and data privacy from a web dashboard.
+**Epic Goal:** After scanning a job, users see a match score with strengths/gaps in the job card. They can request detailed analysis for deeper recommendations. Auth E2E flow is verified.
 
-**FRs covered:** FR3, FR5-6, FR50-56, FR73-77, FR78-82, FR85
+**FRs covered:** FR23-FR25, FR23a-FR23d
+**Tech debt resolved:** AUTH-01, AUTH-02, AUTH-04, MATCH-01, MATCH-02
+**Existing stories:** EXT.6 + API.3 + IC-1 integration story
+**NFRs addressed:** NFR3a (<2s auto match), NFR3b (<5s detailed), NFR24 (no credit decrement on failure)
+**Surfaces:** `apps/extension/`, `apps/api/`, `packages/ui/`
+**Phase:** 1, Lane 1 (AI Features)
+**Dependencies:** Epic 2 (engine extraction output)
 
 ---
 
-## Epic POST-MVP: Subscriptions & Growth (Future)
+## Epic 4: AI Content Studio — Cover Letter & Outreach
 
-Add paid subscription management and referral credits.
+Users generate tailored cover letters (with tone, length, custom instructions, PDF export) and recruiter outreach messages, delivered via real-time SSE streaming.
 
-**Epic Goal:** Users can subscribe to paid plans, manage billing, and earn referral credits.
+**Epic Goal:** Users can generate, edit, regenerate, copy, and export AI-powered cover letters and outreach messages with streaming delivery and cancel support.
 
-**FRs covered:** FR61-62, FR63, NFR27-29, NFR33
+**FRs covered:** FR26-FR30, FR26a, FR36-FR37, FR36a-c, FR38-FR41
+**Tech debt resolved:** AI-01 (remove /v1/ai/answer), SSE infrastructure
+**Existing stories:** EXT.7 + API.1 + API.5 + API.6
+**NFRs addressed:** NFR2 (<5s generation), NFR6a (SSE streaming), NFR24 (no credit decrement on failure)
+**Surfaces:** `apps/extension/`, `apps/api/`, `packages/ui/`
+**Phase:** 2, Lane 1 (AI Features)
+**Dependencies:** Epic 3 (match data context), API.1 SSE infrastructure built here
+
+---
+
+## Epic 5: AI Career Coach
+
+Users get personalized career coaching — conversational AI grounded in resume and job context, with skill-based entry points, session management, and streaming responses.
+
+**Epic Goal:** Users can start coached conversations about interview prep, application strategy, and skill gaps for the current job, with full session management and credit tracking.
+
+**FRs covered:** FR37a-FR37h, FR37f-i, FR37f-ii
+**Tech debt resolved:** CHAT-01, CHAT-02, CHAT-03, COACH-01, COACH-02, COACH-03
+**Existing stories:** EXT.12 + API.2 + API.4 + IC-3 integration story
+**NFRs addressed:** NFR2 (<5s generation), NFR6a (SSE streaming)
+**Surfaces:** `apps/extension/`, `apps/api/`, `packages/ui/`
+**Phase:** 3, Lane 1 (AI Features)
+**Dependencies:** Epic 4 (SSE infrastructure from API.1)
+
+---
+
+## Epic 6: Smart Form Autofill
+
+Users auto-fill application forms with one click — field preview before execution, intelligent mapping, visual confirmation, undo, resume upload, and cover letter injection.
+
+**Epic Goal:** Users can preview detected form fields, execute autofill with visual feedback, undo any fill, and include resume/cover letter uploads — across major ATS platforms.
+
+**FRs covered:** FR42-FR47, FR42a-FR42b, FR44a
+**Existing stories:** EXT.9 + IC-2 integration story
+**NFRs addressed:** NFR4 (<1s autofill), NFR9 (90% mapping accuracy)
+**Surfaces:** `apps/extension/`, `packages/ui/`, `packages/engine/`
+**Phase:** 1, Lane 2 (Autofill) — parallel with Lane 1
+**Dependencies:** Epic 2 (engine autofill core)
+
+---
+
+## Epic 7: Usage, Credits & Upgrade Flow
+
+Users track their AI credit balance, see daily auto-match limits, select AI models with per-operation pricing, and receive clear upgrade prompts when credits run out.
+
+**Epic Goal:** Users understand their usage at a glance, get blocked gracefully when out of credits, and see clear paths to upgrade. Credit gates retrofitted across all AI features.
+
+**FRs covered:** FR38a-FR38c, FR57-FR66c (excluding FR61-FR63 Post-MVP)
+**Superseded story resolved:** 6-3 (credit alignment)
+**Existing stories:** EXT.10
+**NFRs addressed:** NFR24 (no decrement on failure), NFR52 (rate limiting UX)
+**Surfaces:** `apps/extension/`, `apps/api/`, `packages/ui/`
+**Phase:** 2, Lane 3 (Cross-cutting)
+**Dependencies:** At least one credit-consuming feature live (Epic 3 or 4)
+**Note:** Cross-cutting — retrofits credit gates into Epics 3-6
+
+---
+
+## Epic 8: User Feedback
+
+Users report bugs, suggest features, and share ideas with contextual metadata and optional screenshot attachment from the sidebar.
+
+**Epic Goal:** Users can submit categorized feedback with automatic context capture and optional screenshots, accessible from the extension sidebar.
+
+**FRs covered:** FR83-FR85, FR83a, FR84, FR84a
+**Tech debt resolved:** FEEDBACK-01 (screenshot attachment)
+**Existing stories:** EXT.11
+**Surfaces:** `apps/extension/`, `apps/api/`, `packages/ui/`
+**Phase:** 1, Lane 3 (Cross-cutting)
+**Dependencies:** None beyond alpha auth — standalone feature
+
+---
+
+## Epic 9: Web Dashboard — Jobs, Resumes & Account
+
+Users manage their tracked jobs, resumes, account settings, and privacy controls from a full web dashboard with usage visibility.
+
+**Epic Goal:** Users can access a web dashboard to view/manage jobs, resumes, account settings, data privacy, and usage — sharing the same backend as the extension.
+
+**FRs covered:** FR3, FR5-FR6, FR50-FR56, FR73-FR77, FR78-FR82
+**Superseded stories resolved:** 2-3 (resume extensions), 3-3 (job schema enhancements)
+**Existing stories:** None (greenfield Next.js) + IC-4 integration story
+**NFRs addressed:** NFR35 (browser compatibility), NFR38 (independent deployment)
+**Surfaces:** `apps/web/`, `packages/ui/`
+**Phase:** 1-2, Lane 4 (Web)
+**Dependencies:** None — uses existing backend APIs from alpha
+
+---
+
+## Epic 10: Admin Dashboard
+
+Admins configure tier definitions, manage users, review analytics and feedback, and manage system-wide configuration — all changes propagate to all surfaces without code deploys.
+
+**Epic Goal:** Admin users can manage the entire platform: users, tiers, pricing, rate limits, analytics, and feedback — with configuration propagation to all surfaces.
+
+**FRs covered:** FR86-FR95
+**NFRs addressed:** NFR45-NFR46 (admin access control + audit logging), NFR50 (config propagation <5min)
+**Surfaces:** `apps/web/` (route groups per ADR-REV-EX6), `apps/api/`
+**Phase:** 2, Lane 4 (Web)
+**Dependencies:** Epic 9 (shared Next.js app shell)
+
+---
+
+## Epic 11: Subscriptions & Growth (Post-MVP)
+
+Users subscribe to paid plans, manage billing, and earn referral credits.
+
+**Epic Goal:** Replace mocked Stripe integration with real subscription management, billing portal, and referral credit system.
+
+**FRs covered:** FR61-FR63, FR66a-FR66c
+**NFRs addressed:** NFR27-NFR29 (scalability), NFR33 (payment processing)
+**Surfaces:** `apps/web/`, `apps/api/`, `apps/extension/`
+**Phase:** Post-MVP
+**Dependencies:** Epic 7 (credit system), Epic 9 (web dashboard)
 
 ---
