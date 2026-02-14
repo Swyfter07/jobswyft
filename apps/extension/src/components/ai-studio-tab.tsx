@@ -234,9 +234,9 @@ export function AIStudioTab() {
 
                   {matchResult && (
                     <>
-                      <Section title="Strengths" items={matchResult.strengths} color="text-green-600 dark:text-green-400" />
-                      <Section title="Gaps" items={matchResult.gaps} color="text-amber-600 dark:text-amber-400" />
-                      <Section title="Recommendations" items={matchResult.recommendations} color="text-blue-600 dark:text-blue-400" />
+                      <Section title="Strengths" items={matchResult.strengths} color="text-success" />
+                      <Section title="Gaps" items={matchResult.gaps} color="text-warning" />
+                      <Section title="Recommendations" items={matchResult.recommendations} color="text-info" />
                     </>
                   )}
                 </div>

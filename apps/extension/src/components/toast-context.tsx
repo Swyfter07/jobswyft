@@ -48,7 +48,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
               t.variant === "error"
                 ? "border-destructive/50 bg-destructive/10 text-destructive"
                 : t.variant === "success"
-                  ? "border-green-500/50 bg-green-500/10 text-green-700 dark:text-green-400"
+                  ? "border-success/50 bg-success/10 text-success"
                   : "border-border bg-card text-card-foreground"
             }`}
           >

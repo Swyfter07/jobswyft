@@ -1,5 +1,5 @@
 # generated: 2026-02-14
-# project: Jobswyft
+# project: jobswyft-docs
 # project_key: NOKEY
 # tracking_system: file-system
 # story_location: _bmad-output/implementation-artifacts
@@ -34,7 +34,7 @@
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
 generated: 2026-02-14
-project: Jobswyft
+project: jobswyft-docs
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
@@ -90,17 +90,142 @@ alpha_phase:
   epic-EXT-retrospective: done
 
 # =============================================================================
-# BETA PHASE — NEW EPICS START HERE
+# BETA PHASE — STARTED 2026-02-14
 # =============================================================================
-# New epics will be created via /bmad-bmm-create-epics-and-stories
-# Sprint planning via /bmad-bmm-sprint-planning
+# Parallel Execution Plan:
+#   Phase 0 (Foundation): Epic 1 + Epic 2 (parallel)
+#   Phase 1 (4 Lanes):    Epic 3 + Epic 6 + Epic 8 + Epic 9 (parallel)
+#   Phase 2 (3 Lanes):    Epic 4 + Epic 7 + Epic 10 (parallel)
+#   Phase 3:              Epic 5 + IC-4
+#   Post-MVP:             Epic 11
 #
-# Inputs for new epic planning:
-#   - Backend tech debt: _bmad-output/implementation-artifacts/backend-tech-debt.md
-#   - Alpha retro learnings: _bmad-output/implementation-artifacts/alpha-phase-retro-2026-02-14.md
-#   - Remaining extension stories: EXT-6 through EXT-12 (in epic files)
-#   - Superseded backlog: 2-3 (resume extensions), 3-3 (job schema), 6-3 (credit alignment)
+# Integration Checkpoints:
+#   IC-1 (Story 3.5): After Epic 2 + Epic 3 — Scan → Engine → Match E2E
+#   IC-2 (Story 6.3): After Epic 6 — Engine → Autofill E2E
+#   IC-3 (Story 5.4): After Epic 4 + Epic 5 — Full AI Studio + Coach E2E
+#   IC-4 (Story 9.5): After Epic 9 — Cross-Surface Integration
+#
+# Inputs carried forward from alpha:
+#   - Backend tech debt: backend-tech-debt.md (11 items)
+#   - Alpha retro learnings: alpha-phase-retro-2026-02-14.md
+#   - Superseded backlog: 2-3 (resume), 3-3 (job schema), 6-3 (credits)
 # =============================================================================
 
 development_status:
-  # New epics will be added here by sprint planning workflow
+  # ─── Epic 1: Extension Stabilization & UI Polish ───────────────────────────
+  # Phase 0 (Foundation) — parallel with Epic 2
+  # Surfaces: packages/ui/, apps/extension/
+  epic-1: in-progress
+  1-1-design-system-theme-foundation-audit: review
+  1-2-shell-layout-navigation-fixes: backlog
+  1-3-card-block-component-standardization: backlog
+  1-4-ai-studio-feature-view-fixes: backlog
+  1-5-storybook-completion-variant-coverage: backlog
+  1-6-state-management-audit-integration-validation: backlog
+  epic-1-retrospective: optional
+
+  # ─── Epic 2: Engine Package — Detection, Extraction & Autofill Core ────────
+  # Phase 0 (Foundation) — parallel with Epic 1
+  # Surfaces: packages/engine/, apps/extension/ (adapter)
+  epic-2: in-progress
+  2-1-engine-package-scaffold-scan-engine-extraction: in-progress
+  2-2-middleware-extraction-pipeline: backlog
+  2-3-smart-extraction-patterns-confidence-self-healing: backlog
+  2-4-site-config-system-board-registry: backlog
+  2-5-autofill-engine-core-field-detection-form-filling: backlog
+  2-6-extension-adapter-engine-integration: backlog
+  epic-2-retrospective: optional
+
+  # ─── Epic 3: Job Match Intelligence ────────────────────────────────────────
+  # Phase 1, Lane 1 (AI Features)
+  # Surfaces: apps/extension/, apps/api/, packages/ui/
+  # Dependencies: Epic 2 (engine extraction output)
+  epic-3: backlog
+  3-1-auth-e2e-verification-profile-auto-creation: backlog
+  3-2-match-type-api-enhancement-daily-rate-limiting: backlog
+  3-3-auto-match-ui-score-skills-job-card-integration: backlog
+  3-4-detailed-match-analysis-credit-gating: backlog
+  3-5-ic-1-scan-engine-match-e2e-validation: backlog
+  epic-3-retrospective: optional
+
+  # ─── Epic 4: AI Content Studio — Cover Letter & Outreach ──────────────────
+  # Phase 2, Lane 1 (AI Features)
+  # Surfaces: apps/extension/, apps/api/, packages/ui/
+  # Dependencies: Epic 3 (match data context)
+  epic-4: backlog
+  4-1-sse-streaming-infrastructure: backlog
+  4-2-cover-letter-outreach-sse-migration-endpoint-cleanup: backlog
+  4-3-cover-letter-ui-generation-editing-export: backlog
+  4-4-outreach-message-ui-generation-copy: backlog
+  epic-4-retrospective: optional
+
+  # ─── Epic 5: AI Career Coach ───────────────────────────────────────────────
+  # Phase 3, Lane 1 (AI Features)
+  # Surfaces: apps/extension/, apps/api/, packages/ui/
+  # Dependencies: Epic 4 (SSE infrastructure)
+  epic-5: backlog
+  5-1-chat-endpoint-coach-prompt-templates: backlog
+  5-2-coach-ui-chat-interface-skills-streaming: backlog
+  5-3-coach-session-management-context-reset: backlog
+  5-4-ic-3-full-ai-studio-coach-e2e-validation: backlog
+  epic-5-retrospective: optional
+
+  # ─── Epic 6: Smart Form Autofill ──────────────────────────────────────────
+  # Phase 1, Lane 2 (Autofill)
+  # Surfaces: apps/extension/, packages/ui/, packages/engine/
+  # Dependencies: Epic 2 (engine autofill core)
+  epic-6: backlog
+  6-1-autofill-ui-field-preview-fill-execution: backlog
+  6-2-autofill-undo-resume-upload-cover-letter-injection: backlog
+  6-3-ic-2-scan-engine-autofill-e2e-validation: backlog
+  epic-6-retrospective: optional
+
+  # ─── Epic 7: Usage, Credits & Upgrade Flow ─────────────────────────────────
+  # Phase 2, Lane 3 (Cross-cutting)
+  # Surfaces: apps/extension/, apps/api/, packages/ui/
+  # Dependencies: At least one credit-consuming feature live (Epic 3 or 4)
+  epic-7: backlog
+  7-1-usage-store-credit-display: backlog
+  7-2-credit-gating-model-selection-upgrade-prompts: backlog
+  epic-7-retrospective: optional
+
+  # ─── Epic 8: User Feedback ────────────────────────────────────────────────
+  # Phase 1, Lane 3 (Cross-cutting)
+  # Surfaces: apps/extension/, apps/api/, packages/ui/
+  # Dependencies: None — standalone feature
+  epic-8: backlog
+  8-1-feedback-form-context-capture: backlog
+  8-2-screenshot-attachment-support: backlog
+  epic-8-retrospective: optional
+
+  # ─── Epic 9: Web Dashboard — Jobs, Resumes & Account ──────────────────────
+  # Phase 1-2, Lane 4 (Web)
+  # Surfaces: apps/web/, packages/ui/
+  # Dependencies: None — uses existing backend APIs
+  epic-9: backlog
+  9-1-dashboard-shell-authentication: backlog
+  9-2-jobs-management-page: backlog
+  9-3-resume-management-page: backlog
+  9-4-account-privacy-page: backlog
+  9-5-ic-4-cross-surface-integration-validation: backlog
+  epic-9-retrospective: optional
+
+  # ─── Epic 10: Admin Dashboard ──────────────────────────────────────────────
+  # Phase 2, Lane 4 (Web)
+  # Surfaces: apps/web/, apps/api/
+  # Dependencies: Epic 9 (shared Next.js app shell)
+  epic-10: backlog
+  10-1-admin-auth-gate-dashboard-shell: backlog
+  10-2-user-management-feedback-review: backlog
+  10-3-tier-configuration-system-settings: backlog
+  10-4-platform-analytics-role-management: backlog
+  epic-10-retrospective: optional
+
+  # ─── Epic 11: Subscriptions & Growth (Post-MVP) ───────────────────────────
+  # Post-MVP
+  # Surfaces: apps/web/, apps/api/, apps/extension/
+  # Dependencies: Epic 7 (credit system), Epic 9 (web dashboard)
+  epic-11: backlog
+  11-1-stripe-integration-subscription-management: backlog
+  11-2-referral-system-advanced-credit-pricing: backlog
+  epic-11-retrospective: optional

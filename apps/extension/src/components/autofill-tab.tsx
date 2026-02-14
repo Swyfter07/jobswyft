@@ -399,7 +399,7 @@ export function AutofillTab() {
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>{fields.length} fields detected</span>
             <span className="text-border">|</span>
-            <span className="text-green-600 dark:text-green-400">{readyCount} ready</span>
+            <span className="text-success">{readyCount} ready</span>
             <span className="text-border">|</span>
             <span>{filledCount} filled</span>
             {store.board && (
@@ -411,7 +411,7 @@ export function AutofillTab() {
             {canUndo && undoTimeLeft !== null && (
               <>
                 <span className="text-border">|</span>
-                <span className="text-amber-600 dark:text-amber-400">
+                <span className="text-warning">
                   Undo {Math.floor(undoTimeLeft / 60)}:{String(undoTimeLeft % 60).padStart(2, "0")}
                 </span>
               </>
@@ -468,10 +468,10 @@ function ConfidenceBadge({ confidence }: { confidence: number }) {
   const pct = Math.round(confidence * 100);
   const color =
     confidence > 0.7
-      ? "text-green-600 dark:text-green-400"
+      ? "text-success"
       : confidence > 0.4
-        ? "text-amber-600 dark:text-amber-400"
-        : "text-red-600 dark:text-red-400";
+        ? "text-warning"
+        : "text-destructive";
 
   return <span className={`text-[10px] font-mono ${color}`}>{pct}%</span>;
 }
@@ -513,10 +513,10 @@ function FieldGroup({
               f.status === "filled"
                 ? "border-border/50 text-muted-foreground opacity-60"
                 : f.status === "ready"
-                  ? "border-green-500/30 bg-green-500/5"
+                  ? "border-success/30 bg-success/5"
                   : f.status === "generating"
                     ? "border-primary/30 bg-primary/5"
-                    : "border-amber-500/30 bg-amber-500/5"
+                    : "border-warning/30 bg-warning/5"
             }`}
           >
             <div className="flex items-center gap-1.5 truncate mr-2">
@@ -528,13 +528,13 @@ function FieldGroup({
                 <span className="text-muted-foreground">Filled</span>
               )}
               {f.status === "ready" && (
-                <span className="text-green-600 dark:text-green-400">Ready</span>
+                <span className="text-success">Ready</span>
               )}
               {f.status === "generating" && (
                 <span className="text-primary animate-pulse">Generating...</span>
               )}
               {f.status === "missing" && (
-                <span className="text-amber-600 dark:text-amber-400">
+                <span className="text-warning">
                   {onClickField ? "Click to AI fill" : "No value"}
                 </span>
               )}

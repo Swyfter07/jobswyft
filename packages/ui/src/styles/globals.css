@@ -49,6 +49,32 @@
   --success-foreground: oklch(1 0 0);
   --warning: oklch(0.681 0.162 76);
   --warning-foreground: oklch(0.21 0.006 285.885);
+  --destructive-foreground: oklch(1 0 0);
+
+  /* Info state - Blue */
+  --info: oklch(0.588 0.199 245);
+  --info-foreground: oklch(1 0 0);
+
+  /* ─── Functional area accents ─────────────────────────────────────── */
+  /* Scan (blue ~245 hue) */
+  --scan-accent: oklch(0.588 0.199 245);
+  --scan-accent-foreground: oklch(0.99 0 0);
+  --scan-accent-muted: oklch(0.93 0.03 245);
+
+  /* Studio (violet ~293 hue) — aliases AI accent */
+  --studio-accent: var(--ai-accent);
+  --studio-accent-foreground: var(--ai-accent-foreground);
+  --studio-accent-muted: oklch(0.93 0.04 293);
+
+  /* Autofill (green ~155 hue) */
+  --autofill-accent: oklch(0.60 0.17 155);
+  --autofill-accent-foreground: oklch(0.99 0 0);
+  --autofill-accent-muted: oklch(0.93 0.03 155);
+
+  /* Coach (orange ~58 hue) — aliases primary */
+  --coach-accent: var(--primary);
+  --coach-accent-foreground: var(--primary-foreground);
+  --coach-accent-muted: oklch(0.93 0.04 58);
 
   /* Card accent - subtle orange for borders & header backgrounds */
   --card-accent-border: oklch(0.89 0.068 70);
@@ -99,6 +125,32 @@
   --success-foreground: oklch(0.12 0.03 55);
   --warning: oklch(0.762 0.165 76);
   --warning-foreground: oklch(0.12 0.03 55);
+  --destructive-foreground: oklch(0.96 0.005 55);
+
+  /* Info state - Blue (brighter for dark) */
+  --info: oklch(0.688 0.199 245);
+  --info-foreground: oklch(0.12 0.03 55);
+
+  /* ─── Functional area accents (dark) ──────────────────────────────── */
+  /* Scan (blue ~245 hue) */
+  --scan-accent: oklch(0.688 0.199 245);
+  --scan-accent-foreground: oklch(0.14 0 0);
+  --scan-accent-muted: oklch(0.22 0.04 245);
+
+  /* Studio (violet ~293 hue) — aliases AI accent */
+  --studio-accent: var(--ai-accent);
+  --studio-accent-foreground: var(--ai-accent-foreground);
+  --studio-accent-muted: oklch(0.22 0.05 293);
+
+  /* Autofill (green ~155 hue) */
+  --autofill-accent: oklch(0.70 0.17 155);
+  --autofill-accent-foreground: oklch(0.14 0 0);
+  --autofill-accent-muted: oklch(0.22 0.04 155);
+
+  /* Coach (orange ~58 hue) — aliases primary */
+  --coach-accent: var(--primary);
+  --coach-accent-foreground: var(--primary-foreground);
+  --coach-accent-muted: oklch(0.22 0.05 58);
 
   /* Card accent - deeper orange for dark mode borders & backgrounds */
   --card-accent-border: oklch(0.37 0.08 55);
@@ -146,8 +198,24 @@
   --color-success-foreground: var(--success-foreground);
   --color-warning: var(--warning);
   --color-warning-foreground: var(--warning-foreground);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-info: var(--info);
+  --color-info-foreground: var(--info-foreground);
   --color-card-accent-border: var(--card-accent-border);
   --color-card-accent-bg: var(--card-accent-bg);
+  /* Functional area accents */
+  --color-scan-accent: var(--scan-accent);
+  --color-scan-accent-foreground: var(--scan-accent-foreground);
+  --color-scan-accent-muted: var(--scan-accent-muted);
+  --color-studio-accent: var(--studio-accent);
+  --color-studio-accent-foreground: var(--studio-accent-foreground);
+  --color-studio-accent-muted: var(--studio-accent-muted);
+  --color-autofill-accent: var(--autofill-accent);
+  --color-autofill-accent-foreground: var(--autofill-accent-foreground);
+  --color-autofill-accent-muted: var(--autofill-accent-muted);
+  --color-coach-accent: var(--coach-accent);
+  --color-coach-accent-foreground: var(--coach-accent-foreground);
+  --color-coach-accent-muted: var(--coach-accent-muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-muted: var(--muted);
   --color-secondary-foreground: var(--secondary-foreground);
@@ -262,6 +330,65 @@
 @keyframes indeterminate {
   0% { transform: translateX(-100%); }
   100% { transform: translateX(400%); }
+}
+
+/* ─── Gradient depth buttons ──────────────────────────────────────── */
+/* Per-area CTA gradient buttons with colored glow. */
+.btn-gradient-depth-scan {
+  background: linear-gradient(to bottom right, var(--scan-accent), var(--scan-accent-muted));
+  border-top: 1px solid oklch(1 0 0 / 0.2);
+  box-shadow: 0 4px 12px oklch(from var(--scan-accent) l c h / 0.3);
+  color: var(--scan-accent-foreground);
+}
+.btn-gradient-depth-scan:hover {
+  box-shadow: 0 6px 16px oklch(from var(--scan-accent) l c h / 0.4);
+}
+
+.btn-gradient-depth-studio {
+  background: linear-gradient(to bottom right, var(--studio-accent), var(--studio-accent-muted));
+  border-top: 1px solid oklch(1 0 0 / 0.2);
+  box-shadow: 0 4px 12px oklch(from var(--studio-accent) l c h / 0.3);
+  color: var(--studio-accent-foreground);
+}
+.btn-gradient-depth-studio:hover {
+  box-shadow: 0 6px 16px oklch(from var(--studio-accent) l c h / 0.4);
+}
+
+.btn-gradient-depth-autofill {
+  background: linear-gradient(to bottom right, var(--autofill-accent), var(--autofill-accent-muted));
+  border-top: 1px solid oklch(1 0 0 / 0.2);
+  box-shadow: 0 4px 12px oklch(from var(--autofill-accent) l c h / 0.3);
+  color: var(--autofill-accent-foreground);
+}
+.btn-gradient-depth-autofill:hover {
+  box-shadow: 0 6px 16px oklch(from var(--autofill-accent) l c h / 0.4);
+}
+
+.btn-gradient-depth-coach {
+  background: linear-gradient(to bottom right, var(--coach-accent), var(--coach-accent-muted));
+  border-top: 1px solid oklch(1 0 0 / 0.2);
+  box-shadow: 0 4px 12px oklch(from var(--coach-accent) l c h / 0.3);
+  color: var(--coach-accent-foreground);
+}
+.btn-gradient-depth-coach:hover {
+  box-shadow: 0 6px 16px oklch(from var(--coach-accent) l c h / 0.4);
+}
+
+/* ─── Reduced motion support ─────────────────────────────────────── */
+:root {
+  --motion-duration: 200ms;
+  --motion-enabled: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-duration: 0s;
+    --motion-enabled: 0;
+  }
+
+  .animate-tab-content {
+    animation: none;
+  }
 }
 
 .dark .scroll-fade-y {

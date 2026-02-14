@@ -54,9 +54,13 @@ const preview: Preview = {
           name: "Desktop",
           styles: { width: "1440px", height: "900px" },
         },
-        extensionPopup: {
-          name: "Extension Popup",
-          styles: { width: "400px", height: "600px" },
+        extensionDefault: {
+          name: "Extension Default",
+          styles: { width: "360px", height: "600px" },
+        },
+        extensionWide: {
+          name: "Extension Wide",
+          styles: { width: "500px", height: "600px" },
         },
       },
     },
