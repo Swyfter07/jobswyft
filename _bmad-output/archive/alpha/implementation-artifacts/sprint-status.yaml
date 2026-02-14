@@ -1,0 +1,115 @@
+# generated: 2026-01-31
+# project: Jobswyft
+# project_key: NOKEY
+# tracking_system: file-system
+# story_location: _bmad-output/implementation-artifacts
+
+# STATUS DEFINITIONS:
+# ==================
+# Epic Status:
+#   - backlog: Epic not yet started
+#   - in-progress: Epic actively being worked on
+#   - done: All stories in epic completed
+#
+# Epic Status Transitions:
+#   - backlog → in-progress: Automatically when first story is created (via create-story)
+#   - in-progress → done: Manually when all stories reach 'done' status
+#
+# Story Status:
+#   - backlog: Story only exists in epic file
+#   - ready-for-dev: Story file created in stories folder
+#   - in-progress: Developer actively working on implementation
+#   - review: Ready for code review (via Dev's code-review workflow)
+#   - done: Story completed
+#
+# Retrospective Status:
+#   - optional: Can be completed but not required
+#   - done: Retrospective has been completed
+#
+# WORKFLOW NOTES:
+# ===============
+# - Epic transitions to 'in-progress' automatically when first story is created
+# - Stories can be worked in parallel if team capacity allows
+# - SM typically creates next story after previous one is 'done' to incorporate learnings
+# - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
+
+generated: 2026-01-31
+project: Jobswyft
+project_key: NOKEY
+tracking_system: file-system
+story_location: _bmad-output/implementation-artifacts
+
+development_status:
+  # Epic 0: UI Component Library Migration (PRIORITY)
+  # NOTE: Pivoted to shadcn UI approach on 2026-02-03 (see sprint-change-proposal-2026-02-03.md)
+  # NOTE: Architectural decision documented 2026-02-03: Vite (not Next.js) for packages/ui build tooling
+  epic-0: in-progress
+  0-1-foundation-design-tokens-ui-scaffold: superseded  # Replaced by shadcn UI approach
+  0-2-core-atoms-icons-typography-badge-button: superseded  # Replaced by shadcn UI approach
+  0-1-NEW-shadcn-ui-setup: done
+  0-3-form-atoms-input-textarea-select-progressbar-logo: superseded  # Covered by Sureel-UI migration
+  0-4-molecules-card-modal: superseded  # Covered by Sureel-UI migration
+  0-5-organisms-navbar-jobcard-tabs-emptystate: superseded  # Covered by Sureel-UI migration
+  0-6-compositions-extensionsidebar-fab-extensionpopup: superseded  # Covered by Sureel-UI migration
+  0-7-ui-api-data-mapper-layer: done  # snake_case → camelCase mappers — implemented ahead of story (18 tests passing)
+  epic-0-retrospective: optional
+
+  # Epic 1: User Authentication & Account Foundation API
+  epic-1: in-progress
+  1-1-project-foundation-auth-system: done
+  1-2-profile-account-management-api: done
+  epic-1-retrospective: optional
+
+  # Epic 2: Resume Management API
+  epic-2: in-progress
+  2-1-resume-upload-storage-parsing: done
+  2-2-resume-crud-active-selection: done
+  2-3-resume-parsed-data-extensions: backlog  # highlights, certifications, projects, website
+  epic-2-retrospective: optional
+
+  # Epic 3: Job Scanning & Match Analysis API
+  epic-3: in-progress
+  3-1-job-data-storage-api: done
+  3-2-ai-match-analysis-endpoint: done
+  3-3-job-data-schema-enhancements: backlog  # posted_at, logo, surface employment_type/status
+  epic-3-retrospective: optional
+
+  # Epic 4: AI Content Generation API
+  epic-4: in-progress
+  4-1-cover-letter-generation-api: done
+  4-2-answer-outreach-generation-api: done
+  epic-4-retrospective: optional
+
+  # Epic 5: Application & Job Tracking API
+  epic-5: in-progress
+  5-1-autofill-data-api: done
+  5-2-job-tracking-notes-api: done
+  epic-5-retrospective: optional
+
+  # Epic 6: Usage & Subscription Management API
+  epic-6: in-progress
+  6-1-usage-tracking-balance-api: done
+  6-2-subscription-billing-api-mocked: done
+  6-3-credit-system-api-ui-alignment: backlog  # Unified credit endpoint shape for CreditBar/CreditBalance
+  epic-6-retrospective: optional
+
+  # Epic 7: Privacy, Feedback & Dashboard Support API
+  epic-7: in-progress
+  7-1-privacy-data-deletion-api: done
+  7-2-feedback-api: done
+  epic-7-retrospective: optional
+
+  # Epic 8: Deployment & Infrastructure
+  epic-8: in-progress
+  8-1-railway-api-deployment: done
+
+  # Epic EXT: Extension UI Build (End-to-End)
+  # NOTE: Iterative epic - stories created one at a time, Storybook → Extension → Backend Tech Debt
+  epic-EXT: in-progress
+  EXT-1-wxt-extension-setup-ui-integration-login: review
+  EXT-2-component-library-reorganization: done
+  EXT-3-authenticated-navigation-sidebar-shell: done
+  EXT-4-resume-management: done
+  EXT-4.5-component-library-cleanup-ux-alignment: done  # Completed 2026-02-08 - UI package 29% smaller, UX compliant baseline
+  EXT-5-job-page-scanning-job-card: done  # Completed 2026-02-08 - Code review passed (7 fixes applied, 44 tests added)
+  EXT-5.5-scan-engine-hardening: done  # Code review: 12 findings (5H, 4M, 3L) all fixed. 142 extension tests + 10 backend tests pass.

@@ -1,4 +1,4 @@
-# generated: 2026-01-31
+# generated: 2026-02-14
 # project: Jobswyft
 # project_key: NOKEY
 # tracking_system: file-system
@@ -33,83 +33,74 @@
 # - SM typically creates next story after previous one is 'done' to incorporate learnings
 # - Dev moves story to 'review', then runs code-review (fresh context, different LLM recommended)
 
-generated: 2026-01-31
+generated: 2026-02-14
 project: Jobswyft
 project_key: NOKEY
 tracking_system: file-system
 story_location: _bmad-output/implementation-artifacts
 
-development_status:
-  # Epic 0: UI Component Library Migration (PRIORITY)
-  # NOTE: Pivoted to shadcn UI approach on 2026-02-03 (see sprint-change-proposal-2026-02-03.md)
-  # NOTE: Architectural decision documented 2026-02-03: Vite (not Next.js) for packages/ui build tooling
-  epic-0: in-progress
-  0-1-foundation-design-tokens-ui-scaffold: superseded  # Replaced by shadcn UI approach
-  0-2-core-atoms-icons-typography-badge-button: superseded  # Replaced by shadcn UI approach
-  0-1-NEW-shadcn-ui-setup: done
-  0-3-form-atoms-input-textarea-select-progressbar-logo: superseded  # Covered by Sureel-UI migration
-  0-4-molecules-card-modal: superseded  # Covered by Sureel-UI migration
-  0-5-organisms-navbar-jobcard-tabs-emptystate: superseded  # Covered by Sureel-UI migration
-  0-6-compositions-extensionsidebar-fab-extensionpopup: superseded  # Covered by Sureel-UI migration
-  0-7-ui-api-data-mapper-layer: done  # snake_case → camelCase mappers — implemented ahead of story (18 tests passing)
-  epic-0-retrospective: optional
+# =============================================================================
+# ALPHA PHASE — CLOSED 2026-02-14
+# =============================================================================
+# All alpha epics archived to _bmad-output/archive/alpha/
+# Consolidated retrospective: alpha-phase-retro-2026-02-14.md
+# Backlog stories (2-3, 3-3, 6-3) superseded — to be redefined in new epics
+# Backend tech debt (11 items) carried forward — see backend-tech-debt.md
+# =============================================================================
+
+alpha_phase:
+  # Epic 0: UI Component Library Migration
+  epic-0: done  # Closed 2026-02-14 — shadcn UI setup complete, superseded stories archived
+  epic-0-retrospective: done  # Consolidated alpha retro
 
   # Epic 1: User Authentication & Account Foundation API
-  epic-1: in-progress
-  1-1-project-foundation-auth-system: done
-  1-2-profile-account-management-api: done
-  epic-1-retrospective: optional
+  epic-1: done  # Closed 2026-02-14 — 2/2 stories done
+  epic-1-retrospective: done
 
   # Epic 2: Resume Management API
-  epic-2: in-progress
-  2-1-resume-upload-storage-parsing: done
-  2-2-resume-crud-active-selection: done
-  2-3-resume-parsed-data-extensions: backlog  # highlights, certifications, projects, website
-  epic-2-retrospective: optional
+  epic-2: done  # Closed 2026-02-14 — 2/2 done, story 2-3 superseded (redefine in new epic)
+  epic-2-retrospective: done
 
   # Epic 3: Job Scanning & Match Analysis API
-  epic-3: in-progress
-  3-1-job-data-storage-api: done
-  3-2-ai-match-analysis-endpoint: done
-  3-3-job-data-schema-enhancements: backlog  # posted_at, logo, surface employment_type/status
-  epic-3-retrospective: optional
+  epic-3: done  # Closed 2026-02-14 — 2/2 done, story 3-3 superseded (redefine in new epic)
+  epic-3-retrospective: done
 
   # Epic 4: AI Content Generation API
-  epic-4: in-progress
-  4-1-cover-letter-generation-api: done
-  4-2-answer-outreach-generation-api: done
-  epic-4-retrospective: optional
+  epic-4: done  # Closed 2026-02-14 — 2/2 done
+  epic-4-retrospective: done
 
   # Epic 5: Application & Job Tracking API
-  epic-5: in-progress
-  5-1-autofill-data-api: done
-  5-2-job-tracking-notes-api: done
-  epic-5-retrospective: optional
+  epic-5: done  # Closed 2026-02-14 — 2/2 done
+  epic-5-retrospective: done
 
   # Epic 6: Usage & Subscription Management API
-  epic-6: in-progress
-  6-1-usage-tracking-balance-api: done
-  6-2-subscription-billing-api-mocked: done
-  6-3-credit-system-api-ui-alignment: backlog  # Unified credit endpoint shape for CreditBar/CreditBalance
-  epic-6-retrospective: optional
+  epic-6: done  # Closed 2026-02-14 — 2/2 done, story 6-3 superseded (redefine in new epic)
+  epic-6-retrospective: done
 
   # Epic 7: Privacy, Feedback & Dashboard Support API
-  epic-7: in-progress
-  7-1-privacy-data-deletion-api: done
-  7-2-feedback-api: done
-  epic-7-retrospective: optional
+  epic-7: done  # Closed 2026-02-14 — 2/2 done
+  epic-7-retrospective: done
 
   # Epic 8: Deployment & Infrastructure
-  epic-8: in-progress
-  8-1-railway-api-deployment: done
+  epic-8: done  # Closed 2026-02-14 — 1/1 done
+  epic-8-retrospective: done
 
-  # Epic EXT: Extension UI Build (End-to-End)
-  # NOTE: Iterative epic - stories created one at a time, Storybook → Extension → Backend Tech Debt
-  epic-EXT: in-progress
-  EXT-1-wxt-extension-setup-ui-integration-login: review
-  EXT-2-component-library-reorganization: done
-  EXT-3-authenticated-navigation-sidebar-shell: done
-  EXT-4-resume-management: done
-  EXT-4.5-component-library-cleanup-ux-alignment: done  # Completed 2026-02-08 - UI package 29% smaller, UX compliant baseline
-  EXT-5-job-page-scanning-job-card: done  # Completed 2026-02-08 - Code review passed (7 fixes applied, 44 tests added)
-  EXT-5.5-scan-engine-hardening: done  # Code review: 12 findings (5H, 4M, 3L) all fixed. 142 extension tests + 10 backend tests pass.
+  # Epic EXT: Extension UI Build (Alpha)
+  epic-EXT: done  # Closed 2026-02-14 — EXT-1 through EXT-5.5 done (EXT-1 review closed out)
+  epic-EXT-retrospective: done
+
+# =============================================================================
+# BETA PHASE — NEW EPICS START HERE
+# =============================================================================
+# New epics will be created via /bmad-bmm-create-epics-and-stories
+# Sprint planning via /bmad-bmm-sprint-planning
+#
+# Inputs for new epic planning:
+#   - Backend tech debt: _bmad-output/implementation-artifacts/backend-tech-debt.md
+#   - Alpha retro learnings: _bmad-output/implementation-artifacts/alpha-phase-retro-2026-02-14.md
+#   - Remaining extension stories: EXT-6 through EXT-12 (in epic files)
+#   - Superseded backlog: 2-3 (resume extensions), 3-3 (job schema), 6-3 (credit alignment)
+# =============================================================================
+
+development_status:
+  # New epics will be added here by sprint planning workflow
