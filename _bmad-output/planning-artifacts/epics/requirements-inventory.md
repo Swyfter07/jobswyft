@@ -65,7 +65,7 @@
 - FR37: Users can regenerate outreach messages with feedback on what to change
 
 **Coach — Conversational AI Chat (10):**
-- FR37a: Users can access Coach as a sub-tab within AI Studio (alongside Match, Cover Letter, and Outreach) — Coach is the primary chat interface for conversational AI interactions
+- FR37a: Users can access Coach as a dedicated main-level tab (alongside Scan, AI Studio, and Autofill) — Coach provides structured career coaching with skill-based entry points, interview preparation, and strategic application advice
 - FR37b: Coach provides conversational AI responses personalized to the user's active resume and current scanned job
 - FR37c: Coach can advise on application strategy, interview preparation, and skill gap analysis for the current role
 - FR37d: Coach conversations cost 1 AI credit per message
@@ -75,6 +75,14 @@
 - FR37f-ii: Users can also start a free-form chat without selecting a predefined skill category
 - FR37g: Coach displays conversation history within the current session
 - FR37h: Users can start a new Coach conversation to clear history
+
+**Chat — AI Studio Q&A (6):**
+- FR37i: Users can access Chat as a sub-tab within AI Studio (alongside Match, Cover Letter, and Outreach) — Chat provides quick AI Q&A about the current scanned job
+- FR37j: Chat provides conversational AI responses grounded in the user's active resume and current scanned job context
+- FR37k: Chat conversations cost 1 AI credit per message
+- FR37l: Chat conversation resets when user switches to a different job (new job = new chat context)
+- FR37m: Chat displays conversation history within the current session
+- FR37n: Users can start a new Chat conversation to clear history
 
 **Model Selection (3):**
 - FR38a: Users can select which AI model to use for any paid AI generation request
@@ -131,14 +139,14 @@
 
 **Extension Sidebar Experience (14):**
 - FR67: Users can open the extension sidebar (Chrome Side Panel) from any webpage
-- FR67a: Sidebar navigation uses a 3-tab structure: Scan | AI Studio | Autofill
-- FR67b: AI Studio contains 4 sub-tabs: Match | Cover Letter | Outreach | Coach
+- FR67a: Sidebar navigation uses a 4-tab structure: Scan | AI Studio | Autofill | Coach
+- FR67b: AI Studio contains 4 sub-tabs: Match | Cover Letter | Outreach | Chat
 - FR68: Users can close the extension sidebar
 - FR69: Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked)
-- FR69a: AI Studio tools (detailed match, cover letter, outreach, coach) unlock when a job is detected AND user has available credits
+- FR69a: AI Studio tools (detailed match, cover letter, outreach, chat) unlock when a job is detected AND user has available credits
 - FR69b: Autofill functionality enables only when user is on a page with form fields (application page)
 - FR70: Sidebar displays resume tray for resume access when user is authenticated
-- FR71: All AI Studio tools (including Coach) are available when a job is detected and user has available credits
+- FR71: All AI Studio tools (including Chat) and the Coach tab are available when a job is detected and user has available credits
 - FR72: Users can navigate to the web dashboard from the sidebar
 - FR72a: When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
 - FR72b: When user navigates to a non-job page, sidebar preserves the last job context
@@ -180,7 +188,7 @@
 - FR84a: Users can optionally attach a screenshot with their feedback
 - FR85: Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
 
-**Totals: 140 FRs across 19 capability areas.**
+**Totals: 146 FRs across 20 capability areas.**
 
 ## NonFunctional Requirements
 
@@ -443,7 +451,8 @@
 **Detailed Match (FR24-FR25):** Epic 3 (Job Match Intelligence)
 **Cover Letter (FR26-FR30, FR26a):** Epic 4 (AI Content Studio)
 **Outreach Messages (FR36-FR37, FR36a-c):** Epic 4 (AI Content Studio)
-**Coach — AI Chat (FR37a-FR37h, FR37f-i, FR37f-ii):** Epic 5 (AI Career Coach)
+**Coach (FR37a-FR37h, FR37f-i, FR37f-ii):** Epic 5 (AI Career Coach — main tab)
+**Chat (FR37i-FR37n):** Epic 5 (AI Career Coach — AI Studio sub-tab)
 **Model Selection (FR38a-FR38c):** Epic 7 (Usage, Credits & Upgrade Flow)
 **Common AI Capabilities (FR38-FR41):** Cross-cutting across Epics 3, 4, 5 (implemented per AI feature)
 **Form Autofill (FR42-FR47, FR42a-b, FR44a):** Epic 2 (Engine — autofill core) + Epic 6 (Smart Form Autofill — UI + integration)
@@ -456,4 +465,4 @@
 **Data Privacy (FR78-FR82):** Implemented in Alpha (Epic 7). Surfaced in Epic 9 (Web Dashboard privacy page).
 **User Feedback (FR83-FR85, FR83a, FR84, FR84a):** Epic 8 (User Feedback)
 
-**Coverage verification: All 140 FRs mapped. No orphaned requirements.**
+**Coverage verification: All 146 FRs mapped. No orphaned requirements.**

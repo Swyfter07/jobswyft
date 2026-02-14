@@ -119,11 +119,11 @@ Users generate tailored cover letters (with tone, length, custom instructions, P
 
 ## Epic 5: AI Career Coach
 
-Users get personalized career coaching — conversational AI grounded in resume and job context, with skill-based entry points, session management, and streaming responses.
+Users get two AI conversation experiences: (1) Career Coach as a dedicated main-level tab with structured coaching, skill-based entry points, and strategic advice; (2) Chat as an AI Studio sub-tab for quick job-context Q&A. Both share a backend chat endpoint with different prompt templates.
 
-**Epic Goal:** Users can start coached conversations about interview prep, application strategy, and skill gaps for the current job, with full session management and credit tracking.
+**Epic Goal:** Users can access structured career coaching (Coach tab) and quick AI Q&A (Chat sub-tab) for the current job, with session management, streaming, and credit tracking.
 
-**FRs covered:** FR37a-FR37h, FR37f-i, FR37f-ii
+**FRs covered:** FR37a-FR37h, FR37f-i, FR37f-ii, FR37i-FR37n
 **Tech debt resolved:** CHAT-01, CHAT-02, CHAT-03, COACH-01, COACH-02, COACH-03
 **Existing stories:** EXT.12 + API.2 + API.4 + IC-3 integration story
 **NFRs addressed:** NFR2 (<5s generation), NFR6a (SSE streaming)

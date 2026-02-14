@@ -48,7 +48,7 @@ So that the overall shell feels polished and content is never clipped or misalig
 **And** scrolling is smooth with no content overflow outside the scroll area
 **And** `.scrollbar-hidden` and `.scroll-fade-y` utilities are applied correctly
 
-**Given** the 3-tab navigation (Scan | AI Studio | Autofill)
+**Given** the 4-tab navigation (Scan | AI Studio | Autofill | Coach)
 **When** the user switches between tabs
 **Then** tab state is preserved within each tab (FR72d)
 **And** active tab indicator is visually correct in both themes
@@ -66,6 +66,19 @@ So that the overall shell feels polished and content is never clipped or misalig
 As a user,
 I want all card-based UI elements (resume cards, job details, sign-in) to have consistent borders, spacing, and padding,
 So that the extension looks cohesive and professionally designed.
+
+**Prerequisite Task (Sprint Change Proposal 2026-02-14):**
+
+**Given** Story 1.2 consolidated from 4 tabs → 3 tabs (removing Coach as main tab)
+**When** Sprint Change Proposal reversed this decision (Coach = main tab, Chat = AI Studio sub-tab)
+**Then** the following revert task must be completed before other Story 1.3 work begins:
+- Restore `coachContent` prop to `ExtensionSidebar` component
+- Add Coach tab trigger (4th tab: Bot icon, "Coach" label)
+- Restore `"coach"` to `MainTab` type in `sidebar-store.ts`
+- Update `authenticated-layout.tsx` to pass `coachContent` prop
+- Update `sidebar-store.test.ts` to include "coach" tab
+- Update ExtensionSidebar Storybook stories for 4-tab structure
+- Verify `isLocked` disables AI Studio, Autofill, AND Coach when no job data
 
 **Acceptance Criteria:**
 
@@ -111,7 +124,7 @@ So that every screen in the extension is visually polished and functional.
 **Acceptance Criteria:**
 
 **Given** the AI Studio container
-**When** rendered with 4 sub-tabs (Match | Cover Letter | Outreach | Coach)
+**When** rendered with 4 sub-tabs (Match | Cover Letter | Outreach | Chat)
 **Then** sub-tab navigation renders correctly with proper active indicators
 **And** sub-tab content areas have consistent padding and spacing
 **And** no visual glitches occur during tab switching
@@ -183,7 +196,7 @@ So that the extension works reliably without stale data, lost state, or unexpect
 
 **Acceptance Criteria:**
 
-**Given** the existing Zustand stores (`useCoreStore`, `useScanStore`, and any others)
+**Given** the existing Zustand stores (`useCoreStore`, `useScanStore`, and any others including coach-store and chat-store)
 **When** an audit is performed
 **Then** each store is documented: purpose, persisted keys, chrome.storage usage, typed message commands
 **And** any stale state patterns (data not clearing on logout, zombie listeners) are identified and fixed

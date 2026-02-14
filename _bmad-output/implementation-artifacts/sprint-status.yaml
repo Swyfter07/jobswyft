@@ -118,7 +118,7 @@ development_status:
   epic-1: in-progress
   1-1-design-system-theme-foundation-audit: done
   1-2-shell-layout-navigation-fixes: done
-  1-3-card-block-component-standardization: backlog
+  1-3-card-block-component-standardization: ready-for-dev
   1-4-ai-studio-feature-view-fixes: backlog
   1-5-storybook-completion-variant-coverage: backlog
   1-6-state-management-audit-integration-validation: backlog
@@ -129,7 +129,7 @@ development_status:
   # Surfaces: packages/engine/, apps/extension/ (adapter)
   epic-2: in-progress
   2-1-engine-package-scaffold-scan-engine-extraction: done
-  2-2-middleware-extraction-pipeline: backlog
+  2-2-middleware-extraction-pipeline: ready-for-dev
   2-3-smart-extraction-patterns-confidence-self-healing: backlog
   2-4-site-config-system-board-registry: backlog
   2-5-autofill-engine-core-field-detection-form-filling: backlog
@@ -164,10 +164,11 @@ development_status:
   # Surfaces: apps/extension/, apps/api/, packages/ui/
   # Dependencies: Epic 4 (SSE infrastructure)
   epic-5: backlog
-  5-1-chat-endpoint-coach-prompt-templates: backlog
-  5-2-coach-ui-chat-interface-skills-streaming: backlog
-  5-3-coach-session-management-context-reset: backlog
-  5-4-ic-3-full-ai-studio-coach-e2e-validation: backlog
+  5-1-chat-endpoint-prompt-templates: backlog
+  5-2-coach-ui-main-tab-skills-streaming: backlog
+  5-3-chat-ui-ai-studio-sub-tab-streaming: backlog
+  5-4-coach-chat-session-management-context-reset: backlog
+  5-5-ic-3-full-ai-studio-coach-chat-e2e-validation: backlog
   epic-5-retrospective: optional
 
   # ─── Epic 6: Smart Form Autofill ──────────────────────────────────────────

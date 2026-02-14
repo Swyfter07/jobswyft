@@ -81,8 +81,8 @@ Three prototype sources have been audited and their best patterns catalogued:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Sidebar tabs | 3: Scan \| AI Studio \| Autofill | Coach is inside AI Studio as 4th sub-tab |
-| AI Studio sub-tabs | 4: Match \| Cover Letter \| Outreach \| Coach | Coach (conversational AI chat) is the 4th AI Studio sub-tab |
+| Sidebar tabs | 4: Scan \| AI Studio \| Autofill \| Coach | Coach is a dedicated main-level tab for career coaching |
+| AI Studio sub-tabs | 4: Match \| Cover Letter \| Outreach \| Chat | Chat (general job-context AI Q&A) is the 4th AI Studio sub-tab |
 | Color system | OKLCH semantic CSS variables per functional area | Main branch pattern, extended with area-specific tokens; Builder.IO's `brand-primary`/`success`/`warning` token approach validated |
 | Coach color | Independent `--coach-*` semantic variable | Separate from `--primary` (brand orange) |
 | Animation library | Framer Motion for state transitions + match score | CSS animations for micro-interactions (tab scale, button glow) |
@@ -141,15 +141,15 @@ The side panel always reflects the active browser tab — no manual action requi
 **Context reset on job switch:**
 - Job card: replaced with new job details
 - Match score: new score animates in
-- AI Studio: all tabs reset to "Generate" state (content is job-specific)
-- Coach chat: cleared (new job = new conversation)
+- AI Studio: all tabs reset to "Generate" state (content is job-specific), including Chat history
+- Coach: conversation cleared (new job = new coaching context)
 - Resume: **persists** (resume doesn't change between jobs)
 - Credits & auth: **persist**
 
 **Manual reset:**
 - Small reset button in the sidebar header area
 - Returns extension to "Waiting for Job Detection" state
-- Clears job, match, AI Studio (including Coach chat) — keeps resume, auth, credits
+- Clears job, match, AI Studio (including Chat), Coach conversation — keeps resume, auth, credits
 
 ### Effortless Interactions
 
@@ -264,7 +264,7 @@ Rather than borrowing from external products, Jobswyft's UX patterns emerge from
 Patterns extracted from own work — proven through iteration:
 
 **Navigation Patterns:**
-- **3-tab sidebar with sub-tabs** — Scan, AI Studio (4 sub-tabs: Match, Cover Letter, Outreach, Coach), Autofill. Flat hierarchy, no nesting deeper than 2 levels.
+- **4-tab sidebar with sub-tabs** — Scan, AI Studio (4 sub-tabs: Match, Cover Letter, Outreach, Chat), Autofill, Coach. Flat hierarchy, no nesting deeper than 2 levels.
 - **Auto-state progression** — The panel knows where the user is (logged out → authenticated → job detected = full power) and adjusts without user action.
 
 **Interaction Patterns:**
@@ -323,7 +323,7 @@ Lessons learned from own iterations — things that broke or caused confusion:
 |---------|-----|
 | All hardcoded Tailwind colors | Replaced by semantic OKLCH tokens |
 | Inlined sub-components | Rebuild as shared primitives |
-| Answer tab in AI Studio | Removed — Coach sub-tab replaces both Answer and Chat |
+| Answer tab in AI Studio | Removed — Chat sub-tab provides general job Q&A within AI Studio; Coach is a separate main-level tab for structured career coaching |
 | Multi-variant resume card (default/subtle/bold) | Single clean variant, simpler |
 | `text-[10px]` anywhere | `.text-micro` utility only |
 | HSL color format (Builder.IO) | OKLCH for perceptual uniformity |
@@ -431,7 +431,7 @@ Layer 6: Composed views (ExtensionSidebar, state components)
 **Custom components (no shadcn equivalent):**
 - MatchIndicator, IconBadge, SkillPill, SkillSectionLabel
 - CreditBar (footer with progress + renewal text)
-- LoggedOutView, JobCard, AIStudio, Autofill, Coach
+- LoggedOutView, JobCard, AIStudio, ChatPanel, Autofill, Coach
 
 **Animation Boundary:**
 - **Framer Motion** for: state transitions (AnimatePresence), match score animation (motion.circle), count-up numbers, orchestrated multi-element sequences
@@ -1145,8 +1145,8 @@ flowchart TD
 ### Navigation Patterns
 
 **Tab Navigation (shadcn Tabs):**
-- Main sidebar: 3 tabs — Scan | AI Studio | Autofill
-- AI Studio sub-tabs: 4 — Match | Cover Letter | Outreach | Coach
+- Main sidebar: 4 tabs — Scan | AI Studio | Autofill | Coach
+- AI Studio sub-tabs: 4 — Match | Cover Letter | Outreach | Chat
 - Active tab: underline indicator (shadcn default Tabs styling)
 - Tab switch animation: `animate-tab-content` (slideInFromRight 200ms ease-out)
 - Tab content preserves state within a session (switching Scan → Coach → Scan doesn't re-scan)
