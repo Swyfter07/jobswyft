@@ -1,124 +1,103 @@
-# Architecture Validation Results
+## Architecture Validation Results
 
-## Coherence Validation ✅
+### Coherence Validation ✅
 
-**Decision Compatibility:**
-- All technology choices work together without conflicts
-- WXT + React + Zustand: Standard combo, well-documented
-- Next.js 14+ App Router: Current stable, Vercel-native
-- FastAPI + Supabase: Python SDK available
-- OpenAPI → TypeScript: Standard code generation
-- Claude + GPT fallback: Provider interface supports both
+**Decision Compatibility:** All 16 ADR-REV decisions validated for mutual compatibility. No contradictions found. Config delivery chain (D1 ↔ A2 ↔ I2) and self-healing loop (SE3 ↔ EX4 ↔ A1 ↔ I3) form coherent feedback systems. All technology versions verified as compatible.
 
-**Pattern Consistency:**
-- Naming conventions clearly defined (snake_case API ↔ camelCase TS)
-- Response format standardized (envelope pattern + error codes + SSE for streaming)
-- State management consistent (Zustand stores per domain)
-- Button hierarchy and error escalation patterns defined
-- Four-state progressive model aligns with component inventory
+**Pattern Consistency:** All 8 PATTERN-SE patterns align with both existing conventions and new decisions. Naming boundary (snake_case API ↔ camelCase TS) handled by Zod transforms at config loading. Domain store pattern (SE7) extends existing store convention.
 
-**UX Design Specification alignment verified (2026-02-07).**
+**Structure Alignment:** Project structure maps every ADR to specific files/directories. Hexagonal boundary for features/engine/ enforced by convention (no Chrome API imports). New API files follow existing router/service patterns.
 
-## Requirements Coverage Validation ✅
+### Requirements Coverage Validation ✅
 
-**Functional Requirements (80 FRs):**
+**Functional Requirements:** 85 FRs across Extension, Web Dashboard, and API surfaces — all architecturally supported. Web Dashboard FRs partially covered (scaffolded, initialization deferred).
 
-| FR Group | Status | Location |
-|----------|--------|----------|
-| Auth (FR1-6) | ✅ | `routers/auth.py`, Supabase Auth |
-| Resumes (FR7-13) | ✅ | `routers/resumes.py`, Supabase Storage |
-| Scanning (FR14-22) | ✅ | `extension/lib/scanner.ts` |
-| AI Match (FR23-25) | ✅ | `routers/ai.py` (JSON), `<AnimatedMatchScore>` |
-| AI Cover Letter (FR26-30) | ✅ | `routers/ai.py` (SSE), `<AIStudio>` Cover Letter sub-tab |
-| AI Chat (FR31-34) | ✅ | `routers/ai.py` (SSE), `<AIStudio>` Chat sub-tab |
-| AI Outreach (FR35-38) | ✅ | `routers/ai.py` (SSE), `<AIStudio>` Outreach sub-tab |
-| Coach | ✅ | `routers/ai.py` (SSE), `<Coach>` tab |
-| Autofill (FR39-44) | ✅ | `extension/features/autofill/`, `<SequentialAutofill>` |
-| Job Tracking (FR45-53) | ✅ | `routers/jobs.py`, `jobs` table |
-| Usage (FR54-61) | ✅ | `routers/usage.py`, `usage_events` table, `<CreditBar>` |
-| Sidebar (FR62-67) | ✅ | `extension/entrypoints/sidepanel/`, Side Panel API |
-| Dashboard (FR68-72) | ✅ | `web/src/app/(dashboard)/` |
-| Privacy (FR73-77) | ✅ | `privacy/` page, account deletion |
-| Feedback (FR78-80) | ✅ | `routers/feedback.py`, `feedback` table |
+**Non-Functional Requirements:** 44 NFRs addressed:
+- Performance: Config hints + confidence thresholds minimize extraction latency
+- Security: Content script isolation, JWT auth, anonymized telemetry
+- Reliability: Bundled configs, fallback chains, circuit breaker, graceful degradation
+- Accessibility: WCAG 2.1 AA via UI package patterns
+- Maintainability: Config-driven sites, Zod schemas, domain stores, typed messages
 
-**Non-Functional Requirements (44 NFRs):**
+### Implementation Readiness Validation ✅
 
-| NFR Group | Status | Notes |
-|-----------|--------|-------|
-| Performance (NFR1-9) | ✅ | Architecture supports; perf is implementation |
-| Security (NFR10-20) | ✅ | Supabase RLS, TLS, auth middleware |
-| Reliability (NFR21-26) | ✅ | AI fallback, error handling patterns |
-| Scalability (NFR27-29) | ⏸️ | Deferred to Post-MVP |
-| Integration (NFR30-35) | ✅ | Chrome MV3, AI abstraction, Stripe |
-| Maintainability (NFR36-44) | ✅ | Clear boundaries, logging |
+**Decision Completeness:** 16 ADRs with Decision/Rationale/Affects + 8 implementation patterns with code examples + anti-patterns table + enforcement guidelines.
 
-## Implementation Readiness Validation ✅
+**Structure Completeness:** Full directory tree grounded in actual codebase. Every new file linked to its ADR. Clear boundaries per extension context.
 
-| Check | Status |
-|-------|--------|
-| All decisions have versions | ✅ |
-| Patterns comprehensive | ✅ |
-| Project structure complete | ✅ |
-| Integration points defined | ✅ |
-| Error codes standardized | ✅ |
-| MCP/CLI tooling documented | ✅ |
-| UX Design Specification aligned | ✅ |
-| Four-state model documented | ✅ |
-| Streaming architecture defined | ✅ |
-| Accessibility patterns specified | ✅ |
-| Component inventory complete | ✅ |
-| Shell layout contract defined | ✅ |
+**Pattern Completeness:** AsyncState<T>, typed messages, telemetry envelope, config schema — all async operations, communication, events, and configs have standardized patterns.
 
-## Architecture Completeness Checklist
+### Gap Analysis Results
+
+**Critical Gaps:** None
+
+**Important Gaps:**
+1. Web Dashboard (`apps/web/`) — not initialized. Required for dashboard stories. Non-blocking for Smart Engine.
+2. Database schemas for telemetry_events, site_configs, selector_health tables — placeholders only. Design when implementing API endpoints.
+3. OpenAPI spec update needed for new `/v1/telemetry/*` and `/v1/configs/*` endpoints.
+
+**Nice-to-Have Gaps:**
+1. Extension E2E testing (Playwright) — unit-testable via hexagonal architecture
+2. Selector health alert thresholds — tune based on telemetry data
+3. Config authoring admin dashboard — deferred to post-MVP
+
+### Architecture Completeness Checklist
 
 **✅ Requirements Analysis**
-- [x] Project context thoroughly analyzed
-- [x] Scale and complexity assessed
-- [x] Technical constraints identified
-- [x] Cross-cutting concerns mapped
+- [x] Project context thoroughly analyzed (85 FRs, 44 NFRs)
+- [x] Scale and complexity assessed (HIGH)
+- [x] Technical constraints identified (MV3, 400px panel, ATS diversity)
+- [x] Cross-cutting concerns mapped (6 concerns)
 
 **✅ Architectural Decisions**
-- [x] Critical decisions documented with versions
-- [x] Technology stack fully specified
-- [x] Integration patterns defined
-- [x] Performance considerations addressed
+- [x] 16 ADR-REV decisions documented with rationale
+- [x] Technology stack fully specified and version-verified
+- [x] Integration patterns defined (REST, typed messages, config sync)
+- [x] Performance considerations addressed (pipeline escalation, batch telemetry)
 
 **✅ Implementation Patterns**
-- [x] Naming conventions established
-- [x] Structure patterns defined
-- [x] Communication patterns specified (JSON + SSE streaming)
-- [x] Process patterns documented
-- [x] Button hierarchy and error escalation defined
-- [x] Animation strategy documented (Framer Motion + CSS boundary)
-- [x] Accessibility patterns specified (WCAG 2.1 AA)
+- [x] Naming conventions confirmed + 8 new patterns defined
+- [x] Structure patterns defined (domain stores, layered selectors)
+- [x] Communication patterns specified (typed messages, telemetry envelope)
+- [x] Process patterns documented (AsyncState<T>, anti-patterns table)
 
 **✅ Project Structure**
-- [x] Complete directory structure defined
-- [x] Component boundaries established
-- [x] Integration points mapped (including SSE streaming endpoints)
-- [x] Requirements to structure mapping complete
-- [x] Extension shell layout contract defined
-- [x] Four-state progressive model documented
-- [x] State preservation matrix defined
-- [x] Full component inventory (compositions, features, shared primitives, state views)
+- [x] Complete directory structure with actual codebase grounding
+- [x] Component boundaries established (content/background/panel/engine)
+- [x] Integration points mapped (6 data flows)
+- [x] Requirements to structure mapping complete (9 feature mappings)
 
-## Architecture Readiness Assessment
+### Architecture Readiness Assessment
 
 **Overall Status:** READY FOR IMPLEMENTATION
 
-**Confidence Level:** HIGH
+**Confidence Level:** HIGH — brownfield revision grounded in existing working codebase with implementation experience
 
 **Key Strengths:**
-- Clear separation of concerns (3 apps with defined boundaries)
-- Flexible usage tracking via `global_config`
-- AI provider abstraction for fallback
-- Comprehensive naming/pattern conventions
-- MCP and CLI tooling documented
+- Config-driven architecture enables rapid ATS platform support without code changes
+- Hexagonal engine core is fully unit-testable without Chrome APIs
+- Self-healing feedback loop (correction → telemetry → health → config → sync) is architecturally complete
+- Layered extraction with confidence scoring provides graceful degradation at every level
+- Existing codebase patterns extended rather than replaced — lower migration risk
+
+**Areas for Future Enhancement:**
+- ML-based confidence scoring (after collecting weighted multi-signal data)
+- Task-based AI provider routing (after collecting usage patterns)
+- Admin dashboard for config authoring (after MVP validation)
+- Extension E2E testing with Playwright
+
+### Implementation Handoff
+
+**AI Agent Guidelines:**
+- Follow all 16 ADR-REV decisions exactly as documented
+- Use all 8 PATTERN-SE patterns consistently
+- Respect hexagonal boundary: `features/engine/` has NO Chrome API imports
+- New async operations MUST use `AsyncState<T>`
+- New messages MUST use dot-namespaced typed commands
+- New telemetry MUST use standard event envelope
+- New site configs go in `configs/sites/{domain}.json`
 
 **First Implementation Priority:**
-1. Initialize monorepo with pnpm workspaces
-2. Set up Supabase project + run migrations
-3. Build FastAPI skeleton with routers
-4. Deploy to Railway to validate setup
-
----
+1. ADR-REV-D3: Config schema (Zod) — foundation for all config consumers
+2. ADR-REV-D1 + I2: Selector registry + bundled defaults — enables extraction pipeline
+3. ADR-REV-SE1 + SE2: Extraction pipeline + confidence scoring — core Smart Engine

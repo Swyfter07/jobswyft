@@ -1,8 +1,155 @@
-# Core Architectural Decisions
+## Core Architectural Decisions
 
-## Database Schema
+### Decision Priority Analysis
 
-### Tables Overview
+**Critical Decisions (Block Implementation):**
+- Selector Registry Storage (Hybrid: shipped defaults + API delta sync)
+- Extraction Pipeline Escalation (Config hints + confidence threshold)
+- Config-Driven Site Support (Config with escape hatches)
+- Content Script Communication (Zustand state + typed messages for commands)
+- Extension Update vs Config Update Separation (Bundled defaults + runtime overlay)
+
+**Important Decisions (Shape Architecture):**
+- Confidence Scoring (Weighted multi-signal, Similo-inspired)
+- Self-Healing Selectors (Fallback chain + heuristic repair)
+- DOM Readiness Detection (Multi-signal with config hints)
+- Correction Feedback Loop (Local + telemetry + auto-propose)
+- AI Fallback Orchestration (Provider abstraction + circuit breaker)
+- Config Sync API (Pull with push notification)
+- Telemetry Ingestion (Fire-and-forget batch endpoint)
+
+**Deferred Decisions (Post-MVP):**
+- ML-based confidence scoring (collect data first via weighted multi-signal)
+- Task-based AI provider routing (collect usage data first via circuit breaker)
+- Admin dashboard for config authoring (git-managed with fast-path sufficient for MVP)
+
+### Data Architecture
+
+**ADR-REV-D1: Selector Registry Storage — Hybrid**
+- Decision: Ship base selectors with extension, sync health updates and new selectors from API via delta sync
+- Rationale: Offline resilience with cross-user learning; aligns with Honey's server-driven config pattern
+- Affects: Extension storage layer, API config endpoints, config pipeline
+
+**ADR-REV-D2: Extraction Trace Storage — Local + Telemetry**
+- Decision: Persist recent traces in local storage (rotation policy) for user-facing correction UI; ship anonymized traces to API for aggregate selector health analysis
+- Rationale: Enables both immediate user feedback workflows and data-driven selector improvements
+- Affects: Extension storage, telemetry pipeline, API ingestion, privacy policy
+
+**ADR-REV-D3: Site Config Schema — Versioned JSON with Zod**
+- Decision: Versioned JSON configs with Zod runtime validation and migration functions between versions
+- Rationale: Type-safe configs that survive remote sync; version field enables graceful migration when schema evolves
+- Affects: Config authoring, extension config loader, API config endpoints
+
+### Smart Engine Architecture
+
+**ADR-REV-SE1: Extraction Pipeline Escalation — Hybrid Config + Confidence**
+- Decision: Site configs hint the optimal starting layer; confidence-threshold escalation determines when to stop or escalate further
+- Rationale: Config hints optimize known sites; confidence thresholds handle unknown sites and config staleness gracefully
+- Affects: Extraction pipeline, site configs schema, confidence scoring module
+
+**ADR-REV-SE2: Confidence Scoring — Weighted Multi-Signal**
+- Decision: Multiple signals per extraction (selector match count, text pattern matching, structural position, cross-field consistency) with weighted combination producing final score
+- Rationale: Effective without ML infrastructure; extraction trace data collected can eventually train ML model
+- Affects: Extraction pipeline, extraction trace schema, per-field scoring
+
+**ADR-REV-SE3: Self-Healing Selectors — Fallback Chain + Heuristic Repair**
+- Decision: Ordered selector alternatives per field with auto-deprecation of low-health selectors; heuristic repair as last resort before AI escalation; repair successes feed back into selector health
+- Rationale: Maximizes resilience while generating data for system improvement; aligns with password manager self-healing patterns from research
+- Affects: Selector registry, extraction pipeline, telemetry, config pipeline
+
+**ADR-REV-SE4: Site Support Model — Config with Escape Hatches**
+- Decision: Pure JSON config by default; optional `customExtractor` field references built-in strategy functions for edge cases; new strategies ship in extension updates, selector configs update independently
+- Rationale: 90%+ of sites covered by pure config; clean extension point for unusual platforms without sacrificing config-driven updatability
+- Affects: Site config schema, extraction pipeline, extension build process
+
+### Extension Architecture
+
+**ADR-REV-EX1: Communication — Zustand State + Typed Commands**
+- Decision: State synchronization via Zustand stores backed by chrome.storage (job data, UI state, configs); explicit typed messages (TypeScript discriminated unions) only for imperative commands (trigger scan, start autofill, open picker)
+- Rationale: Plays to existing Zustand investment; clean separation of state (reactive) vs. actions (imperative); reduces message passing complexity
+- Affects: All extension contexts (content script, background, side panel), message type registry
+
+**ADR-REV-EX2: DOM Readiness — Multi-Signal with Config Hints**
+- Decision: MutationObserver idle detection + content heuristic markers + site config readiness signals (e.g., wait for element, URL pattern + idle threshold)
+- Rationale: Config-driven tuning for problematic SPA platforms; heuristic baseline for unknown sites; addresses EXT-5/5.5 timing issues
+- Affects: Content Sentinel module, site config schema, detection pipeline
+
+**ADR-REV-EX3: Element Picker — Side Panel Guided**
+- Decision: Minimal page injection (highlight overlay only); picker controls, instructions, and selector preview live in side panel
+- Rationale: Minimal CSP conflicts; leverages existing 400px panel for rich UI; consistent with side-panel-first UX philosophy
+- Affects: Content script injection, side panel UI, correction workflow
+
+**ADR-REV-EX4: Correction Feedback — Local + Telemetry + Auto-Propose**
+- Decision: Corrections applied locally immediately; anonymized correction data sent to API; accumulated corrections auto-propose new selectors to config pipeline for human review
+- Rationale: Closes the full feedback loop (user correction → selector improvement → config sync); complements self-healing strategy (ADR-REV-SE3)
+- Affects: Correction UI, telemetry pipeline, config pipeline, selector registry
+
+### API & Communication Patterns
+
+**ADR-REV-A1: Telemetry Ingestion — Batch Endpoint**
+- Decision: Single `POST /v1/telemetry/batch` endpoint; extension buffers events locally, ships in batches (every 30s or on idle); API returns 202 Accepted, processes asynchronously
+- Rationale: Write-only, high-volume data shouldn't block extension or core API; keeps telemetry in FastAPI surface for consistent API contract
+- Affects: API routes, extension telemetry buffer, async processing workers
+
+**ADR-REV-A2: Config Sync — Pull with Push Notification**
+- Decision: Pull-based delta sync (`GET /v1/configs/sites?since_version=X`) as foundation; Supabase Realtime push channel notifies extension "new configs available" triggering a pull
+- Rationale: Reliable pull for bulk sync; push notifications for time-sensitive updates (ATS DOM changes); leverages existing Supabase Realtime infrastructure
+- Affects: API config endpoints, Supabase Realtime setup, extension config sync module
+
+**ADR-REV-A3: AI Fallback — Provider Abstraction + Circuit Breaker**
+- Decision: Provider interface with primary (Anthropic) and secondary (OpenAI) providers; circuit breaker opens after N failures in M minutes, routing all requests to secondary until primary recovers
+- Rationale: Adds resilience to existing dual-provider setup without task-routing complexity; task-based routing can be layered on later with usage data
+- Affects: AI service layer, provider adapters, health monitoring
+
+### Infrastructure & Deployment
+
+**ADR-REV-I1: Config Pipeline — Git-Managed with Fast-Path Override**
+- Decision: Site configs in repo as JSON (source of truth), CI validates schema on PR, merge refreshes API cache; emergency override API endpoint bypasses PR cycle for urgent selector fixes; overrides merged back to repo
+- Rationale: Version control reliability with fast response to selector breakage; fast-path is essentially a "hotfix" mechanism for configs
+- Affects: Repo structure, CI pipeline, API config management, override reconciliation
+
+**ADR-REV-I2: Extension/Config Update Separation — Bundled Defaults + Runtime Overlay**
+- Decision: Ship baseline config snapshot with extension; on startup, fetch delta updates from API; runtime configs overlay bundled defaults
+- Rationale: Extension works offline with bundled configs, gets fresh configs when online; natural implementation of hybrid selector storage (ADR-REV-D1)
+- Affects: Extension build process, config loader, startup sequence
+
+**ADR-REV-I3: Monitoring — Selector Health Dashboard + Alerts**
+- Decision: Dedicated views showing per-site/per-field extraction success rates, selector health scores, and trends; automated alerts when success rate drops below threshold, triggering config pipeline fast-path
+- Rationale: Alert pipeline makes self-healing system operational; without alerts, selector breakage goes unnoticed
+- Affects: Web dashboard, telemetry aggregation, alerting infrastructure, config pipeline integration
+
+**ADR-REV-I4: CI/CD — Per-Surface + Integration Pipeline**
+- Decision: Per-surface CI workflows triggered by path filters; shared package changes trigger all downstream pipelines; separate integration pipeline for cross-surface tests on merges to main
+- Rationale: Per-surface speed for daily development; integration confidence for cross-surface concerns (config sync, telemetry)
+- Affects: CI configuration, test organization, merge policies
+
+### Decision Impact Analysis
+
+**Implementation Sequence:**
+1. Config schema + Zod validation (ADR-REV-D3) — foundation for all config-driven decisions
+2. Selector registry storage + bundled defaults (ADR-REV-D1, I2) — enables extraction pipeline
+3. Extraction pipeline escalation + confidence scoring (ADR-REV-SE1, SE2) — core Smart Engine
+4. Communication refactor (ADR-REV-EX1) — Zustand state + typed commands
+5. DOM readiness + Content Sentinel revision (ADR-REV-EX2) — improved detection
+6. Self-healing selectors + fallback chains (ADR-REV-SE3) — resilience layer
+7. Telemetry batch endpoint + extraction traces (ADR-REV-A1, D2) — observability
+8. Config sync API + push notifications (ADR-REV-A2) — remote config delivery
+9. Correction feedback loop + element picker (ADR-REV-EX3, EX4) — user feedback
+10. AI circuit breaker (ADR-REV-A3) — AI resilience
+11. Config pipeline + fast-path (ADR-REV-I1) — operational config management
+12. Monitoring dashboard + alerts (ADR-REV-I3) — operational observability
+13. CI/CD per-surface + integration (ADR-REV-I4) — deployment infrastructure
+
+**Cross-Component Dependencies:**
+- ADR-REV-D3 (Zod configs) → ADR-REV-D1, SE1, SE4, EX2, I1, I2 (all config consumers)
+- ADR-REV-SE3 (self-healing) ↔ ADR-REV-EX4 (correction feedback) — bidirectional data flow
+- ADR-REV-A1 (telemetry) → ADR-REV-I3 (monitoring) → ADR-REV-I1 (config fast-path) — alert-driven config updates
+- ADR-REV-EX1 (communication) → ADR-REV-EX2, EX3, EX4 (all extension features depend on communication layer)
+- ADR-REV-D1 (hybrid storage) ↔ ADR-REV-A2 (config sync) ↔ ADR-REV-I2 (bundled + overlay) — config delivery chain
+
+### Database Schema (Confirmed from Original Architecture)
+
+**Tables Overview**
 
 | Table | Purpose | PRD Source |
 |-------|---------|------------|
@@ -15,10 +162,10 @@
 
 **Note:** AI outputs are **ephemeral** (FR36, FR77) - no storage table.
 
-### Schema Definitions
+**Schema Definitions**
 
-**profiles** (1:1 with auth.users)
 ```sql
+-- profiles (1:1 with auth.users)
 profiles (
   id                    UUID PRIMARY KEY REFERENCES auth.users(id),
   email                 TEXT NOT NULL,
@@ -31,10 +178,8 @@ profiles (
   created_at            TIMESTAMPTZ DEFAULT now(),
   updated_at            TIMESTAMPTZ DEFAULT now()
 )
-```
 
-**resumes**
-```sql
+-- resumes
 resumes (
   id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -45,10 +190,8 @@ resumes (
   updated_at  TIMESTAMPTZ DEFAULT now()
 )
 -- Max 5 resumes enforced at API level
-```
 
-**jobs**
-```sql
+-- jobs
 jobs (
   id              UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id         UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -64,10 +207,8 @@ jobs (
   created_at      TIMESTAMPTZ DEFAULT now(),
   updated_at      TIMESTAMPTZ DEFAULT now()
 )
-```
 
-**usage_events** (Flexible usage tracking)
-```sql
+-- usage_events (Flexible usage tracking)
 usage_events (
   id             UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id        UUID NOT NULL REFERENCES profiles(id) ON DELETE CASCADE,
@@ -79,36 +220,24 @@ usage_events (
   created_at     TIMESTAMPTZ DEFAULT now()
 )
 -- Index on (user_id, period_type, period_key) for fast balance queries
-```
 
-**Usage Check Query:**
-```sql
-SELECT COALESCE(SUM(credits_used), 0) as used
-FROM usage_events
-WHERE user_id = $1
-  AND period_type = $2
-  AND period_key = $3
-```
-
-**global_config** (Backend-configurable settings)
-```sql
+-- global_config (Backend-configurable settings)
 global_config (
   key         TEXT PRIMARY KEY,
   value       JSONB NOT NULL,
   description TEXT,
   updated_at  TIMESTAMPTZ DEFAULT now()
 )
+
+-- feedback
+feedback (
+  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id    UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  content    TEXT NOT NULL,
+  context    JSONB,  -- { "page_url": "...", "feature": "cover_letter" }
+  created_at TIMESTAMPTZ DEFAULT now()
+)
 ```
-
-Example config entries:
-
-| Key | Value | Description |
-|-----|-------|-------------|
-| `tier_limits` | `{"free": {"type": "lifetime", "amount": 5}, "starter": {"type": "monthly", "amount": 100}, "pro": {"type": "monthly", "amount": 500}, "power": {"type": "monthly", "amount": 2000}}` | AI generation credits per tier |
-| `daily_match_limit` | `{"free": 20, "starter": 100, "pro": 500, "power": 2000}` | Free daily match analyses per tier (not deducted from AI credits) |
-| `default_ai_provider` | `"claude"` | System default provider |
-| `ai_fallback_enabled` | `true` | Enable fallback on failure |
-| `referral_bonus_credits` | `5` | Credits awarded per referral |
 
 **Credit System (Hybrid Model):**
 
@@ -119,18 +248,7 @@ Example config entries:
 
 Match analyses are tracked separately from AI credits. The `usage_events.operation_type` distinguishes between `match` (daily allocation) and generative operations (`cover_letter`, `outreach`, `chat`) which consume AI credits.
 
-**feedback**
-```sql
-feedback (
-  id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id    UUID REFERENCES profiles(id) ON DELETE SET NULL,
-  content    TEXT NOT NULL,
-  context    JSONB,  -- { "page_url": "...", "feature": "cover_letter" }
-  created_at TIMESTAMPTZ DEFAULT now()
-)
-```
-
-### Entity States
+**Entity States**
 
 | Entity | States | Notes |
 |--------|--------|-------|
@@ -140,22 +258,15 @@ feedback (
 | Subscription Status | active, canceled, past_due | From Stripe webhooks |
 | AI Provider | claude, gpt | User preference + system default |
 
----
+### API Response Format (Confirmed)
 
-## API Response Format
+**Envelope Pattern**
 
-### Envelope Pattern
-
-**Success:**
 ```json
-{
-  "success": true,
-  "data": { ... }
-}
-```
+// Success
+{ "success": true, "data": { ... } }
 
-**Error:**
-```json
+// Error
 {
   "success": false,
   "error": {
@@ -166,7 +277,7 @@ feedback (
 }
 ```
 
-### HTTP Status Code Mapping
+**HTTP Status Code Mapping**
 
 | Status | When Used | Example Error Code |
 |--------|-----------|-------------------|
@@ -182,7 +293,7 @@ feedback (
 | 500 | Server error | `INTERNAL_ERROR` |
 | 503 | Service unavailable | `AI_PROVIDER_UNAVAILABLE` |
 
-### Standardized Error Codes
+**Standardized Error Codes**
 
 | Code | HTTP | Message (example) |
 |------|------|-------------------|
@@ -198,9 +309,7 @@ feedback (
 | `VALIDATION_ERROR` | 400 | Dynamic based on field |
 | `RATE_LIMITED` | 429 | "Too many requests. Please wait." |
 
----
-
-## AI Provider Architecture
+### AI Provider Architecture (Confirmed)
 
 | Setting | Value |
 |---------|-------|
@@ -215,10 +324,9 @@ feedback (
 1. User's `preferred_ai_provider` (if set)
 2. `global_config.default_ai_provider`
 3. Fallback to other provider on failure (if enabled)
+4. Circuit breaker (ADR-REV-A3) opens after N failures in M minutes
 
 **Streaming Architecture:**
-
-AI generation endpoints (`cover_letter`, `outreach`, `chat`) use Server-Sent Events (SSE) to stream responses progressively:
 
 | Endpoint | Streaming | Response Type |
 |----------|-----------|---------------|
@@ -249,4 +357,3 @@ data: {"code": "AI_GENERATION_FAILED", "message": "..."}
 - "Stop generating" cancel button available throughout
 - On `prefers-reduced-motion`: show final text immediately (no progressive reveal)
 
----

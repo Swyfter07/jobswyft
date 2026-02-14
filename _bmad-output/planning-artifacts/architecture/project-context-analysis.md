@@ -1,84 +1,66 @@
-# Project Context Analysis
+## Revision Context
 
-## Requirements Summary
+**Original Architecture:** Completed 2026-01-30 (8 steps, all validated)
+**New Inputs Since Original:**
+- Smart Engine Architecture Vision (2026-02-13)
+- Technical Research: Detection & Autofill Patterns (2026-02-13)
+- Core Engine Architecture addendum (2026-02-08)
+- Scan Engine Architecture addendum (2026-02-08)
+- Implementation experience from EXT-5, EXT-5.5 stories
+- UX Design Specification (2026-02-07)
 
-**Scope:** 80 Functional Requirements + 44 Non-Functional Requirements across 3 surfaces
+**Revision Goal:** Update architectural decisions to reflect implementation learnings, incorporate Smart Engine vision, and align with the latest research findings.
 
-| Surface | Technology | Responsibility |
-|---------|------------|----------------|
-| Chrome Extension | WXT + React + Zustand | Primary UI - scan, autofill, AI tools |
-| Web Dashboard | Next.js 14+ (App Router) | Job tracking, account management, billing |
-| Backend API | FastAPI (Python) | Business logic, AI orchestration, data persistence |
+## Project Context Analysis
 
-**Deployment Targets:**
+### Requirements Overview
 
-| Surface | Platform | MVP Approach |
-|---------|----------|--------------|
-| Extension | Chrome Web Store | Local unpacked for MVP |
-| Dashboard | Vercel | Direct deploy via Vercel CLI |
-| API | Railway | Direct deploy via Railway CLI |
+**Functional Requirements:**
+85 FRs spanning three surfaces:
+- **Extension (primary):** Job detection on 20+ ATS platforms, field extraction with confidence scoring, sequential autofill with field-by-field visualization, resume selection, match scoring display, application tracking, four-state progressive UI
+- **Web Dashboard:** Resume management (upload/parse/edit, max 5), application history with analytics, job match review, account settings
+- **API Backend:** AI-powered resume parsing & matching, autofill data generation, application state persistence, usage tracking, Supabase auth integration
 
-**Implementation Priority:** Backend API + Database → Dashboard → Extension
+**Non-Functional Requirements:**
+44 NFRs driving architectural decisions:
+- **Performance:** Detection < 500ms, autofill < 2s, extension bundle < 5MB, side panel render < 200ms
+- **Security:** JWT auth (Supabase), encrypted storage, GDPR-compliant data handling, content script isolation
+- **Reliability:** Graceful degradation (offline mode, no-AI fallback), extraction retry with escalation
+- **Accessibility:** WCAG 2.1 AA across all surfaces
+- **Maintainability:** Config-driven site support, selector health tracking, extraction audit trail
 
-## Architectural Drivers (From NFRs)
+**Scale & Complexity:**
 
-| Driver | Target | Impact |
-|--------|--------|--------|
-| **Performance** | Scan <2s, AI <5s, autofill <1s | Optimized extraction, streaming AI responses |
-| **Reliability** | 99.9% uptime, graceful degradation | AI fallback (Claude → GPT), error handling |
-| **Security** | TLS 1.3, encryption at rest, RLS | Supabase RLS policies, secure token handling |
-| **Scalability** | 50K → 150K MAU | Horizontal scaling, efficient queries |
-| **Privacy** | GDPR/CCPA, ephemeral AI outputs | No server-side AI content storage |
+- Primary domain: Full-stack with Chrome extension specialization
+- Complexity level: HIGH
+- Estimated architectural components: 15-20 major modules (detection engine, extraction pipeline, autofill engine, selector registry, config sync, content sentinel, side panel UI, web dashboard, API services, auth layer, telemetry, storage adapters, AI integration, resume parser, match engine)
 
-## Scale & Complexity
+### Technical Constraints & Dependencies
 
-- **Complexity Level:** Medium-High
-- **Primary Domain:** Multi-Surface Product (Extension + Web + API)
-- **Database Tables:** ~7 (with RLS policies)
-- **API Endpoint Groups:** ~8
-- **AI Operations:** 5 (Match, Cover Letter, Chat, Outreach, Resume Parse)
+- **Chrome MV3:** Service worker lifecycle, content script sandboxing, message passing APIs, storage quotas
+- **400px Side Panel:** All extension UI must fit within constrained viewport
+- **Supabase:** Auth provider, PostgreSQL database, Edge Functions, real-time subscriptions
+- **ATS Platform Diversity:** No standardized DOM structure; each platform requires distinct selectors/strategies
+- **Bundle Size:** Extension must remain performant; heavy AI libraries must be API-side
+- **Content Security Policy:** Extension CSP restricts inline scripts, eval, and external resource loading
 
-## Technical Constraints
+### Cross-Cutting Concerns Identified
 
-| Constraint | Architectural Impact |
-|------------|---------------------|
-| Chrome MV3 | Ephemeral service workers → chrome.storage + Zustand persistence |
-| Side Panel API | Persistent panel alongside browsing; no Shadow DOM; `.dark` class on panel root |
-| API-first | OpenAPI spec → generated TypeScript clients |
-| Supabase | Auth + DB + Storage as unified provider |
-| AI Abstraction | Claude primary + GPT fallback → provider interface needed |
-| Monorepo | pnpm workspaces (TS) + uv (Python) |
+1. **Authentication & Session Management** — Supabase JWT flows across extension (background ↔ content script ↔ side panel), web (Next.js middleware), and API (FastAPI dependency injection)
+2. **State Synchronization** — Extension local state (Zustand) ↔ API persistence ↔ Web dashboard views; conflict resolution for offline-to-online transitions
+3. **Error Handling & Degradation** — Layered fallback strategy: cached configs → local extraction → degraded UI states; error boundaries per surface
+4. **Telemetry & Observability** — Extraction success/failure rates, selector health metrics, autofill completion tracking, API latency monitoring
+5. **Config Management** — Site selector configs (JSON), feature flags, remote sync with delta updates, versioned config schema
+6. **Security Boundaries** — Content script isolation, CSP compliance, credential handling, PII minimization in telemetry
 
-## Cross-Cutting Concerns
+### Revision Delta (New Since 2026-01-30)
 
-1. **Authentication**: Supabase JWT shared across extension ↔ web ↔ API
-2. **Four-State Progressive Model**: Logged Out → Non-Job Page → Job Detected → Full Power — side panel auto-adjusts to context
-3. **Credit Tracking**: Hybrid model — 20 daily free match analyses + 5 lifetime AI credits (generative content), then subscription-based
-4. **Error Handling**: Three-tier escalation — Inline Retry → Section Degraded → Full Re-Auth
-5. **No Offline Mode**: Graceful degradation with clear "no connection" state; all AI features require API calls
-6. **Subscription Tiers**: Feature gating based on plan (Free/Starter/Pro/Power)
-7. **Streaming AI Responses**: Cover letters, outreach, coach chat stream progressively with cancel option
-8. **State Preservation**: Detailed rules per event (tab switch, job URL change, manual reset, re-login) — see State Preservation Matrix
-9. **Logging**: Comprehensive backend logging viewable on Railway dashboard (NFR42-44)
-10. **User Feedback**: In-app feedback capture for product iteration (FR78-80)
-11. **Accessibility**: WCAG 2.1 AA compliance, semantic HTML, ARIA patterns, reduced motion support
+| Input | Architectural Impact |
+|-------|---------------------|
+| Smart Engine Vision | Unifies scan + autofill into shared core engine; introduces capability layers L0-L4 |
+| Technical Research | Validates hexagonal architecture; adds self-healing selectors, Similo-inspired confidence scoring |
+| Core Engine Addendum | Defines selector registry, extraction trace, element picker, correction feedback loop |
+| Scan Engine Addendum | Refines 5-layer extraction pipeline, content sentinel, delayed verification |
+| UX Design Spec | Constrains UI architecture: 400px panel, four-state unlock, functional area colors |
+| EXT-5/5.5 Learnings | Real implementation feedback on detection timing, DOM readiness, state management |
 
-## Deferred Decisions
-
-| Topic | Deferred To |
-|-------|-------------|
-| Scalability (50K→150K MAU) | Post-MVP (NFR27-29 marked Post-MVP) |
-| CI/CD Pipeline | Post-MVP - using CLI direct deploy for MVP |
-| Comprehensive Testing | Post-MVP - minimal testing acceptable for MVP (NFR39) |
-| Chrome Web Store Publishing | Post-MVP - local unpacked for MVP |
-
-## Explicitly NOT Included (vs Prototype)
-
-| Feature | Reason |
-|---------|--------|
-| BYOK (Bring Your Own Key) | Not in PRD - subscription model only |
-| WebSocket real-time sync | No value add - SSE for streaming AI, background sync for data |
-| Offline mode | No offline features; graceful degradation with "no connection" state |
-| Content script Shadow DOM sidebar | Using Chrome Side Panel API instead (persistent, no DOM conflicts) |
-
----

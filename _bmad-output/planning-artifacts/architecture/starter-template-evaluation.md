@@ -1,99 +1,40 @@
-# Starter Template Evaluation
+## Starter Template Evaluation
 
-## Primary Technology Domain
+### Primary Technology Domain
 
-Multi-Surface Product requiring 3 separate starters:
-1. **Chrome Extension** (WXT) - Primary user interface
-2. **Web Dashboard** (Next.js) - Job tracking, billing, account management
-3. **Backend API** (FastAPI) - Business logic, AI orchestration, data persistence
+Full-stack monorepo with Chrome extension specialization — established and actively developed.
 
-## Monorepo Structure
+### Starter Options Considered
 
-```
-jobswyft/
-├── apps/
-│   ├── extension/        # WXT Chrome extension
-│   ├── web/              # Next.js dashboard
-│   └── api/              # FastAPI backend
-├── packages/
-│   ├── ui/               # Shared component library (shadcn/ui + Storybook)
-│   └── types/            # Shared TypeScript types
-├── specs/
-│   └── openapi.yaml      # API contract (source of truth)
-├── pnpm-workspace.yaml
-├── package.json
-└── README.md
-```
+This is a **brownfield revision**. All primary starters were selected during original architecture (2026-01-30) and remain current. No starter changes recommended.
 
-## Selected Starters
+### Selected Stack (Confirmed)
 
-| App | Starter | Initialization Command |
-|-----|---------|------------------------|
-| Extension | WXT (React template) | `pnpm dlx wxt@latest init apps/extension --template react` |
-| Web | create-next-app | `pnpm dlx create-next-app@latest apps/web --typescript --tailwind --eslint --app --src-dir --import-alias "@/*"` |
-| API | uv init + FastAPI | `cd apps/api && uv init --name jobswyft-api` |
+**Rationale:** All frameworks are actively maintained with recent releases. Version audit shows no critical gaps. The existing starter choices align well with Smart Engine requirements.
 
-## Architectural Decisions from Starters
+| Surface | Framework | Version | Notes |
+|---------|-----------|---------|-------|
+| Extension | WXT + React 19 + Zustand 5 | ^0.20.13 | MV3 abstractions, HMR |
+| UI Library | Vite 7 + shadcn/ui 3 + Tailwind 4 + Storybook 10 | Current | Shared component system |
+| API | FastAPI + uv + Supabase | >=0.128.0 | Python 3.11+, dual AI providers |
+| Web | Next.js (scaffolded, not yet initialized) | TBD | Dashboard surface pending |
+| Monorepo | pnpm workspaces | — | Cross-package linking |
 
-**Language & Runtime:**
-- TypeScript 5.x (extension + web) - strict mode enabled
-- Python 3.11+ (api) - mypy strict mode
+### Architectural Decisions Provided by Starters
 
-**Styling Solution:**
-- Tailwind CSS 4.x with CSS-first configuration (no `tailwind.config.ts`)
-- CSS variables in OKLCH color space defined in `globals.css` (single source of truth)
-- `@theme inline` directive maps CSS variables to Tailwind utilities
-- shadcn/ui primitives for interactive components (Select, Dialog, Dropdown, Tooltip)
-- CSS Modules for complex custom effects (glassmorphism, animations) when needed
-- Custom composed components for domain-specific UI (JobCard, ExtensionSidebar)
+**Language & Runtime:** TypeScript 5.7 (extension/UI/web), Python 3.11+ (API)
+**Styling:** Tailwind v4 + OKLCH design tokens via globals.css, shadcn/ui primitives
+**Build Tooling:** Vite 7 (UI lib), WXT/Vite (extension), uv (API)
+**Testing:** Vitest 3 (TypeScript surfaces), Pytest 8 (API)
+**State Management:** Zustand 5 (extension), server state via Supabase
+**Code Organization:** Monorepo with `apps/` (surfaces) + `packages/` (shared libraries)
 
-**Build Tooling:**
-- Vite 7.x (packages/ui library build + WXT extension)
-- Next.js built-in (web)
-- uv + uvicorn (api)
+### Gaps for Smart Engine Evolution
 
-**Testing Framework:**
-- Vitest + React Testing Library (extension + web)
-- pytest + pytest-asyncio (api)
+1. **Web Dashboard initialization** — `apps/web/` needs Next.js scaffold when dashboard stories begin
+2. **Extension E2E testing** — Consider Playwright with Chrome extension support for integration testing
+3. **Config schema validation** — Zod/Ajv for runtime validation of selector registry and site configs
+4. **Real-time config push** — Lightweight SSE/WebSocket client if server-driven config sync adopted
 
-**Code Organization:**
-- Feature-based colocation (components + tests together)
-- Shared types package for API contracts
-- OpenAPI spec drives TypeScript client generation
+**Note:** These gaps are non-blocking for current development and can be addressed incrementally as Smart Engine stories progress.
 
-**Development Experience:**
-- Hot reload on all surfaces
-- pnpm workspace commands from root
-- lint-staged + pre-commit hooks
-
-## Post-Initialization Setup Required
-
-| App/Package | Additional Setup |
-|-------------|------------------|
-| ui | ✅ Done (Story 0.1-NEW): shadcn/ui, Tailwind v4, Storybook 10, Vite 7 |
-| Extension | + Zustand, + @jobswyft/ui, + Supabase client |
-| Web | + @jobswyft/ui, + Supabase auth helpers, + React Query |
-| API | + FastAPI routers structure, + Supabase SDK, + AI provider clients |
-
-**Note:** Package initialization order: ui → apps (extension, web).
-
-## Deployment & Tooling (MVP)
-
-| Tool | Purpose |
-|------|---------|
-| **Railway CLI** | Backend API deployment - local build validation → direct push |
-| **Vercel CLI** | Dashboard deployment - preview + production deploys |
-| **Supabase CLI** | Database migrations, local development, type generation |
-| **Supabase MCP** | AI-assisted database operations |
-
-**MVP Deployment Workflow:**
-1. Validate build locally
-2. Push directly via CLI (no CI/CD pipeline for MVP)
-3. Secrets managed in Railway (API) and Vercel (Dashboard) dashboards
-
-**Logging Strategy:**
-- Backend: Comprehensive structured logging (ERROR, WARN, INFO)
-- Logs viewable on Railway dashboard (no streaming infrastructure for MVP)
-- Key operations logged: auth, AI generation, errors
-
----
