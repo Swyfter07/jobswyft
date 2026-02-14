@@ -21,6 +21,8 @@ export interface SelectorEntry {
   selectors: string[];
   /** Lower number = tried first within same board+field */
   priority: number;
+  /** Selector usage mode: scan reads, autofill writes, both (architecture ADR-REV-D1). Defaults to "read" for Story 2.1 scan entries. */
+  mode?: "read" | "write" | "both";
   /** Lifecycle status */
   status: "active" | "degraded" | "deprecated";
   /** ISO date when entry was added */

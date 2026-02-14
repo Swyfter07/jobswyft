@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
-import { computeFieldConfidence, resolveFieldType, SIGNAL_WEIGHTS } from "../signal-weights";
-import type { SignalEvaluation } from "../field-types";
+import { computeFieldConfidence, resolveFieldType, SIGNAL_WEIGHTS } from "../../src/scoring/signal-weights";
+import type { SignalEvaluation } from "../../src/types/field-types";
 
 describe("SIGNAL_WEIGHTS", () => {
   it("has autocomplete as highest weight", () => {

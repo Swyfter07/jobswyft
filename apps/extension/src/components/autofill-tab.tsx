@@ -6,13 +6,13 @@ import { useCreditsStore } from "../stores/credits-store";
 import { useAutofillStore } from "../stores/autofill-store";
 import { useToast } from "./toast-context";
 import { apiClient } from "../lib/api-client";
-import { detectATSForm } from "../features/autofill/ats-detector";
+import { detectATSForm } from "@jobswyft/engine";
 import { detectFormFields } from "../features/autofill/field-detector";
 import { fillFormFields, undoFormFills } from "../features/autofill/field-filler";
 import { fetchResumeBlob, injectResumeFile } from "../features/autofill/resume-uploader";
 import { AUTOFILL_FIELD_REGISTRY } from "../features/autofill/field-registry";
 import { fetchAutofillData } from "../features/autofill/autofill-data-service";
-import type { MappedField, DetectionResult, DetectedField, FieldFillResult } from "../features/autofill/field-types";
+import type { MappedField, DetectionResult, DetectedField, FieldFillResult } from "@jobswyft/engine";
 
 // Serialize registry for chrome.scripting.executeScript args
 const REGISTRY_SERIALIZED = AUTOFILL_FIELD_REGISTRY.map((e) => ({

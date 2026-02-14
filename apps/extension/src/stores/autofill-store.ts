@@ -9,17 +9,17 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
 import { AUTOFILL_STORAGE_KEY } from "../lib/constants";
-import type {
-  DetectionResult,
-  MappedField,
-  MappedFieldStatus,
-  AutofillData,
-  AutofillFieldType,
-  FieldCategory,
-  FieldFillResult,
-  UndoState,
-} from "../features/autofill/field-types";
-import { getFieldCategory } from "../features/autofill/field-types";
+import {
+  getFieldCategory,
+  type DetectionResult,
+  type MappedField,
+  type MappedFieldStatus,
+  type AutofillData,
+  type AutofillFieldType,
+  type FieldCategory,
+  type FieldFillResult,
+  type UndoState,
+} from "@jobswyft/engine";
 import type { EEOPreferences } from "./settings-store";
 
 // ─── State Types ──────────────────────────────────────────────────────────────

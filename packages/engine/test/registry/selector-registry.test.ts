@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { SELECTOR_REGISTRY, type SelectorEntry } from "./selector-registry";
+import { SELECTOR_REGISTRY, type SelectorEntry } from "../../src/registry/selector-registry";
 
 describe("SELECTOR_REGISTRY — data integrity", () => {
   it("has entries", () => {

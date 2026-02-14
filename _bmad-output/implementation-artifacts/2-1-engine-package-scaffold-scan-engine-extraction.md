@@ -1,6 +1,6 @@
 # Story 2.1: Engine Package Scaffold & Scan Engine Extraction
 
-Status: ready-for-dev
+Status: done
 
 <!-- Note: Validation is optional. Run validate-create-story for quality check before dev-story. -->
 
@@ -51,43 +51,43 @@ So that the core intelligence is independently testable and reusable across surf
 
 ## Tasks / Subtasks
 
-- [ ] Task 1: Scaffold `packages/engine/` package (AC: #1)
-  - [ ] 1.1 Create `packages/engine/package.json` with name `@jobswyft/engine`, ESM exports
-  - [ ] 1.2 Create `tsconfig.json` (strict, ES2020 target, ESNext module, declaration: true)
-  - [ ] 1.3 Create `tsup.config.ts` for ESM bundling (architecture-prescribed; do NOT reference `@jobswyft/ui` which uses Vite)
-  - [ ] 1.4 Create `vitest.config.ts` with jsdom environment
-  - [ ] 1.5 Add Chrome API ban lint rule (ESLint `no-restricted-imports` for `chrome.*` or `webextension-polyfill`)
-  - [ ] 1.6 Verify `pnpm install` resolves `@jobswyft/engine` in workspace
-- [ ] Task 2: Extract pure scanning modules (AC: #2)
-  - [ ] 2.1 Move `job-detector.ts` to `packages/engine/src/detection/job-detector.ts`
-  - [ ] 2.2 Move `extraction-validator.ts` to `packages/engine/src/scoring/extraction-validator.ts`
-  - [ ] 2.3 Move `selector-registry.ts` to `packages/engine/src/registry/selector-registry.ts`
-  - [ ] 2.4 Move `frame-aggregator.ts` to `packages/engine/src/extraction/frame-aggregator.ts` — replace `chrome.scripting.InjectionResult[]` param type with a generic `FrameResult` interface defined in engine types
-  - [ ] 2.5 Move `ats-detector.ts` to `packages/engine/src/detection/ats-detector.ts`
-  - [ ] 2.6 Move `field-types.ts` to `packages/engine/src/types/field-types.ts`
-  - [ ] 2.7 Move `signal-weights.ts` to `packages/engine/src/scoring/signal-weights.ts`
-  - [ ] 2.8 Create `packages/engine/src/index.ts` barrel exports
-- [ ] Task 3: Update extension imports (AC: #3, #4)
-  - [ ] 3.1 Add `@jobswyft/engine` dependency to `apps/extension/package.json`
-  - [ ] 3.2 Update all extension source imports from local `features/scanning/` to `@jobswyft/engine`
-  - [ ] 3.3 Update all extension source imports from local `features/autofill/field-types` and `signal-weights` to `@jobswyft/engine`
-  - [ ] 3.4 Update extension test file imports — any test that imports from moved modules must use `@jobswyft/engine` (e.g., `ats-detector.test.ts`, `signal-weights.test.ts`); Chrome-dependent tests (`scanner.integration.test.ts`, `field-detector.test.ts`, `field-filler.test.ts`, `resume-uploader.test.ts`) stay but may need import path fixes for types/constants
-  - [ ] 3.5 Update `scanner.ts` injectable function to import types/constants from engine (note: injectable functions inline their logic, but surrounding orchestration code uses engine imports)
-  - [ ] 3.6 Create extension-side adapter to map `chrome.scripting.InjectionResult[]` → engine's `FrameResult[]` before calling `aggregateFrameResults()`
-  - [ ] 3.7 Verify no circular dependencies between engine and extension
-- [ ] Task 4: Write engine package unit tests (AC: #5)
-  - [ ] 4.1 Port existing `job-detector.test.ts` to engine package
-  - [ ] 4.2 Port existing `extraction-validator.test.ts` to engine package
-  - [ ] 4.3 Port existing `selector-registry.test.ts` to engine package
-  - [ ] 4.4 Port existing `signal-weights.test.ts` to engine package
-  - [ ] 4.5 Write new `frame-aggregator.test.ts`
-  - [ ] 4.6 Write new `ats-detector.test.ts`
-  - [ ] 4.7 Write new `field-types.test.ts` (getFieldCategory helper)
-  - [ ] 4.8 Verify all tests pass: `cd packages/engine && pnpm test`
-- [ ] Task 5: Validate end-to-end extension behavior (AC: #4)
-  - [ ] 5.1 Run existing extension test suite — all must pass
-  - [ ] 5.2 Build extension: `cd apps/extension && pnpm build`
-  - [ ] 5.3 Manual smoke test: scan on LinkedIn, Indeed, Greenhouse pages (if fixtures or manual test available)
+- [x] Task 1: Scaffold `packages/engine/` package (AC: #1)
+  - [x] 1.1 Create `packages/engine/package.json` with name `@jobswyft/engine`, ESM exports
+  - [x] 1.2 Create `tsconfig.json` (strict, ES2020 target, ESNext module, declaration: true)
+  - [x] 1.3 Create `tsup.config.ts` for ESM bundling (architecture-prescribed; do NOT reference `@jobswyft/ui` which uses Vite)
+  - [x] 1.4 Create `vitest.config.ts` with jsdom environment
+  - [x] 1.5 Add Chrome API ban lint rule (ESLint `no-restricted-imports` for `chrome.*` or `webextension-polyfill`)
+  - [x] 1.6 Verify `pnpm install` resolves `@jobswyft/engine` in workspace
+- [x] Task 2: Extract pure scanning modules (AC: #2)
+  - [x] 2.1 Move `job-detector.ts` to `packages/engine/src/detection/job-detector.ts`
+  - [x] 2.2 Move `extraction-validator.ts` to `packages/engine/src/scoring/extraction-validator.ts`
+  - [x] 2.3 Move `selector-registry.ts` to `packages/engine/src/registry/selector-registry.ts`
+  - [x] 2.4 Move `frame-aggregator.ts` to `packages/engine/src/extraction/frame-aggregator.ts` — replace `chrome.scripting.InjectionResult[]` param type with a generic `FrameResult` interface defined in engine types
+  - [x] 2.5 Move `ats-detector.ts` to `packages/engine/src/detection/ats-detector.ts`
+  - [x] 2.6 Move `field-types.ts` to `packages/engine/src/types/field-types.ts`
+  - [x] 2.7 Move `signal-weights.ts` to `packages/engine/src/scoring/signal-weights.ts`
+  - [x] 2.8 Create `packages/engine/src/index.ts` barrel exports
+- [x] Task 3: Update extension imports (AC: #3, #4)
+  - [x] 3.1 Add `@jobswyft/engine` dependency to `apps/extension/package.json`
+  - [x] 3.2 Update all extension source imports from local `features/scanning/` to `@jobswyft/engine`
+  - [x] 3.3 Update all extension source imports from local `features/autofill/field-types` and `signal-weights` to `@jobswyft/engine`
+  - [x] 3.4 Update extension test file imports — any test that imports from moved modules must use `@jobswyft/engine` (e.g., `ats-detector.test.ts`, `signal-weights.test.ts`); Chrome-dependent tests (`scanner.integration.test.ts`, `field-detector.test.ts`, `field-filler.test.ts`, `resume-uploader.test.ts`) stay but may need import path fixes for types/constants
+  - [x] 3.5 Update `scanner.ts` injectable function to import types/constants from engine (note: injectable functions inline their logic, but surrounding orchestration code uses engine imports)
+  - [x] 3.6 Create extension-side adapter to map `chrome.scripting.InjectionResult[]` → engine's `FrameResult[]` before calling `aggregateFrameResults()`
+  - [x] 3.7 Verify no circular dependencies between engine and extension
+- [x] Task 4: Write engine package unit tests (AC: #5)
+  - [x] 4.1 Port existing `job-detector.test.ts` to engine package
+  - [x] 4.2 Port existing `extraction-validator.test.ts` to engine package
+  - [x] 4.3 Port existing `selector-registry.test.ts` to engine package
+  - [x] 4.4 Port existing `signal-weights.test.ts` to engine package
+  - [x] 4.5 Write new `frame-aggregator.test.ts`
+  - [x] 4.6 Write new `ats-detector.test.ts`
+  - [x] 4.7 Write new `field-types.test.ts` (getFieldCategory helper)
+  - [x] 4.8 Verify all tests pass: `cd packages/engine && pnpm test`
+- [x] Task 5: Validate end-to-end extension behavior (AC: #4)
+  - [x] 5.1 Run existing extension test suite — all must pass
+  - [x] 5.2 Build extension: `cd apps/extension && pnpm build`
+  - [x] 5.3 Manual smoke test: scan on LinkedIn, Indeed, Greenhouse pages (if fixtures or manual test available)
 
 ## Dev Notes
 
@@ -266,9 +266,85 @@ Tests for Chrome-dependent files (`scanner.integration.test.ts`, `field-detector
 ## Dev Agent Record
 
 ### Agent Model Used
+Claude Opus 4.6
 
 ### Debug Log References
+- No errors or debug issues encountered during implementation
 
 ### Completion Notes List
+- Scaffolded `packages/engine/` with package.json, tsconfig.json, tsup.config.ts, vitest.config.ts, eslint.config.js
+- Engine builds cleanly with tsup (ESM + DTS) — 22.21 KB output
+- Extracted 7 pure modules from extension to engine (job-detector, extraction-validator, selector-registry, frame-aggregator, ats-detector, field-types, signal-weights)
+- Created `FrameResult` generic interface to abstract `chrome.scripting.InjectionResult[]`
+- Created extension-side `frame-result-adapter.ts` with `toFrameResults()` converter
+- Updated 11 extension source files to import from `@jobswyft/engine` instead of local paths
+- Deleted 7 original source files + 5 moved test files from extension
+- Created barrel exports in `packages/engine/src/index.ts` (aliased `computeFieldConfidence` as `computeExtractionFieldConfidence` / `computeSignalFieldConfidence` to avoid naming collision)
+- 117 engine tests across 7 test files (exceeds AC requirement of 10+)
+- 123 extension tests pass (zero regressions)
+- 31 UI tests pass (zero regressions)
+- Extension builds successfully with identical output structure
+- No circular dependencies between engine and extension
+- Chrome API ban enforced via tsconfig (no DOM lib) + ESLint no-restricted-globals
 
 ### File List
+
+**New files (packages/engine/):**
+- packages/engine/package.json
+- packages/engine/tsconfig.json
+- packages/engine/tsup.config.ts
+- packages/engine/vitest.config.ts
+- packages/engine/eslint.config.js
+- packages/engine/src/index.ts
+- packages/engine/src/detection/job-detector.ts
+- packages/engine/src/detection/ats-detector.ts
+- packages/engine/src/extraction/frame-aggregator.ts
+- packages/engine/src/registry/selector-registry.ts
+- packages/engine/src/scoring/extraction-validator.ts
+- packages/engine/src/scoring/signal-weights.ts
+- packages/engine/src/types/field-types.ts
+- packages/engine/src/types/frame-result.ts
+- packages/engine/test/detection/job-detector.test.ts
+- packages/engine/test/detection/ats-detector.test.ts
+- packages/engine/test/extraction/frame-aggregator.test.ts
+- packages/engine/test/registry/selector-registry.test.ts
+- packages/engine/test/scoring/extraction-validator.test.ts
+- packages/engine/test/scoring/signal-weights.test.ts
+- packages/engine/test/types/field-types.test.ts
+
+**New files (extension adapter):**
+- apps/extension/src/features/scanning/frame-result-adapter.ts
+
+**Modified files:**
+- apps/extension/package.json (added @jobswyft/engine dependency)
+- apps/extension/src/components/authenticated-layout.tsx (imports from @jobswyft/engine)
+- apps/extension/src/components/autofill-tab.tsx (imports from @jobswyft/engine)
+- apps/extension/src/entrypoints/background/index.ts (imports from @jobswyft/engine)
+- apps/extension/src/stores/scan-store.ts (imports from @jobswyft/engine)
+- apps/extension/src/stores/autofill-store.ts (imports from @jobswyft/engine)
+- apps/extension/src/lib/api-client.ts (imports from @jobswyft/engine)
+- apps/extension/src/features/autofill/field-registry.ts (imports from @jobswyft/engine)
+- apps/extension/src/features/autofill/autofill-data-service.ts (imports from @jobswyft/engine)
+- apps/extension/src/features/scanning/scanner.integration.test.ts (imports from @jobswyft/engine)
+- pnpm-lock.yaml (workspace dependency resolution)
+- _bmad-output/implementation-artifacts/sprint-status.yaml (story status)
+- _bmad-output/implementation-artifacts/2-1-engine-package-scaffold-scan-engine-extraction.md (story file)
+
+**Deleted files (moved to engine):**
+- apps/extension/src/features/scanning/job-detector.ts
+- apps/extension/src/features/scanning/extraction-validator.ts
+- apps/extension/src/features/scanning/selector-registry.ts
+- apps/extension/src/features/scanning/frame-aggregator.ts
+- apps/extension/src/features/autofill/ats-detector.ts
+- apps/extension/src/features/autofill/field-types.ts
+- apps/extension/src/features/autofill/signal-weights.ts
+- apps/extension/src/features/scanning/job-detector.test.ts
+- apps/extension/src/features/scanning/extraction-validator.test.ts
+- apps/extension/src/features/scanning/selector-registry.test.ts
+- apps/extension/src/features/autofill/__tests__/ats-detector.test.ts
+- apps/extension/src/features/autofill/__tests__/signal-weights.test.ts
+
+## Change Log
+
+- **2026-02-14**: Story 2.1 implemented — Created `@jobswyft/engine` package, extracted 7 pure scanning/autofill modules from extension, created FrameResult abstraction, 117 engine unit tests, zero extension regressions (123 tests pass)
+- **2026-02-14**: Code review fixes — [H1] Fixed ESLint Chrome API ban (added @typescript-eslint/parser, lint now passes cleanly); [M1] Added pnpm-lock.yaml to File List; [M2] Added doc comments to aliased barrel exports (computeExtractionFieldConfidence / computeSignalFieldConfidence); [M3] Added optional `mode` field to SelectorEntry for architecture compliance (ADR-REV-D1)

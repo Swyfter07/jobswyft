@@ -8,6 +8,8 @@
  * sub-frame while the main frame (frameId 0) only contains the navigation shell.
  */
 
+import type { FrameResult } from "../types/frame-result";
+
 /** Fields tracked during aggregation */
 const SIMPLE_FIELDS = ["title", "company", "location", "salary", "employmentType", "sourceUrl"] as const;
 
@@ -38,11 +40,11 @@ function scoreResult(d: Record<string, unknown> | undefined | null): number {
 /**
  * Aggregate multi-frame scripting results into a single data + sources record.
  *
- * @param results - Array of chrome.scripting.executeScript InjectionResult[]
+ * @param results - Array of FrameResult (abstracted from chrome.scripting.InjectionResult[])
  * @returns Aggregated best data and sources
  */
 export function aggregateFrameResults(
-  results: chrome.scripting.InjectionResult[] | undefined | null
+  results: FrameResult[] | undefined | null
 ): AggregatedResult {
   const data: Record<string, string> = {
     title: "", company: "", description: "", location: "", salary: "", employmentType: "", sourceUrl: "",
@@ -57,7 +59,7 @@ export function aggregateFrameResults(
   const sorted = [...safeResults].sort((a, b) => scoreResult(b.result) - scoreResult(a.result));
 
   for (const r of sorted) {
-    const d = r?.result;
+    const d = r?.result as Record<string, unknown> | undefined;
     if (!d) continue;
 
     // hasShowMore: OR across all frames — if ANY frame detected show-more, report true
@@ -65,17 +67,22 @@ export function aggregateFrameResults(
 
     for (const field of SIMPLE_FIELDS) {
       if (d[field] && !data[field]) {
-        data[field] = d[field];
-        if (d.sources?.[field]) sources[field] = d.sources[field];
-        if (d.sourceSelectorIds?.[field]) sourceSelectorIds[field] = d.sourceSelectorIds[field];
+        data[field] = d[field] as string;
+        const dSources = d.sources as Record<string, string> | undefined;
+        const dSelectorIds = d.sourceSelectorIds as Record<string, string> | undefined;
+        if (dSources?.[field]) sources[field] = dSources[field];
+        if (dSelectorIds?.[field]) sourceSelectorIds[field] = dSelectorIds[field];
       }
     }
 
     // Description uses longest-wins heuristic
-    if (d.description && d.description.length > (data.description?.length || 0)) {
-      data.description = d.description;
-      if (d.sources?.description) sources.description = d.sources.description;
-      if (d.sourceSelectorIds?.description) sourceSelectorIds.description = d.sourceSelectorIds.description;
+    const dDesc = d.description as string | undefined;
+    if (dDesc && dDesc.length > (data.description?.length || 0)) {
+      data.description = dDesc;
+      const dSources = d.sources as Record<string, string> | undefined;
+      const dSelectorIds = d.sourceSelectorIds as Record<string, string> | undefined;
+      if (dSources?.description) sources.description = dSources.description;
+      if (dSelectorIds?.description) sourceSelectorIds.description = dSelectorIds.description;
     }
   }
 

@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
 import type { JobData } from "@jobswyft/ui";
 import { apiClient } from "../lib/api-client";
-import type { ExtractionConfidence } from "../features/scanning/extraction-validator";
+import type { ExtractionConfidence } from "@jobswyft/engine";
 
 interface ScanState {
   scanStatus: "idle" | "scanning" | "success" | "error";

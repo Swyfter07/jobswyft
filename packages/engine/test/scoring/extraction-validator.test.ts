@@ -4,7 +4,7 @@ import {
   computeCompleteness,
   validateExtraction,
   type ExtractionSource,
-} from "./extraction-validator";
+} from "../../src/scoring/extraction-validator";
 
 describe("computeFieldConfidence", () => {
   it("returns 0.95 for json-ld source", () => {

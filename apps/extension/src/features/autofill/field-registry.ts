@@ -7,7 +7,7 @@
  * The registry is JSON-serializable for passing via chrome.scripting.executeScript({ args }).
  */
 
-import type { AutofillFieldType } from "./field-types";
+import type { AutofillFieldType } from "@jobswyft/engine";
 
 export interface AutofillFieldEntry {
   /** Unique identifier, e.g. "gh-firstName" */

@@ -5,7 +5,7 @@
  * and multiple corroborating signals boost confidence via diminishing returns.
  */
 
-import type { SignalType, SignalEvaluation, AutofillFieldType } from "./field-types";
+import type { SignalType, SignalEvaluation, AutofillFieldType } from "../types/field-types";
 
 // ─── Signal Weights ───────────────────────────────────────────────────────────
 

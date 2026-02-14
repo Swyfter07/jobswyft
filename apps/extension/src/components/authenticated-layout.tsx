@@ -18,15 +18,19 @@ import { useScanStore } from "../stores/scan-store";
 import { useCreditsStore } from "../stores/credits-store";
 import { useSettingsStore } from "../stores/settings-store";
 import { scrapeJobPage } from "../features/scanning/scanner";
-import { SELECTOR_REGISTRY } from "../features/scanning/selector-registry";
-import { detectJobPage } from "../features/scanning/job-detector";
-import { validateExtraction, type ExtractionSource } from "../features/scanning/extraction-validator";
+import {
+  SELECTOR_REGISTRY,
+  detectJobPage,
+  validateExtraction,
+  aggregateFrameResults,
+  type ExtractionSource,
+} from "@jobswyft/engine";
 import { cleanHtmlForAI } from "../features/scanning/html-cleaner";
-import { aggregateFrameResults } from "../features/scanning/frame-aggregator";
+import { toFrameResults } from "../features/scanning/frame-result-adapter";
 import { apiClient } from "../lib/api-client";
 import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME, AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY } from "../lib/constants";
 import { useAutofillStore } from "../stores/autofill-store";
-import { detectATSForm } from "../features/autofill/ats-detector";
+import { detectATSForm } from "@jobswyft/engine";
 import { detectFormFields } from "../features/autofill/field-detector";
 import { AUTOFILL_FIELD_REGISTRY } from "../features/autofill/field-registry";
 import { fetchAutofillData } from "../features/autofill/autofill-data-service";
@@ -151,7 +155,7 @@ export function AuthenticatedLayout() {
         });
 
         // Aggregate results — main frame (frameId 0) first, sub-frames fill gaps only
-        const { data: best, sources: bestSources, hasShowMore } = aggregateFrameResults(results);
+        const { data: best, sources: bestSources, hasShowMore } = aggregateFrameResults(toFrameResults(results));
 
         // Track show-more detection for banner display
         scanStore.setHasShowMore(hasShowMore);
@@ -230,7 +234,7 @@ export function AuthenticatedLayout() {
                 });
 
                 // Fresh scan — don't carry forward stale data from initial scan
-                const { data: reBest, sources: reSources } = aggregateFrameResults(reResults);
+                const { data: reBest, sources: reSources } = aggregateFrameResults(toFrameResults(reResults));
 
                 // Backfill secondary fields from initial scan if fresh scan missed them
                 if (!reBest.location && best.location) { reBest.location = best.location; reSources.location = bestSources.location; }

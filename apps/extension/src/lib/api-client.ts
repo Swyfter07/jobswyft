@@ -1,6 +1,6 @@
 import { API_URL } from "./constants";
 import type { UserProfile } from "../stores/auth-store";
-import type { AutofillData } from "../features/autofill/field-types";
+import type { AutofillData } from "@jobswyft/engine";
 import { unwrap, type ApiResumeListItem, type ApiResumeResponse, type ApiJobResponse, type ApiPaginatedData, type ApiResponse } from "@jobswyft/ui";
 
 export interface ApiUploadResponse {

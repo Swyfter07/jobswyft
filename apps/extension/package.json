@@ -16,6 +16,7 @@
     "postinstall": "wxt prepare"
   },
   "dependencies": {
+    "@jobswyft/engine": "workspace:*",
     "@jobswyft/ui": "workspace:*",
     "@supabase/supabase-js": "^2.49.4",
     "lucide-react": "^0.562.0",

@@ -1,4 +1,4 @@
-import { detectJobPage, getJobBoard } from "../../features/scanning/job-detector";
+import { detectJobPage, getJobBoard } from "@jobswyft/engine";
 import { AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY, COOLDOWN_STORAGE_KEY, SETTINGS_STORAGE_KEY } from "../../lib/constants";
 
 /** Cooldown (ms) to avoid re-scanning the same URL */

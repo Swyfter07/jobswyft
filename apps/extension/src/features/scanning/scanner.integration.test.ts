@@ -3,7 +3,7 @@
  */
 import { describe, it, expect, beforeEach } from "vitest";
 import { scrapeJobPage } from "./scanner";
-import { SELECTOR_REGISTRY } from "./selector-registry";
+import { SELECTOR_REGISTRY } from "@jobswyft/engine";
 
 function setDocumentHTML(html: string) {
   document.documentElement.innerHTML = html;

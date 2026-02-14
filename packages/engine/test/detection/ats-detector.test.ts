@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectATSForm } from "../ats-detector";
+import { detectATSForm } from "../../src/detection/ats-detector";
 
 describe("detectATSForm", () => {
   // ─── Greenhouse ───────────────────────────────────────────────────

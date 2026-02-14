@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { detectJobPage, getJobBoard } from "./job-detector";
+import { detectJobPage, getJobBoard } from "../../src/detection/job-detector";
 
 describe("detectJobPage", () => {
   // ─── Major Job Boards ─────────────────────────────────────────────
