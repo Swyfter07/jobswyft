@@ -21,11 +21,10 @@ inputDocuments:
 
 Jobswyft is an AI-powered Chrome Side Panel assistant (400px fixed width) that transforms job applications from a tedious multi-tab process into a streamlined, intelligent workflow. The extension lives alongside job boards (LinkedIn, Indeed, Greenhouse, etc.) and provides real-time scanning, AI analysis, and one-click autofill — enabling users to apply 5x faster with higher quality applications.
 
-The product follows a **four-state progressive unlock model**:
+The product follows a **three-state progressive unlock model**:
 1. **Logged Out** — Feature showcase + Google sign-in CTA
 2. **Non-Job Page** — Resume management + waiting state
-3. **Job Detected** — Auto-scanned job details + match analysis
-4. **Full Power** — Autofill + AI Studio (cover letters, outreach, chat, deep match analysis)
+3. **Job Detected = Full Power** — All features unlocked: scan results, quick match, AI Studio (match, cover letter, outreach, coach), autofill
 
 ### Target Users
 
@@ -44,7 +43,7 @@ The product follows a **four-state progressive unlock model**:
 
 1. **400px Constraint** — Every pixel matters. Must deliver high-density information without feeling cramped. Progressive disclosure (collapsible sections, locked/unlocked states, auto-collapse on scroll) is essential.
 
-2. **Four-State Transitions** — Smooth transitions between sidebar states that feel natural, not jarring. Users must always understand where they are and what capabilities are available.
+2. **Three-State Transitions** — Smooth transitions between sidebar states that feel natural, not jarring. Users must always understand where they are and what capabilities are available.
 
 3. **AI Latency Communication** — Match analysis takes 2-3 seconds, cover letter generation longer. Users need engaging feedback (animated score fill, sequential field completion) rather than generic spinners.
 
@@ -82,8 +81,8 @@ Three prototype sources have been audited and their best patterns catalogued:
 
 | Decision | Choice | Rationale |
 |----------|--------|-----------|
-| Sidebar tabs | 4: Scan \| AI Studio \| Autofill \| Coach | Coach is standalone — not nested in AI Studio |
-| AI Studio sub-tabs | 4: Match \| Cover Letter \| Chat \| Outreach | Chat added back as dedicated AI Studio sub-tab |
+| Sidebar tabs | 3: Scan \| AI Studio \| Autofill | Coach is inside AI Studio as 4th sub-tab |
+| AI Studio sub-tabs | 4: Match \| Cover Letter \| Outreach \| Coach | Coach (conversational AI chat) is the 4th AI Studio sub-tab |
 | Color system | OKLCH semantic CSS variables per functional area | Main branch pattern, extended with area-specific tokens; Builder.IO's `brand-primary`/`success`/`warning` token approach validated |
 | Coach color | Independent `--coach-*` semantic variable | Separate from `--primary` (brand orange) |
 | Animation library | Framer Motion for state transitions + match score | CSS animations for micro-interactions (tab scale, button glow) |
@@ -143,14 +142,14 @@ The side panel always reflects the active browser tab — no manual action requi
 - Job card: replaced with new job details
 - Match score: new score animates in
 - AI Studio: all tabs reset to "Generate" state (content is job-specific)
-- Chat: cleared (new job = new conversation)
+- Coach chat: cleared (new job = new conversation)
 - Resume: **persists** (resume doesn't change between jobs)
 - Credits & auth: **persist**
 
 **Manual reset:**
 - Small reset button in the sidebar header area
 - Returns extension to "Waiting for Job Detection" state
-- Clears job, match, AI Studio, and chat — keeps resume, auth, credits
+- Clears job, match, AI Studio (including Coach chat) — keeps resume, auth, credits
 
 ### Effortless Interactions
 
@@ -265,8 +264,8 @@ Rather than borrowing from external products, Jobswyft's UX patterns emerge from
 Patterns extracted from own work — proven through iteration:
 
 **Navigation Patterns:**
-- **4-tab sidebar with sub-tabs** — Scan, AI Studio (4 sub-tabs), Autofill, Coach. Flat hierarchy, no nesting deeper than 2 levels.
-- **Auto-state progression** — The panel knows where the user is (logged out → authenticated → job detected → full power) and adjusts without user action.
+- **3-tab sidebar with sub-tabs** — Scan, AI Studio (4 sub-tabs: Match, Cover Letter, Outreach, Coach), Autofill. Flat hierarchy, no nesting deeper than 2 levels.
+- **Auto-state progression** — The panel knows where the user is (logged out → authenticated → job detected = full power) and adjusts without user action.
 
 **Interaction Patterns:**
 - **Auto-scan on URL change** — Zero-click job detection. The panel reacts to the browser, not the other way around.
@@ -324,7 +323,7 @@ Lessons learned from own iterations — things that broke or caused confusion:
 |---------|-----|
 | All hardcoded Tailwind colors | Replaced by semantic OKLCH tokens |
 | Inlined sub-components | Rebuild as shared primitives |
-| Answer tab in AI Studio | Replaced by Chat tab |
+| Answer tab in AI Studio | Removed — Coach sub-tab replaces both Answer and Chat |
 | Multi-variant resume card (default/subtle/bold) | Single clean variant, simpler |
 | `text-[10px]` anywhere | `.text-micro` utility only |
 | HSL color format (Builder.IO) | OKLCH for perceptual uniformity |
@@ -776,14 +775,13 @@ Phased by **user value loop** — each phase produces something demo-able.
 3. Add Autofill tab to ExtensionSidebar
 
 **Phase 4 — Deepen Engagement (demo: "full AI-powered workflow"):**
-1. **AIStudio** — 4 sub-tabs (Match, Cover Letter, Chat, Outreach) with studio-accent identity
-2. **Coach** — chat interface with coach-accent bubbles
-3. Add AI Studio + Coach tabs to ExtensionSidebar
+1. **AIStudio** — 4 sub-tabs (Match, Cover Letter, Outreach, Coach) with studio-accent identity + coach-accent for Coach sub-tab
+2. Add AI Studio tab to ExtensionSidebar (Coach is inside AI Studio)
 
 **Phase 5 — Complete Shell:**
 1. **CreditBar** — progress bar + renewal text
 2. **LoggedOutView** — feature showcase + Google CTA
-3. State components (logged out / authenticated / job detected / full power)
+3. State components (logged out / authenticated / job detected = full power)
 4. Full Storybook coverage at 360px and 500px viewports
 
 ## User Journey Flows
@@ -876,9 +874,9 @@ flowchart TD
     K -->|No| P{User wants outreach?}
     P -->|Yes| Q[Switch to Outreach sub-tab]
     Q --> R[Generate networking message]
-    P -->|No| S{User wants to chat?}
-    S -->|Yes| T[Switch to Chat sub-tab]
-    T --> U[AI chat about this job + resume context]
+    P -->|No| S{User wants coaching?}
+    S -->|Yes| T[Switch to Coach sub-tab]
+    T --> U[AI coaching about this job + resume context via skill selection or free-form chat]
 ```
 
 ### Journey 4: Job Switching (Marcus)
@@ -892,14 +890,14 @@ flowchart TD
     C -->|Yes, different job| D[Auto-scan triggers for Job B]
     D --> E[Job A card replaced → Job B slides in]
     E --> F[New match score animates]
-    F --> G[AI Studio/Chat reset to 'Generate' state]
+    F --> G[AI Studio reset to 'Generate' state, Coach chat cleared]
     G --> H[Resume persists unchanged]
     C -->|Yes, same job| I[No change — same context]
     C -->|No, non-job page| J[Side panel retains Job A context]
     J --> K[User can continue working with Job A]
     A --> L[Click reset button in header]
     L --> M[Return to 'Waiting for Job Detection' state]
-    M --> N[Job + match + AI Studio + Chat cleared]
+    M --> N[Job + match + AI Studio (including Coach chat) cleared]
     N --> O[Resume + auth + credits persist]
 ```
 
@@ -1022,8 +1020,7 @@ flowchart TD
 | `<ExtensionSidebar>` | AppHeader + Tabs + CreditBar | Full sidebar shell |
 | `<StateLoggedOut>` | LoggedOutView | Logged out state |
 | `<StateAuthenticated>` | ResumeCard + empty state | Authenticated, no job |
-| `<StateJobDetected>` | JobCard + locked AIStudio preview | Job scanned, AI locked |
-| `<StateFullPower>` | JobCard + AIStudio + Autofill | Full feature access |
+| `<StateJobDetected>` | JobCard + AIStudio (with Coach) + Autofill | Job scanned = full power, all features unlocked |
 
 ### Component Implementation Strategy
 
@@ -1040,7 +1037,7 @@ flowchart TD
 | **1. Foundation** | Utility classes, token additions | Storybook shows gradient buttons + functional area colors |
 | **2. Core Loop** | StateTransition, AnimatedMatchScore, CardAccentFooter, **JobCard**, minimal ExtensionSidebar | "Open job → see animated match score" |
 | **3. Expand** | SequentialAutofill, **Autofill** | "Scan → autofill in one click" |
-| **4. Deepen** | **AIStudio** (4 sub-tabs), **Coach** | "Full AI-powered workflow" |
+| **4. Deepen** | **AIStudio** (4 sub-tabs including Coach) | "Full AI-powered workflow" |
 | **5. Complete** | **CreditBar**, **LoggedOutView**, **ResumeCard**, **AppHeader**, all State components | Complete extension shell, all states |
 
 ## UX Consistency Patterns
@@ -1148,8 +1145,8 @@ flowchart TD
 ### Navigation Patterns
 
 **Tab Navigation (shadcn Tabs):**
-- Main sidebar: 4 tabs — Scan | AI Studio | Autofill | Coach
-- AI Studio sub-tabs: 4 — Match | Cover Letter | Chat | Outreach
+- Main sidebar: 3 tabs — Scan | AI Studio | Autofill
+- AI Studio sub-tabs: 4 — Match | Cover Letter | Outreach | Coach
 - Active tab: underline indicator (shadcn default Tabs styling)
 - Tab switch animation: `animate-tab-content` (slideInFromRight 200ms ease-out)
 - Tab content preserves state within a session (switching Scan → Coach → Scan doesn't re-scan)
@@ -1157,7 +1154,7 @@ flowchart TD
 **State Transitions:**
 - `<StateTransition>` wrapper with AnimatePresence
 - Direction: slide in from right (`x: 20 → 0, opacity: 0 → 1, 200ms ease-out`)
-- Sidebar state changes (Logged Out → Authenticated → Job Detected): full-panel transitions
+- Sidebar state changes (Logged Out → Authenticated → Job Detected = Full Power): full-panel transitions
 - Tab changes within a state: content-only transition (header/footer stay static)
 
 **Shell Layout Contract:**

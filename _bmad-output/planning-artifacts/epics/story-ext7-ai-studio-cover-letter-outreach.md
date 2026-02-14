@@ -13,14 +13,14 @@
 | Existing | `AiStudio` | `features/` | Tabbed card (currently: Match, Cover Letter, Answer, Outreach). Has `onGenerate` callback with params |
 | Existing | `SelectionChips` | `blocks/` | Tone/length selectors. Props: `options`, `value`, `onChange` |
 | New | `GeneratedOutput` | `blocks/` | Editable textarea with copy button, regenerate button, PDF button |
-| Modified | `AiStudio` | `features/` | Replace "Answer" tab with placeholder for Chat (EXT.8). Wire Cover Letter + Outreach tabs |
+| Modified | `AiStudio` | `features/` | Replace "Answer" tab with placeholder for Coach (EXT.12). Wire Cover Letter + Outreach tabs. AI Studio sub-tabs: Match | Cover Letter | Outreach | Coach |
 
 ## Acceptance Criteria
 
 **Given** the user is on a page where a job has been detected and has available credits
 **When** the sidebar shows AI Studio
 **Then** the `isLocked` state is `false` (unlocked)
-**And** sub-tabs show: Match, Cover Letter, Chat, Outreach (FR67b)
+**And** sub-tabs show: Match, Cover Letter, Outreach, Coach (FR67b)
 
 **Given** the user selects the Cover Letter tab
 **When** the tab renders

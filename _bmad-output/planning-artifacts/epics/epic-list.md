@@ -17,32 +17,32 @@ Deploy all Jobswyft surfaces to their production hosting platforms.
 
 Build the Chrome Extension surface end-to-end, one sidepanel section at a time. Each story delivers a **complete vertical slice**: UI components (Storybook) → Extension integration (WXT + Zustand) → Backend wiring (API) → E2E verification.
 
-**Epic Goal:** Users can install and use the Jobswyft Chrome Extension with full UI/UX across all 4 sidebar states — login, navigation, resume management, job scanning, AI-powered content generation, form autofill, usage tracking, and feedback — with complete backend API integration.
+**Epic Goal:** Users can install and use the Jobswyft Chrome Extension with full UI/UX across all 3 sidebar states — login, navigation, resume management, job scanning, AI-powered content generation (including Coach), form autofill, usage tracking, and feedback — with complete backend API integration.
 
-**FRs covered:** FR1-FR4, FR7-FR49, FR37a-FR37f, FR57-FR60, FR60a-b, FR64-FR72d, FR83-FR84a
+**FRs covered:** FR1-FR4, FR7-FR30, FR36-FR37, FR36a-c, FR37a-FR37h, FR37f-i, FR37f-ii, FR38-FR47, FR57-FR60, FR60a-b, FR64-FR72d, FR83-FR84a
 
 **Surfaces:** packages/ui (Storybook), apps/extension (WXT Side Panel), apps/api (FastAPI)
 
 **Story approach:** All stories defined upfront. Each follows the [Component Development Methodology](#component-development-methodology).
 
-**Stories (14 total, 1 done):**
+**Stories (14 total, 1 done, 1 absorbed):**
 
 | #           | Story                                        | User Value                                                                           | Status      |
 | ----------- | -------------------------------------------- | ------------------------------------------------------------------------------------ | ----------- |
 | EXT.1       | WXT Extension Setup & Login                  | Users can install extension and sign in with Google                                  | DONE        |
 | EXT.2       | Component Library Reorganization             | Clean foundation: proper categories, reference separation, consistent patterns       | Pending     |
-| EXT.3       | Authenticated Navigation & Sidebar Shell     | Users can navigate the 4-tab sidebar with state preservation                         | Pending     |
+| EXT.3       | Authenticated Navigation & Sidebar Shell     | Users can navigate the 3-tab sidebar with state preservation                         | Pending     |
 | EXT.4       | Resume Management                            | Users can upload, view, and manage resumes in the sidebar                            | Pending     |
 | **EXT.4.5** | **Component Library Cleanup & UX Alignment** | **Developers build on official UX-compliant components, not prototype references**   | **Pending** |
 | EXT.5       | Job Page Scanning & Job Card                 | Users can scan job pages and save jobs                                               | Pending     |
 | **EXT.5.5** | **Scan Engine Hardening**                    | **Reliable extraction with confidence scoring, sentinel detection, and AI fallback** | **Pending** |
 | EXT.6       | Match Analysis (Auto + Detailed)             | Users can instantly see how they match a job                                         | Pending     |
 | EXT.7       | AI Studio — Cover Letter & Outreach          | Users can generate tailored application content (SSE streaming)                      | Pending     |
-| EXT.8       | AI Studio — Chat                             | Users can ask questions about a job posting (AI Studio sub-tab)                      | Pending     |
+| EXT.8       | ~~AI Studio — Chat~~ **(ABSORBED INTO EXT.12)** | ~~Users can ask questions about a job posting~~ → Merged into Coach                 | Absorbed    |
 | EXT.9       | Form Autofill                                | Users can auto-fill application forms                                                | Pending     |
 | EXT.10      | Usage, Credits & Upgrade Prompts             | Users can see their balance and understand limits                                    | Pending     |
 | EXT.11      | Feedback                                     | Users can report issues and share ideas                                              | Pending     |
-| EXT.12      | Coach Tab                                    | Users get personalized AI coaching for the current job                               | Pending     |
+| EXT.12      | Coach — AI Studio Sub-Tab                    | Users get conversational AI coaching with skill selection for the current job         | Pending     |
 
 **Dependencies:**
 
@@ -52,9 +52,8 @@ EXT.1 (DONE) → EXT.2 (cleanup) → EXT.3 (navigation, auth store, state preser
                                   EXT.4 (resume) → EXT.4.5 (component cleanup & UX alignment) → EXT.5 (scan + job card)
                                                                                                       ↓
                                                                                                EXT.5.5 (scan hardening) → EXT.6 (match) → EXT.7 (cover letter + outreach, SSE streaming)
-                                                                                                                 → EXT.8 (AI Studio chat sub-tab, SSE streaming)
                                                                                                                  → EXT.9 (autofill)
-                                                                                                                 → EXT.12 (coach standalone tab, SSE streaming)
+                                                                                                                 → EXT.12 (Coach AI Studio sub-tab, absorbs EXT.8, SSE streaming)
                                                                                                    EXT.10 (credits — cross-cutting, retrofits into EXT.6-9, EXT.12)
                                                                                                    EXT.11 (feedback — standalone)
 ```
@@ -75,8 +74,8 @@ Deliver all backend API changes discovered during Chrome Extension development. 
 
 | #                                        | Story                                   | Source Tech Debt   | Unblocks             | Priority |
 | ---------------------------------------- | --------------------------------------- | ------------------ | -------------------- | -------- |
-| API.1                                    | SSE Streaming Infrastructure            | NFR6a              | EXT.7, EXT.8, EXT.12 | High     |
-| API.2                                    | Chat Endpoint (`POST /v1/ai/chat`)      | CHAT-01, CHAT-02   | EXT.8, EXT.12        | High     |
+| API.1                                    | SSE Streaming Infrastructure            | NFR6a              | EXT.7, EXT.12         | High     |
+| API.2                                    | Chat Endpoint (`POST /v1/ai/chat`)      | CHAT-01, CHAT-02   | EXT.12                | High     |
 | API.3                                    | Match Type Param + Daily Rate Limiting  | MATCH-01, MATCH-02 | EXT.6, EXT.10        | High     |
 | API.4                                    | Coach Prompt Templates                  | COACH-01, COACH-02 | EXT.12               | High     |
 | API.5                                    | Remove `/v1/ai/answer` Endpoint         | AI-01              | EXT.7 (cleanup)      | Medium   |
@@ -93,7 +92,7 @@ API.3 (match params) — standalone
 API.5 (remove /answer) — standalone
 ```
 
-**FRs covered:** FR31-FR35 (backend), FR37a-FR37f (backend), NFR6a-NFR6b (streaming)
+**FRs covered:** FR37a-FR37h, FR37f-i, FR37f-ii (backend), NFR6a-NFR6b (streaming)
 
 ---
 

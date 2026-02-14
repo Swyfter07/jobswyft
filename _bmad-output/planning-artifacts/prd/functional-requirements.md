@@ -71,14 +71,18 @@
 - **FR36c:** Users can provide custom instructions for outreach message generation
 - **FR37:** Users can regenerate outreach messages with feedback on what to change
 
-**Coach (Standalone Tab):**
+**Coach — Conversational AI Chat (AI Studio Sub-Tab):**
 
-- **FR37a:** Users can access Coach as a standalone sidebar tab (separate from AI Studio)
-- **FR37b:** Coach provides conversational AI coaching personalized to the user's active resume and current scanned job
+*Coach is the primary conversational AI chat interface, accessible as a sub-tab within AI Studio. It replaces the previously scoped Chat feature (FR31-35, removed in v2). Users begin by selecting a skill category, then engage in free-form chat within that context. Deeper coaching capabilities (mock interviews, career path planning) are planned for post-MVP enhancement.*
+
+- **FR37a:** Users can access Coach as a sub-tab within AI Studio (alongside Match, Cover Letter, and Outreach) — Coach is the primary chat interface for conversational AI interactions
+- **FR37b:** Coach provides conversational AI responses personalized to the user's active resume and current scanned job
 - **FR37c:** Coach can advise on application strategy, interview preparation, and skill gap analysis for the current role
 - **FR37d:** Coach conversations cost 1 AI credit per message
 - **FR37e:** Coach conversation resets when user switches to a different job (new job = new coaching context)
-- **FR37f:** System generates contextual coaching prompts based on match analysis results (e.g., "How do I address the Kubernetes gap?")
+- **FR37f:** Coach presents selectable skill categories as conversation entry points (e.g., "Interview Prep", "Application Strategy", "Company Insights", "General Advice"); selecting a skill initiates a focused chat session
+- **FR37f-i:** System generates contextual skill suggestions based on match analysis results (e.g., if gaps are detected, "Address Kubernetes Gap" appears as a suggested skill)
+- **FR37f-ii:** Users can also start a free-form chat without selecting a predefined skill category
 - **FR37g:** Coach displays conversation history within the current session
 - **FR37h:** Users can start a new Coach conversation to clear history
 
@@ -143,19 +147,19 @@
 ## Extension Sidebar Experience
 
 - **FR67:** Users can open the extension sidebar (Chrome Side Panel) from any webpage
-- **FR67a:** Sidebar navigation uses a 4-tab structure: Scan | AI Studio | Autofill | Coach
-- **FR67b:** AI Studio contains 3 sub-tabs: Match | Cover Letter | Outreach
+- **FR67a:** Sidebar navigation uses a 3-tab structure: Scan | AI Studio | Autofill
+- **FR67b:** AI Studio contains 4 sub-tabs: Match | Cover Letter | Outreach | Coach
 - **FR68:** Users can close the extension sidebar
-- **FR69:** Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked: scan results, quick match, AI Studio, autofill, Coach)
-- **FR69a:** AI Studio tools (detailed match, cover letter, outreach) and Coach tab unlock when a job is detected AND user has available credits
+- **FR69:** Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked: scan results, quick match, AI Studio with Coach, autofill)
+- **FR69a:** AI Studio tools (detailed match, cover letter, outreach, coach) unlock when a job is detected AND user has available credits
 - **FR69b:** Autofill functionality enables only when user is on a page with form fields (application page)
 - **FR70:** Sidebar displays resume tray for resume access when user is authenticated
-- **FR71:** AI Studio tools and Coach tab are available when a job is detected and user has available credits (Job Detected = Full Power state)
+- **FR71:** All AI Studio tools (including Coach) are available when a job is detected and user has available credits (Job Detected = Full Power state)
 - **FR72:** Users can navigate to the web dashboard from the sidebar
 - **FR72a:** When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
 - **FR72b:** When user navigates to a non-job page, sidebar preserves the last job context (user can continue working with previous job data)
 - **FR72c:** Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs, chat; preserves resume, auth, credits)
-- **FR72d:** Sidebar tab switching preserves state within each tab (switching Scan → Coach → Scan does not re-trigger scan)
+- **FR72d:** Sidebar tab switching preserves state within each tab (switching Scan → AI Studio → Scan does not re-trigger scan; switching between AI Studio sub-tabs preserves each sub-tab's state)
 
 ## Web Dashboard (User-Facing)
 
@@ -197,4 +201,4 @@
 - **FR84a:** Users can optionally attach a screenshot with their feedback
 - **FR85:** Backend stores user feedback with timestamp, user ID, category, context, and optional screenshot reference
 
-**Totals:** 100 FRs across 14 capability areas.
+**Totals:** 102 FRs across 14 capability areas.

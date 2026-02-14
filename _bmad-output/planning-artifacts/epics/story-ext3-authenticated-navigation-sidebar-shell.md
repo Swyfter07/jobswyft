@@ -4,14 +4,14 @@
 **I want** to see a navigation bar and tabbed sidebar after signing in,
 **So that** I can access all extension features and navigate between sections.
 
-**FRs addressed:** FR2 (sign out), FR4 (session persistence), FR67 (open sidebar), FR67a (4-tab structure), FR67b (AI Studio sub-tabs), FR68 (close sidebar), FR69 (4-state sidebar: Logged Out, Non-Job Page, Job Detected, Full Power), FR69a (AI Studio + Coach unlock on job detection + credits), FR69b (Autofill on form page), FR70 (resume tray slot), FR71 (AI locked until scan + credits), FR72 (dashboard link), FR72a (job URL change reset), FR72b (non-job page preserves context), FR72c (manual reset button), FR72d (tab state preservation)
+**FRs addressed:** FR2 (sign out), FR4 (session persistence), FR67 (open sidebar), FR67a (3-tab structure: Scan | AI Studio | Autofill), FR67b (4 AI Studio sub-tabs: Match | Cover Letter | Outreach | Coach), FR68 (close sidebar), FR69 (3-state sidebar: Logged Out, Non-Job Page, Job Detected = Full Power), FR69a (AI Studio tools including Coach unlock on job detection + credits), FR69b (Autofill on form page), FR70 (resume tray slot), FR71 (all AI Studio tools locked until scan + credits), FR72 (dashboard link), FR72a (job URL change reset), FR72b (non-job page preserves context), FR72c (manual reset button), FR72d (tab state preservation)
 
 ## Component Inventory
 
 | Status | Component | Directory | Notes |
 |--------|-----------|-----------|-------|
 | Existing | `AppHeader` | `layout/` | Has theme toggle, settings dropdown, sign out. Wire real callbacks |
-| Existing | `ExtensionSidebar` | `layout/` | Has tabs (scan/studio/autofill/coach), isLocked, creditBar. Wire real state |
+| Existing | `ExtensionSidebar` | `layout/` | Has tabs (scan/studio/autofill), AI Studio has sub-tabs (match/cover-letter/outreach/coach), isLocked, creditBar. Wire real state |
 | New | `AuthenticatedLayout` | Extension `components/` | Wraps AppHeader + ExtensionSidebar for logged-in state |
 | New | Zustand `auth-store` | Extension `stores/` | Session state, user profile, persist to chrome.storage |
 | New | Reset button | In `AppHeader` | Ghost button, refresh icon `size-4`, triggers FR72c manual reset |
@@ -44,12 +44,12 @@
 **When** the sidebar renders
 **Then** the sidebar is in "Non-Job Page" state
 **And** Scan tab shows empty/placeholder state ("Navigate to a job posting" + "Or paste a job description" link)
-**And** AI Studio, Autofill, and Coach tabs show locked state (`isLocked=true`) — all require job detection + credits
+**And** AI Studio (including Coach sub-tab) and Autofill tabs show locked state (`isLocked=true`) — all require job detection + credits
 **And** Resume tray is accessible for resume management
 
 **Given** the user navigates to a new job page (different URL)
 **When** auto-scan detects the new job
-**Then** sidebar resets: job data, match data, AI Studio outputs, and chat history are cleared
+**Then** sidebar resets: job data, match data, AI Studio outputs (including Coach chat history) are cleared
 **And** resume selection, auth session, and credits are preserved (FR72a)
 
 **Given** the user navigates from a job page to a non-job page (Gmail, Google Docs, etc.)
@@ -58,7 +58,7 @@
 
 **Given** the user clicks the reset button in the AppHeader
 **When** the reset action triggers
-**Then** job data, match data, AI Studio outputs, and chat are cleared
+**Then** job data, match data, AI Studio outputs (including Coach chat) are cleared
 **And** resume, auth, credits, and settings are preserved (FR72c)
 **And** sidebar returns to "Non-Job Page" / waiting state
 **And** no confirmation dialog (low-stakes, easily re-scanned)

@@ -202,7 +202,7 @@ Jenna exhales. *"Okay, I actually do have relevant stuff."* The quick match saw 
 
 She sees the two buttons on the card. She doesn't feel ready to generate anything yet — she wants guidance first. She clicks **Ask Coach**.
 
-The Coach section opens with a chat interface and skill suggestions: "Interview Prep", "Application Strategy", "Company Insights". She types: *"Is this job a good fit for me? I'm a new grad and the Kubernetes requirement scares me."*
+The AI Studio opens to the Coach sub-tab with a chat interface and skill suggestions: "Interview Prep", "Application Strategy", "Company Insights". She types: *"Is this job a good fit for me? I'm a new grad and the Kubernetes requirement scares me."*
 
 The Coach responds — it knows her resume and the job:
 
@@ -312,7 +312,7 @@ She clicks **Ask Coach**.
 
 **Rising Action:**
 
-The Coach section opens. She sees a clean chat interface with skill suggestions: "Interview Prep", "Salary Research", "Company Insights", "General Advice". She taps **Interview Prep**.
+The AI Studio opens to the Coach sub-tab. She sees a clean chat interface with skill suggestions: "Interview Prep", "Salary Research", "Company Insights", "General Advice". She taps **Interview Prep**.
 
 The Coach responds with context-aware guidance — it already knows the job (fintech, junior dev, Kubernetes mentioned) and her resume (CS degree, payment systems capstone, two internships):
 

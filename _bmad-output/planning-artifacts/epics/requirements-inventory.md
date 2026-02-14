@@ -51,13 +51,6 @@
 - FR29: Users can regenerate cover letter with feedback on what to change
 - FR30: Users can export generated cover letters as PDF
 
-**Chat (5):**
-- FR31: Users can open chat interface from AI Studio
-- FR32: System generates question suggestions based on extracted job posting content
-- FR33: Users can ask questions via chat (costs 1 AI credit per message)
-- FR34: Chat displays conversation history within current session
-- FR35: Users can start new chat session to clear history
-
 **Outreach Messages (5):**
 - FR36: Users can generate outreach messages for recruiters/hiring managers
 - FR36a: Users can select a tone for outreach message generation
@@ -65,13 +58,17 @@
 - FR36c: Users can provide custom instructions for outreach message generation
 - FR37: Users can regenerate outreach messages with feedback on what to change
 
-**Coach (Standalone Tab) (6):**
-- FR37a: Users can access Coach as a standalone sidebar tab (separate from AI Studio)
-- FR37b: Coach provides conversational AI coaching personalized to the user's active resume and current scanned job
+**Coach — Conversational AI Chat (AI Studio Sub-Tab) (10):**
+- FR37a: Users can access Coach as an AI Studio sub-tab (alongside Match, Cover Letter, and Outreach) — Coach is the primary chat interface for conversational AI interactions
+- FR37b: Coach provides conversational AI responses personalized to the user's active resume and current scanned job
 - FR37c: Coach can advise on application strategy, interview preparation, and skill gap analysis for the current role
 - FR37d: Coach conversations cost 1 AI credit per message
 - FR37e: Coach conversation resets when user switches to a different job (new job = new coaching context)
-- FR37f: System generates contextual coaching prompts based on match analysis results (e.g., "How do I address the Kubernetes gap?")
+- FR37f: Coach presents selectable skill categories as conversation entry points (e.g., "Interview Prep", "Application Strategy", "Company Insights", "General Advice"); selecting a skill initiates a focused chat session
+- FR37f-i: System generates contextual skill suggestions based on match analysis results (e.g., if gaps are detected, "Address Kubernetes Gap" appears as a suggested skill)
+- FR37f-ii: Users can also start a free-form chat without selecting a predefined skill category
+- FR37g: Coach displays conversation history within the current session
+- FR37h: Users can start a new Coach conversation to clear history
 
 **Common AI Capabilities (4):**
 - FR38: Users can edit any AI-generated output before using it
@@ -111,25 +108,25 @@
 - FR61: Users can upgrade to a paid subscription tier (Post-MVP)
 - FR62: Users can manage their subscription (upgrade, downgrade, cancel) (Post-MVP)
 - FR63: Users earn additional free generations through referrals
-- FR64: System blocks paid AI generation features (detailed match, cover letter, outreach, chat) when user has no remaining balance
+- FR64: System blocks paid AI generation features (detailed match, cover letter, outreach, coach) when user has no remaining balance
 - FR65: System displays "upgrade coming soon" message when user is out of paid credits
 - FR66: System blocks auto match analysis when free tier user exceeds daily limit (20/day)
 
 **Extension Sidebar Experience (14):**
 - FR67: Users can open the extension sidebar (Chrome Side Panel) from any webpage
-- FR67a: Sidebar navigation uses a 4-tab structure: Scan | AI Studio | Autofill | Coach
-- FR67b: AI Studio contains 4 sub-tabs: Match | Cover Letter | Chat | Outreach
+- FR67a: Sidebar navigation uses a 3-tab structure: Scan | AI Studio | Autofill
+- FR67b: AI Studio contains 4 sub-tabs: Match | Cover Letter | Outreach | Coach
 - FR68: Users can close the extension sidebar
-- FR69: Sidebar displays one of four states: Logged Out (feature showcase + sign-in CTA), Non-Job Page (resume management + waiting state), Job Detected (auto-scanned job details + match analysis), Full Power (all tabs: Scan, AI Studio, Autofill, Coach)
-- FR69a: AI Studio tools (detailed match, cover letter, outreach, chat) and Coach tab unlock when a job is detected AND user has available credits
+- FR69: Sidebar displays one of three states: Logged Out (sign-in only), Non-Job Page (resume tray + dashboard link), Job Detected = Full Power (all features unlocked: scan results, quick match, AI Studio with Coach, autofill)
+- FR69a: AI Studio tools (detailed match, cover letter, outreach, coach) unlock when a job is detected AND user has available credits
 - FR69b: Autofill functionality enables only when user is on a page with form fields (application page)
 - FR70: Sidebar displays resume tray for resume access when user is authenticated
-- FR71: AI Studio tools are locked until a job is scanned and user has available credits; Coach tab follows the same unlock condition
+- FR71: All AI Studio tools (including Coach) are locked until a job is scanned and user has available credits
 - FR72: Users can navigate to the web dashboard from the sidebar
-- FR72a: When user navigates to a new job page, sidebar resets job data, match data, and chat history while preserving resume selection, auth session, and credits
+- FR72a: When user navigates to a new job page, sidebar resets job data, match data, and Coach chat history while preserving resume selection, auth session, and credits
 - FR72b: When user navigates to a non-job page, sidebar preserves the last job context (user can continue working with previous job data)
-- FR72c: Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs, chat; preserves resume, auth, credits)
-- FR72d: Sidebar tab switching preserves state within each tab (switching Scan → Coach → Scan does not re-trigger scan)
+- FR72c: Users can manually reset job context via a reset button in the sidebar header (clears job, match, AI Studio outputs including Coach chat; preserves resume, auth, credits)
+- FR72d: Sidebar tab switching preserves state within each tab (switching Scan → AI Studio → Scan does not re-trigger scan; switching between AI Studio sub-tabs preserves each sub-tab's state)
 
 **Web Dashboard (5):**
 - FR73: Users can access a dedicated jobs management page
@@ -156,13 +153,13 @@
 
 **Performance - Response Times (7):**
 - NFR1: Page scan completes within 2 seconds on standard job boards
-- NFR2: AI generation (cover letter, outreach, chat messages) completes within 5 seconds
+- NFR2: AI generation (cover letter, outreach, coach messages) completes within 5 seconds
 - NFR3a: Auto match analysis completes within 2 seconds of successful scan
 - NFR3b: Detailed match analysis completes within 5 seconds of user request
 - NFR4: Autofill executes within 1 second
 - NFR5: Sidebar opens within 500ms of user click
 - NFR6: Resume parsing completes within 10 seconds of upload
-- NFR6a: AI generation endpoints (cover letter, outreach, chat, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
+- NFR6a: AI generation endpoints (cover letter, outreach, coach) deliver responses via streaming (Server-Sent Events) with progressive text reveal and a user-accessible cancel option
 - NFR6b: Match analysis and resume parsing return complete JSON responses (non-streaming)
 
 **Performance - Accuracy (3):**
@@ -266,7 +263,7 @@
 - Provider interface for abstraction/switching
 - User preference stored in profiles.preferred_ai_provider
 - Fallback configurable via global_config
-- SSE streaming for generative endpoints (cover letter, outreach, chat, coach) with cancel option
+- SSE streaming for generative endpoints (cover letter, outreach, coach) with cancel option
 - Match analysis and resume parsing return complete JSON (non-streaming)
 
 **From Architecture - UI Package:**
@@ -281,8 +278,8 @@
 - Chrome Side Panel API for persistent sidebar alongside job boards (NOT content script Shadow DOM)
 - Zustand stores per domain (auth, resume, job, scan)
 - Chrome permissions: sidePanel, activeTab, scripting, storage, tabs, identity, host_permissions
-- 4-state sidebar model (Logged Out, Non-Job Page, Job Detected, Full Power)
-- Sidebar tabs: 4 main (Scan | AI Studio | Autofill | Coach) + AI Studio has 4 sub-tabs (Match | Cover Letter | Chat | Outreach)
+- 3-state sidebar model (Logged Out, Non-Job Page, Job Detected = Full Power)
+- Sidebar tabs: 3 main (Scan | AI Studio | Autofill) + AI Studio has 4 sub-tabs (Match | Cover Letter | Outreach | Coach)
 - State preservation rules per event (tab switch, job URL change, manual reset, re-login)
 
 **From Architecture - Deployment:**
@@ -318,10 +315,9 @@
 | FR20 | POST-MVP | Element picker for manual field correction (deferred) |
 | FR23-FR25 | EXT.6 | Auto match, detailed match analysis |
 | FR26-FR30 | EXT.7 | Cover letter: generate, tone, length, instructions, regenerate, PDF |
-| FR31-FR35 | EXT.8 + API.2 | AI Studio Chat: UI (EXT.8), backend endpoint (API.2) |
 | FR36-FR37, FR36a-c | EXT.7 | Outreach: generate, tone, length, instructions, regenerate |
-| FR37a-FR37f | EXT.12 + API.4 | Coach: UI (EXT.12), prompt templates (API.4), backend via shared chat endpoint (API.2) |
-| FR38-FR41 | EXT.7, EXT.8 | Common AI: edit output, ephemeral, copy, visual feedback |
+| FR37a-FR37h, FR37f-i, FR37f-ii | EXT.12 + API.2 + API.4 | Coach (AI Studio sub-tab): UI (EXT.12), chat endpoint (API.2), prompt templates (API.4) |
+| FR38-FR41 | EXT.7, EXT.12 | Common AI: edit output, ephemeral, copy, visual feedback |
 | FR42-FR47 | EXT.9 | Autofill: preview, fill, undo, resume upload, cover letter |
 | FR48-FR49 | EXT.5 | Save job from extension, auto "Applied" status |
 | FR50-FR56 | WEB | Job tracking dashboard (Dashboard) |
@@ -330,8 +326,8 @@
 | FR61-FR62 | POST-MVP | Subscription management |
 | FR63 | POST-MVP | Referral credits |
 | FR64-FR65 | EXT.10 | Credit blocking, upgrade message |
-| FR67-FR67b | EXT.3 | Sidebar tabs (4 main + AI Studio sub-tabs) |
-| FR68-FR69b | EXT.3 | Sidebar states (Logged Out, Non-Job Page, Job Detected, Full Power), unlock conditions |
+| FR67-FR67b | EXT.3 | Sidebar tabs (3 main + 4 AI Studio sub-tabs including Coach) |
+| FR68-FR69b | EXT.3 | Sidebar states (Logged Out, Non-Job Page, Job Detected = Full Power), unlock conditions |
 | FR70-FR72 | EXT.3 | Resume tray slot, AI locked state, dashboard link |
 | FR72a-FR72d | EXT.3 | State preservation: job switch reset, non-job page persistence, manual reset, tab state |
 | FR73-FR77 | WEB | Dashboard pages |
@@ -342,12 +338,12 @@
 | NFR6b | API.3 | Match/resume parsing stay JSON (non-streaming) |
 | MATCH-01 | API.3 | Match type param (auto vs detailed) |
 | MATCH-02 | API.3 | Daily auto-match rate limiting (20/day free tier) |
-| CHAT-01 | API.2 | Build `POST /v1/ai/chat` endpoint |
-| CHAT-02 | API.2 | Chat AI prompt template |
-| COACH-01 | API.4 | Coach AI prompt template (strategic/advisory) |
+| CHAT-01 | API.2 | Build `POST /v1/ai/chat` endpoint (serves Coach) |
+| CHAT-02 | API.2 | Coach/chat AI prompt template |
+| COACH-01 | API.4 | Coach AI prompt template (strategic/advisory, skill-based) |
 | COACH-02 | API.4 | Match-analysis-based coaching prompt generation |
 | AI-01 | API.5 | Remove `/v1/ai/answer` dead endpoint |
 
-**100% FR coverage. Zero gaps. Backend tech debt mapped to Epic API.**
+**FR coverage updated for Coach ↔ Chat merge (v2.1). FR31-35 removed (absorbed into Coach FR37a-h). Backend tech debt mapped to Epic API.**
 
 ---

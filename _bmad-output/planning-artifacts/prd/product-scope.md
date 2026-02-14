@@ -9,8 +9,8 @@
 - Active resume selection
 - Scan Page (hybrid: rules + AI fallback)
 - **Job Details Card** with quick match analysis (GPT-4.0 → Claude fallback, <2s)
-  - Two action buttons: **Deep Analysis** → Match tool, **Ask Coach** → Coach/Chat
-- 4 AI Studio tools: **Match** (detailed analysis), **Cover Letter**, **Outreach**, **Coach** (skills UI + free-form chat)
+  - Two action buttons: **Deep Analysis** → Match sub-tab, **Ask Coach** → Coach sub-tab
+- 4 AI Studio sub-tabs: **Match** (detailed analysis), **Cover Letter**, **Outreach**, **Coach** (skills UI + free-form chat)
 - Model selection per request (user chooses AI model, differential pricing)
 - Autofill with **persistent undo** (no timeout; removed only on page refresh or DOM field change)
 - Usage balance display (config-driven from backend)
@@ -20,7 +20,9 @@
 
 1. **Logged Out** — Sign-in only
 2. **Non-Job Page** — Resume tray, dashboard link
-3. **Job Detected = Full Power** — All features unlocked (scan, quick match, AI Studio, autofill)
+3. **Job Detected = Full Power** — All features unlocked (scan, quick match, AI Studio with Coach, autofill)
+
+**Sidebar Tab Structure:** 3 main tabs (Scan | AI Studio | Autofill). Coach is inside AI Studio as the 4th sub-tab.
 
 **Core User Dashboard (Must Ship — Vercel, Next.js):**
 

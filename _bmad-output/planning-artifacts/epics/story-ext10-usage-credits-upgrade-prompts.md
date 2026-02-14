@@ -31,7 +31,7 @@
 **And** for free tier: "5 lifetime credits" label
 **And** for free tier: "X of 20 auto-matches remaining today" counter
 
-**Given** the user tries to use an AI feature (detailed match, cover letter, outreach, chat)
+**Given** the user tries to use an AI feature (detailed match, cover letter, outreach, coach)
 **When** the credit check interceptor runs
 **Then** if credits > 0 → allow operation, decrement locally, refresh from API after
 **And** if credits = 0 → block with disabled button + "No credits remaining" message
@@ -48,7 +48,7 @@
 **And** CreditBar updates with fresh data
 
 **Given** this story retrofits credit checks into previous stories
-**When** EXT.6 (match), EXT.7 (cover letter/outreach), EXT.8 (chat), EXT.12 (coach) are already implemented
+**When** EXT.6 (match), EXT.7 (cover letter/outreach), EXT.12 (coach) are already implemented
 **Then** a shared `useCreditGating()` hook is called before each AI operation
 **And** the hook reads from usage-store and blocks if insufficient
 **And** retrofit scope is LIMITED TO: shared Zustand stores + credit components (CreditBar, UpgradePrompt, useCreditGating hook)
