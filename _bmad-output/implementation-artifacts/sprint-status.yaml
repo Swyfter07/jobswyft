@@ -127,13 +127,13 @@ development_status:
   # ─── Epic 2: Engine Package — Detection, Extraction & Autofill Core ────────
   # Phase 0 (Foundation) — parallel with Epic 1
   # Surfaces: packages/engine/, apps/extension/ (adapter)
-  epic-2: in-progress
+  epic-2: done
   2-1-engine-package-scaffold-scan-engine-extraction: done
   2-2-middleware-extraction-pipeline: done
   2-3-smart-extraction-patterns-confidence-self-healing: done
   2-4-site-config-system-board-registry: done
   2-5-autofill-engine-core-field-detection-form-filling: done
-  2-6-extension-adapter-engine-integration: backlog
+  2-6-extension-adapter-engine-integration: done
   epic-2-retrospective: optional
 
   # ─── Epic 3: Job Match Intelligence ────────────────────────────────────────

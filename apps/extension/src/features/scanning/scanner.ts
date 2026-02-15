@@ -1,4 +1,8 @@
 /**
+ * @deprecated Logic moved to @jobswyft/engine pipeline.
+ * Adapter: features/scanning/engine-scan-adapter.ts + scan-collector.ts
+ * Content script: entrypoints/content-engine.content.ts
+ *
  * Self-contained scraping function for chrome.scripting.executeScript().
  *
  * IMPORTANT: This function is serialized by Chrome and injected into the page.

@@ -1,4 +1,8 @@
 /**
+ * @deprecated Logic moved to @jobswyft/engine executeFillInstructions() + executeUndo().
+ * Adapter: features/autofill/engine-autofill-adapter.ts
+ * Content script: entrypoints/content-engine.content.ts
+ *
  * Pure injectable form fill functions for chrome.scripting.executeScript().
  *
  * IMPORTANT: These functions are serialized by Chrome and injected into the page.

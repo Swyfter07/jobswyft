@@ -1,4 +1,7 @@
 /**
+ * @deprecated Logic moved to @jobswyft/engine SELECTOR_REGISTRY.
+ * Engine's field-classifier.ts now handles board-aware field detection via signal evaluation.
+ *
  * Autofill Field Registry — Data-driven CSS selector definitions for form field detection.
  *
  * Each entry maps a board + fieldType to CSS selectors that identify form fields

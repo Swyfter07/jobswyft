@@ -7,22 +7,15 @@ import { useAutofillStore } from "../stores/autofill-store";
 import { useToast } from "./toast-context";
 import { apiClient } from "../lib/api-client";
 import { detectATSForm } from "@jobswyft/engine";
-import { detectFormFields } from "../features/autofill/field-detector";
-import { fillFormFields, undoFormFills } from "../features/autofill/field-filler";
 import { fetchResumeBlob, injectResumeFile } from "../features/autofill/resume-uploader";
-import { AUTOFILL_FIELD_REGISTRY } from "../features/autofill/field-registry";
 import { fetchAutofillData } from "../features/autofill/autofill-data-service";
-import type { MappedField, DetectionResult, DetectedField, FieldFillResult } from "@jobswyft/engine";
-
-// Serialize registry for chrome.scripting.executeScript args
-const REGISTRY_SERIALIZED = AUTOFILL_FIELD_REGISTRY.map((e) => ({
-  id: e.id,
-  board: e.board,
-  fieldType: e.fieldType,
-  selectors: e.selectors,
-  priority: e.priority,
-  status: e.status,
-}));
+import {
+  detectAndClassifyFields,
+  executeFill,
+  executeUndoFill,
+} from "../features/autofill/engine-autofill-adapter";
+import { buildFillInstructions } from "@jobswyft/engine";
+import type { MappedField, DetectionResult } from "@jobswyft/engine";
 
 export function AutofillTab() {
   const { toast } = useToast();
@@ -46,44 +39,16 @@ export function AutofillTab() {
       const { board } = detectATSForm(tab.url);
       const boardName = board || null;
 
-      // Run injectable field detection across all frames
-      const results = await chrome.scripting.executeScript({
-        target: { tabId: tab.id, allFrames: true },
-        func: detectFormFields,
-        args: [boardName, REGISTRY_SERIALIZED],
-      });
-
-      // Aggregate frame results
-      const allFields: DetectedField[] = [];
-      const seenIds = new Set<string>();
-      let totalScanned = 0;
-      let totalDuration = 0;
-
-      for (const frameResult of results) {
-        if (!frameResult?.result) continue;
-        const r = frameResult.result as DetectionResult;
-        totalScanned += r.totalElementsScanned;
-        totalDuration = Math.max(totalDuration, r.durationMs);
-
-        for (const field of r.fields) {
-          // De-duplicate across frames by stableId
-          if (!seenIds.has(field.stableId)) {
-            seenIds.add(field.stableId);
-            allFields.push({
-              ...field,
-              frameId: frameResult.frameId ?? 0,
-            });
-          }
-        }
-      }
+      // Detect and classify fields via engine adapter (multi-frame)
+      const allFields = await detectAndClassifyFields(tab.id, boardName);
 
       const detectionResult: DetectionResult = {
-        fields: allFields,
+        fields: allFields as DetectionResult["fields"],
         board: boardName,
         url: tab.url,
         timestamp: Date.now(),
-        durationMs: totalDuration,
-        totalElementsScanned: totalScanned,
+        durationMs: 0,
+        totalElementsScanned: allFields.length,
       };
 
       store.setDetectionResult(detectionResult);
@@ -149,7 +114,7 @@ export function AutofillTab() {
       const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
       if (!tab?.id) throw new Error("No active tab");
 
-      // 1. Build fill instructions for text/select fields
+      // 1. Build fill instructions via engine for text/select fields
       const fillable = store.fields.filter(
         (f) =>
           f.mappedValue &&
@@ -170,35 +135,20 @@ export function AutofillTab() {
         return;
       }
 
-      const instructions = fillable.map((f) => ({
-        selector: f.selector,
-        value: f.mappedValue!,
-        inputType: f.inputType,
-        stableId: f.stableId,
-      }));
+      // Delegate instruction building to engine (AC1: no inline logic in extension)
+      const instructions = buildFillInstructions(fillable);
 
-      // 2. Execute injectable filler across all frames
-      let allResults: FieldFillResult[] = [];
-
+      // 2. Execute fill via engine adapter (multi-frame)
+      let filledCount = 0;
       if (instructions.length > 0) {
-        const results = await chrome.scripting.executeScript({
-          target: { tabId: tab.id, allFrames: true },
-          func: fillFormFields,
-          args: [instructions],
-        });
+        const fillResult = await executeFill(tab.id, instructions);
+        filledCount = fillResult.filled;
 
-        // 3. Aggregate frame results
-        for (const fr of results) {
-          if (fr?.result?.results) {
-            allResults.push(...fr.result.results);
-          }
-        }
-
-        // 4. Apply results to store (updates field statuses + builds undo state)
-        store.applyFillResults(allResults);
+        // 3. Apply results to store with engine-captured undo entries
+        store.applyFillResults(fillResult.results, fillResult.undoEntries);
       }
 
-      // 5. Handle resume upload separately (if resume field exists and data available)
+      // 4. Handle resume upload separately (if resume field exists and data available)
       const resumeField = store.fields.find(
         (f) =>
           (f.fieldType === "resumeUpload" || f.fieldType === "coverLetterUpload") &&
@@ -208,10 +158,9 @@ export function AutofillTab() {
         await handleResumeUpload(tab.id, resumeField);
       }
 
-      const filled = allResults.filter((r) => r.success).length;
-      store.setFillStatus(filled > 0 || resumeField ? "done" : "error");
+      store.setFillStatus(filledCount > 0 || resumeField ? "done" : "error");
       toast({
-        title: `Filled ${filled} field${filled !== 1 ? "s" : ""}`,
+        title: `Filled ${filledCount} field${filledCount !== 1 ? "s" : ""}`,
         variant: "success",
       });
     } catch (err) {
@@ -238,22 +187,19 @@ export function AutofillTab() {
 
         store.updateFieldStatus(field.stableId, "ready", result.content);
 
-        // Auto-fill the field via injectable filler
+        // Auto-fill the field via engine adapter
         const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
         if (tab?.id) {
-          const fillResults = await chrome.scripting.executeScript({
-            target: { tabId: tab.id, allFrames: true },
-            func: fillFormFields,
-            args: [[{
-              selector: field.selector,
-              value: result.content,
-              inputType: field.inputType,
-              stableId: field.stableId,
-            }]],
-          });
+          const fillResult = await executeFill(tab.id, [{
+            selector: field.selector,
+            value: result.content,
+            inputType: field.inputType,
+            stableId: field.stableId,
+          }]);
 
-          const frameResult = fillResults.find((fr) => fr?.result?.results?.length > 0);
-          const fieldResult = frameResult?.result?.results?.[0];
+          const fieldResult = fillResult.results.find(
+            (r) => r.stableId === field.stableId
+          );
 
           if (fieldResult?.success) {
             store.updateFieldStatus(field.stableId, "filled");
@@ -287,18 +233,7 @@ export function AutofillTab() {
     if (!tab?.id) return;
 
     try {
-      const entries = undoState.entries.map((e) => ({
-        selector: e.selector,
-        previousValue: e.previousValue,
-        inputType: e.inputType,
-        stableId: e.stableId,
-      }));
-
-      await chrome.scripting.executeScript({
-        target: { tabId: tab.id, allFrames: true },
-        func: undoFormFills,
-        args: [entries],
-      });
+      await executeUndoFill(tab.id, undoState.entries);
 
       // Reset field statuses to "ready"
       for (const entry of undoState.entries) {

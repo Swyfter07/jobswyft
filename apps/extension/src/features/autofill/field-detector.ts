@@ -1,4 +1,8 @@
 /**
+ * @deprecated Logic moved to @jobswyft/engine detectFormFields() + classifyFields().
+ * Adapter: features/autofill/engine-autofill-adapter.ts
+ * Content script: entrypoints/content-engine.content.ts
+ *
  * Pure injectable form field detection function for chrome.scripting.executeScript().
  *
  * IMPORTANT: This function is serialized by Chrome and injected into the page.

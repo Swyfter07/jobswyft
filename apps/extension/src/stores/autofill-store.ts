@@ -11,6 +11,7 @@ import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
 import { AUTOFILL_STORAGE_KEY } from "../lib/constants";
 import {
   getFieldCategory,
+  getDataValue,
   type DetectionResult,
   type MappedField,
   type MappedFieldStatus,
@@ -61,7 +62,7 @@ interface AutofillState {
   setFillStatus: (status: FillStatus) => void;
   incrementFilledCount: () => void;
   addFillError: (error: string) => void;
-  applyFillResults: (results: FieldFillResult[]) => void;
+  applyFillResults: (results: FieldFillResult[], engineUndoEntries?: UndoState["entries"]) => void;
   setUndoState: (state: UndoState | null) => void;
   canUndo: () => boolean;
   clearExpiredUndo: () => void;
@@ -69,33 +70,16 @@ interface AutofillState {
 }
 
 // ─── Field → Value Mapping ────────────────────────────────────────────────────
+// Delegates to engine's getDataValue() for standard fields, overlays EEO
+// preferences from extension settings for EEO-specific fields.
 
 function mapFieldToValue(
   fieldType: AutofillFieldType,
   data: AutofillData,
-  eeo: EEOPreferences
+  eeo: EEOPreferences,
 ): { value: string | null; source: MappedField["valueSource"] } {
-  const p = data.personal;
-
+  // EEO fields: extension-specific settings override engine defaults
   switch (fieldType) {
-    case "firstName":
-      return { value: p.firstName, source: "personal" };
-    case "lastName":
-      return { value: p.lastName, source: "personal" };
-    case "fullName":
-      return { value: p.fullName ?? ([p.firstName, p.lastName].filter(Boolean).join(" ") || null), source: "personal" };
-    case "email":
-      return { value: p.email, source: "personal" };
-    case "phone":
-      return { value: p.phone, source: "personal" };
-    case "location":
-      return { value: p.location, source: "personal" };
-    case "linkedinUrl":
-      return { value: p.linkedinUrl, source: "personal" };
-    case "portfolioUrl":
-      return { value: p.portfolioUrl, source: "personal" };
-    case "websiteUrl":
-      return { value: p.portfolioUrl, source: "personal" };
     case "workAuthorization":
       return { value: eeo.authorizedToWork ?? data.workAuthorization, source: "eeo" };
     case "sponsorshipRequired":
@@ -108,10 +92,9 @@ function mapFieldToValue(
       return { value: eeo.veteranStatus ?? null, source: "eeo" };
     case "eeoDisabilityStatus":
       return { value: eeo.disabilityStatus ?? null, source: "eeo" };
-    case "salary":
-      return { value: data.salaryExpectation, source: "personal" };
     default:
-      return { value: null, source: null };
+      // Standard fields: delegate to engine's mapping
+      return getDataValue(fieldType, data);
   }
 }
 
@@ -237,10 +220,9 @@ export const useAutofillStore = create<AutofillState>()(
         set({ fillErrors: [...get().fillErrors, error] });
       },
 
-      applyFillResults: (results) => {
+      applyFillResults: (results, engineUndoEntries) => {
         const { fields, pageUrl } = get();
         let filledCount = 0;
-        const undoEntries: UndoState["entries"] = [];
 
         const updatedFields = fields.map((f) => {
           const result = results.find((r) => r.stableId === f.stableId);
@@ -248,20 +230,36 @@ export const useAutofillStore = create<AutofillState>()(
 
           if (result.success) {
             filledCount++;
-            undoEntries.push({
-              stableId: f.stableId,
-              selector: f.selector,
-              previousValue: result.previousValue,
-              inputType: f.inputType,
-            });
             return { ...f, status: "filled" as const };
           } else {
             return { ...f, status: "error" as const };
           }
         });
 
-        const newUndoState: UndoState | null = undoEntries.length > 0
-          ? { entries: undoEntries, timestamp: Date.now(), pageUrl: pageUrl || "" }
+        // Prefer engine-captured undo entries (from captureUndoSnapshot in content script).
+        // Falls back to building from fill results if engine entries not provided.
+        let finalUndoEntries: UndoState["entries"];
+        if (engineUndoEntries && engineUndoEntries.length > 0) {
+          finalUndoEntries = engineUndoEntries;
+        } else {
+          finalUndoEntries = [];
+          for (const r of results) {
+            if (r.success) {
+              const field = fields.find((f) => f.stableId === r.stableId);
+              if (field) {
+                finalUndoEntries.push({
+                  stableId: field.stableId,
+                  selector: field.selector,
+                  previousValue: r.previousValue,
+                  inputType: field.inputType,
+                });
+              }
+            }
+          }
+        }
+
+        const newUndoState: UndoState | null = finalUndoEntries.length > 0
+          ? { entries: finalUndoEntries, timestamp: Date.now(), pageUrl: pageUrl || "" }
           : null;
 
         set({
@@ -285,7 +283,9 @@ export const useAutofillStore = create<AutofillState>()(
       canUndo: () => {
         const { undoState, pageUrl } = get();
         if (!undoState) return false;
-        // Expired after 5 minutes
+        // 5-minute safety timeout until MutationObserver detects external DOM changes (Epic 6).
+        // ADR-REV-AUTOFILL-FIX specifies persistent undo, but without MutationObserver,
+        // stale undo entries could persist indefinitely. This timeout provides a safety net.
         if (Date.now() - undoState.timestamp > 5 * 60 * 1000) return false;
         // Must be on same page
         if (undoState.pageUrl !== pageUrl) return false;

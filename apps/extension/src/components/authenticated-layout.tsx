@@ -17,22 +17,23 @@ import { useResumeStore } from "../stores/resume-store";
 import { useScanStore } from "../stores/scan-store";
 import { useCreditsStore } from "../stores/credits-store";
 import { useSettingsStore } from "../stores/settings-store";
-import { scrapeJobPage } from "../features/scanning/scanner";
 import {
-  SELECTOR_REGISTRY,
   detectJobPage,
+  detectATSForm,
   validateExtraction,
-  aggregateFrameResults,
   type ExtractionSource,
+  type DetectionResult,
 } from "@jobswyft/engine";
 import { cleanHtmlForAI } from "../features/scanning/html-cleaner";
-import { toFrameResults } from "../features/scanning/frame-result-adapter";
+import { collectPageData } from "../features/scanning/scan-collector";
+import {
+  runEngineScan,
+  toScanCollectionResults,
+} from "../features/scanning/engine-scan-adapter";
 import { apiClient } from "../lib/api-client";
 import { DASHBOARD_URL, SIDE_PANEL_CLASSNAME, AUTO_SCAN_STORAGE_KEY, SENTINEL_STORAGE_KEY } from "../lib/constants";
 import { useAutofillStore } from "../stores/autofill-store";
-import { detectATSForm } from "@jobswyft/engine";
-import { detectFormFields } from "../features/autofill/field-detector";
-import { AUTOFILL_FIELD_REGISTRY } from "../features/autofill/field-registry";
+import { detectAndClassifyFields } from "../features/autofill/engine-autofill-adapter";
 import { fetchAutofillData } from "../features/autofill/autofill-data-service";
 import { AIStudioTab } from "./ai-studio-tab";
 import { AutofillTab } from "./autofill-tab";
@@ -158,20 +159,25 @@ export function AuthenticatedLayout() {
 
       scanStore.startScan();
       try {
+        // Collect raw page data from all frames via thin collector
         const results = await chrome.scripting.executeScript({
           target: { tabId, allFrames: true },
-          func: scrapeJobPage,
-          args: [board, SELECTOR_REGISTRY],
+          func: collectPageData,
         });
 
-        // Aggregate results — main frame (frameId 0) first, sub-frames fill gaps only
-        const { data: best, sources: bestSources, hasShowMore } = aggregateFrameResults(toFrameResults(results));
+        // Run engine extraction pipeline on collected data
+        const scanResult = await runEngineScan(toScanCollectionResults(results));
+        const best = scanResult.jobData;
+        const bestSources = scanResult.sources;
 
         // Track show-more detection for banner display
-        scanStore.setHasShowMore(hasShowMore);
+        scanStore.setHasShowMore(scanResult.hasShowMore);
 
-        // ─── Confidence scoring (AC3, AC4) ─────────────────────────────
-        let validation = validateExtraction(best, bestSources as Record<string, ExtractionSource>);
+        // Use engine-computed validation; re-validate after AI merge if needed
+        let validation = {
+          completeness: scanResult.completeness,
+          confidence: scanResult.confidence,
+        };
 
         // ─── AI Fallback (AC6) — only on initial scan, not verification ─
         if (!skipAI && validation.completeness < AI_FALLBACK_THRESHOLD && accessToken) {
@@ -236,26 +242,23 @@ export function AuthenticatedLayout() {
             if (verificationTimerRef.current) clearTimeout(verificationTimerRef.current);
             verificationTimerRef.current = setTimeout(async () => {
               try {
-                // Re-scan rule-based only, no AI
+                // Re-scan rule-based only via engine pipeline, no AI
                 const reResults = await chrome.scripting.executeScript({
                   target: { tabId, allFrames: true },
-                  func: scrapeJobPage,
-                  args: [board, SELECTOR_REGISTRY],
+                  func: collectPageData,
                 });
-
-                // Fresh scan — don't carry forward stale data from initial scan
-                const { data: reBest, sources: reSources } = aggregateFrameResults(toFrameResults(reResults));
+                const reScan = await runEngineScan(toScanCollectionResults(reResults));
+                const reBest = reScan.jobData;
 
                 // Backfill secondary fields from initial scan if fresh scan missed them
-                if (!reBest.location && best.location) { reBest.location = best.location; reSources.location = bestSources.location; }
-                if (!reBest.salary && best.salary) { reBest.salary = best.salary; reSources.salary = bestSources.salary; }
-                if (!reBest.employmentType && best.employmentType) { reBest.employmentType = best.employmentType; reSources.employmentType = bestSources.employmentType; }
+                if (!reBest.location && best.location) reBest.location = best.location;
+                if (!reBest.salary && best.salary) reBest.salary = best.salary;
+                if (!reBest.employmentType && best.employmentType) reBest.employmentType = best.employmentType;
                 if (!reBest.sourceUrl && best.sourceUrl) reBest.sourceUrl = best.sourceUrl;
 
-                const reValidation = validateExtraction(reBest, reSources as Record<string, ExtractionSource>);
                 // Always update if verification found valid title + company (fresh data > stale)
                 if (reBest.title && reBest.company) {
-                  scanStore.setScanResult(reBest, reValidation.confidence, board);
+                  scanStore.setScanResult(reBest, reScan.confidence, board);
                   setJobData({
                     title: reBest.title,
                     company: reBest.company,
@@ -393,48 +396,23 @@ export function AuthenticatedLayout() {
 
               const { board } = detectATSForm(tab.url);
               const boardName = board || null;
-              const registrySerialized = AUTOFILL_FIELD_REGISTRY.map((e) => ({
-                id: e.id, board: e.board, fieldType: e.fieldType,
-                selectors: e.selectors, priority: e.priority, status: e.status,
-              }));
 
               try {
                 autofillStore.setDetecting();
 
-                // Detection + data fetch in parallel
-                const [results, autofillData] = await Promise.all([
-                  chrome.scripting.executeScript({
-                    target: { tabId: tab.id!, allFrames: true },
-                    func: detectFormFields,
-                    args: [boardName, registrySerialized],
-                  }),
+                // Detection via engine adapter + data fetch in parallel
+                const [allFields, autofillData] = await Promise.all([
+                  detectAndClassifyFields(tab.id!, boardName),
                   accessToken ? fetchAutofillData(accessToken) : Promise.resolve(null),
                 ]);
 
-                // Aggregate frame results
-                const allFields: Array<Record<string, unknown>> = [];
-                const seenIds = new Set<string>();
-                let totalScanned = 0;
-
-                for (const fr of results) {
-                  if (!fr?.result) continue;
-                  const r = fr.result as { fields: Array<{ stableId: string }>; totalElementsScanned: number };
-                  totalScanned += r.totalElementsScanned;
-                  for (const field of r.fields) {
-                    if (!seenIds.has(field.stableId)) {
-                      seenIds.add(field.stableId);
-                      allFields.push({ ...field, frameId: fr.frameId ?? 0 });
-                    }
-                  }
-                }
-
                 autofillStore.setDetectionResult({
-                  fields: allFields as never[],
+                  fields: allFields as DetectionResult["fields"],
                   board: boardName,
                   url: tab.url!,
                   timestamp: Date.now(),
                   durationMs: 0,
-                  totalElementsScanned: totalScanned,
+                  totalElementsScanned: allFields.length,
                 });
 
                 if (autofillData) {
