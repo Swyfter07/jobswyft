@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply - Lever</title>
+</head>
+<body>
+  <div class="content">
+    <div class="section page-centered application-form">
+      <h2>Apply for this job</h2>
+
+      <form class="application-form" method="POST" action="/applications" enctype="multipart/form-data">
+
+        <!-- Basic Info -->
+        <div class="application-field">
+          <label for="name">Full Name <span class="required">*</span></label>
+          <input type="text" id="name" name="name" class="application-input" placeholder="Your full name" required>
+        </div>
+
+        <div class="application-field">
+          <label for="email">Email <span class="required">*</span></label>
+          <input type="email" id="email" name="email" class="application-input" placeholder="you@email.com" required>
+        </div>
+
+        <div class="application-field">
+          <label for="phone">Phone</label>
+          <input type="tel" id="phone" name="phone" class="application-input" placeholder="+1 (555) 123-4567">
+        </div>
+
+        <div class="application-field">
+          <label for="org">Current Company</label>
+          <input type="text" id="org" name="org" class="application-input" placeholder="Current company name">
+        </div>
+
+        <!-- Resume -->
+        <div class="application-field">
+          <label for="resume">Resume / CV <span class="required">*</span></label>
+          <div class="application-file-input">
+            <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx,.txt,.rtf" required>
+            <span class="help-text">Attach resume as .pdf, .doc, .docx, .txt, or .rtf</span>
+          </div>
+        </div>
+
+        <!-- URLs -->
+        <div class="application-field">
+          <label for="urls[LinkedIn]">LinkedIn URL</label>
+          <input type="url" id="urls[LinkedIn]" name="urls[LinkedIn]" class="application-input" placeholder="https://linkedin.com/in/...">
+        </div>
+
+        <div class="application-field">
+          <label for="urls[GitHub]">GitHub URL</label>
+          <input type="url" id="urls[GitHub]" name="urls[GitHub]" class="application-input" placeholder="https://github.com/...">
+        </div>
+
+        <div class="application-field">
+          <label for="urls[Portfolio]">Portfolio URL</label>
+          <input type="url" id="urls[Portfolio]" name="urls[Portfolio]" class="application-input" placeholder="https://yourportfolio.com">
+        </div>
+
+        <div class="application-field">
+          <label for="urls[Twitter]">Twitter URL</label>
+          <input type="url" id="urls[Twitter]" name="urls[Twitter]" class="application-input" placeholder="https://twitter.com/...">
+        </div>
+
+        <div class="application-field">
+          <label for="urls[Other]">Other URL</label>
+          <input type="url" id="urls[Other]" name="urls[Other]" class="application-input" placeholder="https://...">
+        </div>
+
+        <!-- Additional Information -->
+        <div class="application-field">
+          <label for="comments">Additional Information</label>
+          <textarea id="comments" name="comments" class="application-input" rows="5" placeholder="Add a cover letter or anything else you want to share..."></textarea>
+        </div>
+
+        <!-- Consent -->
+        <div class="application-field application-field--consent">
+          <label>
+            <input type="checkbox" name="consent" value="true" required>
+            I agree to the <a href="/privacy">Privacy Policy</a> and consent to the processing of my personal data.
+          </label>
+        </div>
+
+        <div class="application-actions">
+          <button type="submit" class="postings-btn template-btn-submit">Submit Application</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</body>
+</html>

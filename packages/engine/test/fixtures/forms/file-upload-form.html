@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Upload Form</title>
+</head>
+<body>
+  <h1>Upload Your Documents</h1>
+  <form id="upload-form" method="POST" action="/upload" enctype="multipart/form-data">
+
+    <div class="form-group">
+      <label for="resume">Resume / CV</label>
+      <p class="help-text">Accepted formats: PDF, DOC, DOCX (max 5MB)</p>
+      <input type="file" id="resume" name="resume" accept=".pdf,.doc,.docx" required>
+    </div>
+
+    <div class="form-group">
+      <label for="cover_letter_file">Cover Letter</label>
+      <p class="help-text">Accepted formats: PDF, DOC, DOCX (max 5MB)</p>
+      <input type="file" id="cover_letter_file" name="cover_letter_file" accept=".pdf,.doc,.docx">
+    </div>
+
+    <div class="form-group">
+      <label for="other_document">Other Supporting Document</label>
+      <p class="help-text">Upload any additional document</p>
+      <input type="file" id="other_document" name="other_document">
+    </div>
+
+    <div class="form-group">
+      <label for="portfolio_files">Portfolio Samples</label>
+      <p class="help-text">Upload multiple files at once</p>
+      <input type="file" id="portfolio_files" name="portfolio_files" multiple>
+    </div>
+
+    <div class="form-actions">
+      <button type="submit">Upload Documents</button>
+    </div>
+
+  </form>
+</body>
+</html>

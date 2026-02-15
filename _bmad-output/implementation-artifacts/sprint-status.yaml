@@ -132,7 +132,7 @@ development_status:
   2-2-middleware-extraction-pipeline: done
   2-3-smart-extraction-patterns-confidence-self-healing: done
   2-4-site-config-system-board-registry: done
-  2-5-autofill-engine-core-field-detection-form-filling: backlog
+  2-5-autofill-engine-core-field-detection-form-filling: done
   2-6-extension-adapter-engine-integration: backlog
   epic-2-retrospective: optional
 

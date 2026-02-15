@@ -78,6 +78,29 @@ export type {
   CreateContextOptions,
 } from "./pipeline/index";
 
+// ─── Autofill ───────────────────────────────────────────────────────────────
+export {
+  detectFormFields,
+  findFieldByOpid,
+  deepQueryFormFields,
+  classifyField,
+  classifyFields,
+  evaluateAllSignals,
+  mapFieldsToData,
+  getDataValue,
+  buildFillInstructions,
+  executeFillInstruction,
+  executeFillInstructions,
+  setFieldValue,
+  setSelectValue,
+  setCheckboxValue,
+  setRadioValue,
+  setContentEditableValue,
+  captureUndoSnapshot,
+  executeUndo,
+} from "./autofill/index";
+export type { DeepQueryOptions } from "./autofill/index";
+
 // ─── Types ───────────────────────────────────────────────────────────────────
 export type { FrameResult } from "./types/frame-result";
 

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Apply - Greenhouse</title>
+</head>
+<body>
+  <div id="app_body">
+    <div id="application" class="application-form">
+      <h1 id="header">Apply for this Job</h1>
+      <p class="job-title">Senior Software Engineer</p>
+
+      <form id="application_form" method="POST" action="/applications" enctype="multipart/form-data">
+
+        <!-- Basic Information -->
+        <div id="main_fields">
+          <div class="field">
+            <label for="first_name">First Name <span class="required">*</span></label>
+            <input type="text" id="first_name" name="job_application[first_name]" placeholder="First Name" required>
+          </div>
+
+          <div class="field">
+            <label for="last_name">Last Name <span class="required">*</span></label>
+            <input type="text" id="last_name" name="job_application[last_name]" placeholder="Last Name" required>
+          </div>
+
+          <div class="field">
+            <label for="email">Email <span class="required">*</span></label>
+            <input type="email" id="email" name="job_application[email]" placeholder="email@example.com" required>
+          </div>
+
+          <div class="field">
+            <label for="phone">Phone</label>
+            <input type="tel" id="phone" name="job_application[phone]" placeholder="+1 555-123-4567">
+          </div>
+        </div>
+
+        <!-- Resume -->
+        <div id="resume_fields" class="field field--resume">
+          <label for="resume">Resume / CV <span class="required">*</span></label>
+          <div class="resume-upload-area">
+            <input type="file" id="resume" name="job_application[resume]" accept=".pdf,.doc,.docx,.txt,.rtf" required>
+            <p class="help-text">Attach your resume (PDF, DOC, DOCX, TXT, RTF)</p>
+          </div>
+        </div>
+
+        <!-- URL Fields -->
+        <div id="url_fields">
+          <div class="field">
+            <label for="linkedin_url">LinkedIn Profile</label>
+            <input type="url" id="linkedin_url" name="job_application[urls][linkedin]" placeholder="https://linkedin.com/in/yourprofile">
+          </div>
+
+          <div class="field">
+            <label for="website_url">Website</label>
+            <input type="url" id="website_url" name="job_application[urls][website]" placeholder="https://yourwebsite.com">
+          </div>
+        </div>
+
+        <!-- Custom Questions -->
+        <div id="custom_fields">
+          <h3>Additional Questions</h3>
+
+          <div class="field">
+            <label for="cover_letter">Why do you want to work here? <span class="required">*</span></label>
+            <textarea id="cover_letter" name="job_application[answers][0][text_value]" rows="5" placeholder="Tell us what excites you about this opportunity..." required></textarea>
+          </div>
+
+          <div class="field">
+            <label for="salary_expectation">What are your salary expectations?</label>
+            <input type="text" id="salary_expectation" name="job_application[answers][1][text_value]" placeholder="e.g. $120,000 - $150,000">
+          </div>
+
+          <div class="field">
+            <label for="start_date">Earliest start date</label>
+            <input type="text" id="start_date" name="job_application[answers][2][text_value]" placeholder="MM/DD/YYYY">
+          </div>
+
+          <div class="field">
+            <label for="sponsorship">Will you now or in the future require visa sponsorship?</label>
+            <select id="sponsorship" name="job_application[answers][3][text_value]">
+              <option value="">-- Select --</option>
+              <option value="Yes">Yes</option>
+              <option value="No">No</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- EEO Section -->
+        <div id="eeo_fields">
+          <h3>Equal Employment Opportunity (Voluntary)</h3>
+          <p class="eeo-description">This information is collected for compliance purposes and will not affect your application.</p>
+
+          <div class="field">
+            <label for="gender">Gender</label>
+            <select id="gender" name="job_application[eeo][gender]">
+              <option value="">-- Select --</option>
+              <option value="male">Male</option>
+              <option value="female">Female</option>
+              <option value="decline">Decline to Self-Identify</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="race">Race / Ethnicity</label>
+            <select id="race" name="job_application[eeo][race]">
+              <option value="">-- Select --</option>
+              <option value="hispanic">Hispanic or Latino</option>
+              <option value="white">White (Not Hispanic or Latino)</option>
+              <option value="black">Black or African American (Not Hispanic or Latino)</option>
+              <option value="asian">Asian (Not Hispanic or Latino)</option>
+              <option value="native">American Indian or Alaska Native (Not Hispanic or Latino)</option>
+              <option value="pacific">Native Hawaiian or Other Pacific Islander (Not Hispanic or Latino)</option>
+              <option value="two_or_more">Two or More Races (Not Hispanic or Latino)</option>
+              <option value="decline">Decline to Self-Identify</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="veteran_status">Veteran Status</label>
+            <select id="veteran_status" name="job_application[eeo][veteran_status]">
+              <option value="">-- Select --</option>
+              <option value="protected">I identify as one or more of the classifications of protected veteran</option>
+              <option value="not_protected">I am not a protected veteran</option>
+              <option value="decline">I don't wish to answer</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="disability_status">Disability Status</label>
+            <select id="disability_status" name="job_application[eeo][disability_status]">
+              <option value="">-- Select --</option>
+              <option value="yes">Yes, I have a disability (or previously had a disability)</option>
+              <option value="no">No, I don't have a disability</option>
+              <option value="decline">I don't wish to answer</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" id="submit_app">Submit Application</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</body>
+</html>
