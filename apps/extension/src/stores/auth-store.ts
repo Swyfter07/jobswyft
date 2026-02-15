@@ -4,6 +4,7 @@ import { chromeStorageAdapter } from "../lib/chrome-storage-adapter";
 import { signOut as authSignOut } from "../lib/auth";
 import { getSession, removeSession } from "../lib/storage";
 import { apiClient } from "../lib/api-client";
+import { resetAllStores } from "./reset-stores";
 
 export interface UserProfile {
   id: string;
@@ -63,6 +64,9 @@ export const useAuthStore = create<AuthState>()(
         } catch {
           // Ensure local state is always cleared even if server call fails
         }
+        // Reset all user-specific stores BEFORE clearing auth session
+        // to prevent stale data leaking to next session / different user
+        await resetAllStores();
         get().clearSession();
       },
 
@@ -73,6 +77,9 @@ export const useAuthStore = create<AuthState>()(
           // Check stored session from chrome.storage.local (EXT.1 storage)
           const stored = await getSession();
           if (!stored?.accessToken) {
+            // No session → clear user-specific stores to prevent stale data
+            // from a previous user leaking if a different user logs in next.
+            await resetAllStores();
             get().clearSession();
             return false;
           }
@@ -81,6 +88,7 @@ export const useAuthStore = create<AuthState>()(
           const nowSec = Math.floor(Date.now() / 1000);
           if (!stored.expiresAt || stored.expiresAt < nowSec) {
             await removeSession();
+            await resetAllStores();
             get().clearSession();
             return false;
           }
@@ -88,8 +96,9 @@ export const useAuthStore = create<AuthState>()(
           // Validate with server
           const profile = await apiClient.getMe(stored.accessToken);
           if (!profile) {
-            // Auth failure (401) — clear session and log out
+            // Auth failure (401) — clear user data and session
             await removeSession();
+            await resetAllStores();
             get().clearSession();
             return false;
           }
@@ -109,8 +118,9 @@ export const useAuthStore = create<AuthState>()(
             // Keep existing session state, don't clear
             return false;
           }
-          // Other errors — clear session
+          // Other errors — clear user data and session
           await removeSession().catch(() => {});
+          await resetAllStores();
           get().clearSession();
           return false;
         }

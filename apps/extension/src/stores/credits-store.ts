@@ -10,6 +10,7 @@ interface CreditsState {
 
   fetchCredits: (token: string) => Promise<void>;
   setCredits: (credits: number, maxCredits: number) => void;
+  resetCredits: () => void;
 }
 
 export const useCreditsStore = create<CreditsState>()(
@@ -36,6 +37,10 @@ export const useCreditsStore = create<CreditsState>()(
 
       setCredits: (credits, maxCredits) => {
         set({ credits, maxCredits });
+      },
+
+      resetCredits: () => {
+        set({ credits: 0, maxCredits: 0, isLoading: false });
       },
     }),
     {

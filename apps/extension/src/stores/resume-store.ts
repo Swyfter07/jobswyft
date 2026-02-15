@@ -85,6 +85,7 @@ interface ResumeStoreState {
   saveResumeData: (token: string, data: ResumeData) => Promise<void>;
   updateLocalResumeData: (updates: Partial<ResumeData>) => void;
   clearError: () => void;
+  resetResumes: () => void;
 }
 
 export const useResumeStore = create<ResumeStoreState>()(
@@ -273,6 +274,18 @@ export const useResumeStore = create<ResumeStoreState>()(
       },
 
       clearError: () => set({ error: null }),
+
+      resetResumes: () => {
+        set({
+          resumes: [],
+          activeResumeId: null,
+          activeResumeData: null,
+          resumeCache: {},
+          isLoading: false,
+          isUploading: false,
+          error: null,
+        });
+      },
     }),
     {
       name: "jobswyft-resumes",

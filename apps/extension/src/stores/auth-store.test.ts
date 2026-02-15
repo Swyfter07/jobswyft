@@ -27,6 +27,21 @@ vi.mock("../lib/api-client", () => ({
   },
 }));
 
+vi.mock("./reset-stores", () => ({
+  resetAllStores: vi.fn(async () => {}),
+}));
+
+// Mock chrome.storage.local for resetAllStores (called by signOut)
+vi.stubGlobal("chrome", {
+  storage: {
+    local: {
+      remove: vi.fn(async () => {}),
+      get: vi.fn(async () => ({})),
+      set: vi.fn(async () => {}),
+    },
+  },
+});
+
 describe("useAuthStore", () => {
   beforeEach(() => {
     // Reset store state before each test
@@ -107,5 +122,69 @@ describe("useAuthStore", () => {
     expect(apiClient.logout).toHaveBeenCalledWith("test-token");
     expect(authSignOut).toHaveBeenCalled();
     expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it("should call resetAllStores on signOut()", async () => {
+    const { resetAllStores } = await import("./reset-stores");
+
+    useAuthStore.getState().setSession(
+      {
+        id: "123",
+        email: "test@example.com",
+        name: "Test User",
+        avatarUrl: null,
+      },
+      "test-token"
+    );
+
+    await useAuthStore.getState().signOut();
+
+    expect(resetAllStores).toHaveBeenCalled();
+  });
+
+  it("should call resetAllStores when validateSession finds no stored session", async () => {
+    const { getSession } = await import("../lib/storage");
+    const { resetAllStores } = await import("./reset-stores");
+
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce(null);
+
+    await useAuthStore.getState().validateSession();
+
+    expect(resetAllStores).toHaveBeenCalled();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it("should call resetAllStores when validateSession finds expired token", async () => {
+    const { getSession } = await import("../lib/storage");
+    const { resetAllStores } = await import("./reset-stores");
+
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      accessToken: "expired-token",
+      expiresAt: Math.floor(Date.now() / 1000) - 3600, // 1 hour ago
+    });
+
+    await useAuthStore.getState().validateSession();
+
+    expect(resetAllStores).toHaveBeenCalled();
+    expect(useAuthStore.getState().isAuthenticated).toBe(false);
+  });
+
+  it("should NOT call resetAllStores on network error (preserve session)", async () => {
+    const { getSession } = await import("../lib/storage");
+    const { apiClient } = await import("../lib/api-client");
+    const { resetAllStores } = await import("./reset-stores");
+
+    (getSession as ReturnType<typeof vi.fn>).mockResolvedValueOnce({
+      accessToken: "valid-token",
+      expiresAt: Math.floor(Date.now() / 1000) + 3600,
+    });
+    (apiClient.getMe as ReturnType<typeof vi.fn>).mockRejectedValueOnce(
+      new Error("NETWORK_ERROR")
+    );
+
+    await useAuthStore.getState().validateSession();
+
+    // Should NOT reset stores on network error — session is preserved for retry
+    expect(resetAllStores).not.toHaveBeenCalled();
   });
 });

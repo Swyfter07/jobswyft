@@ -150,7 +150,10 @@ export const useSidebarStore = create<SidebarStoreState>()(
         lastJobUrl: state.lastJobUrl,
         activeTab: state.activeTab,
         aiStudioSubTab: state.aiStudioSubTab,
-        sidebarState: state.sidebarState,
+        // sidebarState excluded — always starts at default "non-job-page".
+        // The actual state is recalculated when a scan occurs (via onUrlChange /
+        // setSidebarState), so persisting it would only risk stale values
+        // (e.g., "full-power" hydrating on a non-job page).
       }),
     }
   )

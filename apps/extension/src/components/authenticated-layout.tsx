@@ -89,15 +89,27 @@ export function AuthenticatedLayout() {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [viewLayer, setViewLayer] = useState<"main" | "resume_detail">("main");
   const [showRescanWarning, setShowRescanWarning] = useState(false);
+  const [hasInitiallyLoaded, setHasInitiallyLoaded] = useState(false);
 
-  // Fetch resumes on mount when authenticated (always fetch to sync with server)
+  // Fetch resumes + credits on mount when authenticated, then mark initial load complete.
+  // Both fetches run in parallel; hasInitiallyLoaded flips to true after both resolve.
+  //
+  // NOTE (Task 4.3): Resume and credits stores do NOT have hydration guards (unlike
+  // useScanStore which waits for persist.hasHydrated()). This is intentional — API data
+  // is always fresher than persisted state, so any hydrated values get overwritten by
+  // the server response. The brief overwrite is hidden by the hasInitiallyLoaded skeleton.
   const hasFetchedResumes = useRef(false);
   useEffect(() => {
     if (accessToken && !hasFetchedResumes.current) {
       hasFetchedResumes.current = true;
-      fetchResumes(accessToken);
+      Promise.all([
+        fetchResumes(accessToken),
+        fetchCredits(accessToken),
+      ]).finally(() => {
+        setHasInitiallyLoaded(true);
+      });
     }
-  }, [accessToken, fetchResumes]);
+  }, [accessToken, fetchResumes, fetchCredits]);
 
   // Re-fetch active resume detail if ID is persisted but data was lost (not persisted)
   // Guard with a ref to prevent infinite retry loops on persistent failures (e.g. 404)
@@ -113,13 +125,6 @@ export function AuthenticatedLayout() {
       detailRetryCount.current = 0;
     }
   }, [accessToken, activeResumeId, activeResumeData, resumeLoading]);
-
-  // Fetch credits on mount
-  useEffect(() => {
-    if (accessToken) {
-      fetchCredits(accessToken);
-    }
-  }, [accessToken, fetchCredits]);
 
   // Cleanup verification timer on unmount
   useEffect(() => {
@@ -145,6 +150,11 @@ export function AuthenticatedLayout() {
           return; // Tab may no longer exist
         }
       }
+
+      // FR72a: Reset autofill and scan state before starting a new scan
+      // to prevent previous job's data from leaking into the new scan.
+      useAutofillStore.getState().resetAutofill();
+      scanStore.resetScan();
 
       scanStore.startScan();
       try {
@@ -502,6 +512,8 @@ export function AuthenticatedLayout() {
   const handleReset = useCallback(() => {
     resetJob();
     scanStore.resetScan();
+    // FR72c: Manual reset must also clear autofill state per State Preservation Matrix
+    useAutofillStore.getState().resetAutofill();
     if (verificationTimerRef.current) {
       clearTimeout(verificationTimerRef.current);
       verificationTimerRef.current = null;
@@ -762,6 +774,39 @@ export function AuthenticatedLayout() {
 
   // ─── Tab lock: AI Studio, Autofill locked when no job ──────────────
   const isLocked = !scanStore.jobData?.title;
+
+  // Show loading skeleton during initial data fetch (Task 4.2)
+  // Prevents flash of empty states while resumes + credits load
+  if (!hasInitiallyLoaded) {
+    return (
+      <ErrorBoundary>
+        <ToastProvider>
+          <ExtensionSidebar
+            className={SIDE_PANEL_CLASSNAME}
+            header={header}
+            contextContent={
+              <div className="space-y-3 p-2">
+                <Skeleton className="h-20 w-full rounded-lg" />
+              </div>
+            }
+            scanContent={
+              <div className="space-y-3 p-2">
+                <Skeleton className="h-10 w-3/4 rounded-lg" />
+                <Skeleton className="h-6 w-1/2 rounded" />
+                <Skeleton className="h-24 w-full rounded-lg" />
+              </div>
+            }
+            studioContent={null}
+            autofillContent={null}
+            coachContent={null}
+            isLocked
+            activeTab={activeTab}
+            onTabChange={(tab: string) => setActiveTab(tab as import("../stores/sidebar-store").MainTab)}
+          />
+        </ToastProvider>
+      </ErrorBoundary>
+    );
+  }
 
   return (
     <ErrorBoundary>
