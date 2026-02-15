@@ -1,0 +1,54 @@
+{
+  "board": "indeed",
+  "name": "Indeed",
+  "urlPatterns": [
+    "indeed\\.com/viewjob",
+    "indeed\\.com/jobs\\?"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        "h1[data-testid=\"jobsearch-JobInfoHeader-title\"]"
+      ],
+      "secondary": [
+        ".jobsearch-JobInfoHeader-title"
+      ]
+    },
+    "company": {
+      "primary": [
+        "div[data-testid=\"inlineHeader-companyName\"] a"
+      ],
+      "secondary": [
+        "[data-company-name]"
+      ]
+    },
+    "description": {
+      "primary": [
+        "#jobDescriptionText"
+      ],
+      "secondary": [
+        ".jobsearch-JobComponent-description"
+      ]
+    },
+    "location": {
+      "primary": [
+        "div[data-testid=\"inlineHeader-companyLocation\"]"
+      ],
+      "secondary": [
+        "div[data-testid=\"job-location\"]"
+      ]
+    },
+    "salary": {
+      "primary": [
+        "div[data-testid=\"attribute_snippet_testid\"] span"
+      ],
+      "secondary": [
+        "#salaryInfoAndJobType span"
+      ]
+    }
+  },
+  "pipelineHints": {
+    "skipLayers": []
+  },
+  "version": 1
+}

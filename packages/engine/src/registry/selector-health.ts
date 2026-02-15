@@ -22,15 +22,29 @@ export interface SelectorHealthRecord {
   lastFailed?: string;
 }
 
+export interface HealthSummary {
+  board: string;
+  totalSelectors: number;
+  healthyCount: number;
+  degradedCount: number;
+  failedCount: number;
+  overallSuccessRate: number;
+  lastFailedSelectors: SelectorHealthRecord[];
+  suggestedRepairs: SelectorHealthRecord[];
+}
+
 export interface SelectorHealthStore {
   record(selectorId: string, success: boolean, board: string, field: string): void;
   getHealth(selectorId: string): SelectorHealthRecord | undefined;
   getSuggestedRepairs(): SelectorHealthRecord[];
+  getHealthSummary?(board?: string): HealthSummary;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
 
 const DEGRADED_THRESHOLD = 0.5;
+const HEALTHY_THRESHOLD = 0.7;
+const FAILED_THRESHOLD = 0.3;
 
 // ─── In-Memory Implementation ───────────────────────────────────────────────
 
@@ -80,5 +94,60 @@ export class InMemorySelectorHealthStore implements SelectorHealthStore {
     }
     // Sort by worst health first
     return degraded.sort((a, b) => a.healthScore - b.healthScore);
+  }
+
+  getHealthSummary(board?: string): HealthSummary {
+    const filtered: SelectorHealthRecord[] = [];
+    for (const rec of this.records.values()) {
+      if (!board || rec.board === board) {
+        filtered.push(rec);
+      }
+    }
+
+    let healthyCount = 0;
+    let degradedCount = 0;
+    let failedCount = 0;
+    let totalSuccess = 0;
+    let totalAttempts = 0;
+    const lastFailedSelectors: SelectorHealthRecord[] = [];
+    const suggestedRepairs: SelectorHealthRecord[] = [];
+
+    for (const rec of filtered) {
+      totalSuccess += rec.successCount;
+      totalAttempts += rec.totalAttempts;
+
+      if (rec.healthScore >= HEALTHY_THRESHOLD) {
+        healthyCount++;
+      } else if (rec.healthScore >= FAILED_THRESHOLD) {
+        degradedCount++;
+      } else {
+        failedCount++;
+      }
+
+      if (rec.lastFailed) {
+        lastFailedSelectors.push(rec);
+      }
+      if (rec.healthScore < DEGRADED_THRESHOLD && rec.totalAttempts >= 2) {
+        suggestedRepairs.push(rec);
+      }
+    }
+
+    // Sort last failed by most recent failure
+    lastFailedSelectors.sort(
+      (a, b) => new Date(b.lastFailed!).getTime() - new Date(a.lastFailed!).getTime()
+    );
+    // Sort repairs by worst health first
+    suggestedRepairs.sort((a, b) => a.healthScore - b.healthScore);
+
+    return {
+      board: board ?? "all",
+      totalSelectors: filtered.length,
+      healthyCount,
+      degradedCount,
+      failedCount,
+      overallSuccessRate: totalAttempts > 0 ? totalSuccess / totalAttempts : 1.0,
+      lastFailedSelectors,
+      suggestedRepairs,
+    };
   }
 }

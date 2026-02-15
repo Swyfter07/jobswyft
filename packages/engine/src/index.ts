@@ -11,8 +11,18 @@ export type { AggregatedResult } from "./extraction/frame-aggregator";
 export { SELECTOR_REGISTRY } from "./registry/selector-registry";
 export type { SelectorEntry } from "./registry/selector-registry";
 
-export type { SelectorHealthRecord, SelectorHealthStore } from "./registry/selector-health";
+export type { SelectorHealthRecord, SelectorHealthStore, HealthSummary } from "./registry/selector-health";
 export { InMemorySelectorHealthStore } from "./registry/selector-health";
+
+export { BoardRegistry } from "./registry/board-registry";
+
+export {
+  SiteConfigSchema,
+  ConfigValidationError,
+  validateSiteConfig,
+  validateSiteConfigs,
+  assertSiteConfig,
+} from "./registry/config-schema";
 
 export type { RepairResult } from "./registry/heuristic-repair";
 export { attemptHeuristicRepair } from "./registry/heuristic-repair";
@@ -52,6 +62,7 @@ export {
   aiFallback,
   postProcess,
   createDefaultPipeline,
+  createPipelineForUrl,
 } from "./pipeline/index";
 export type {
   LayerName,
@@ -64,6 +75,7 @@ export type {
   SiteConfig,
   DetectionContext,
   ExtractionMiddleware,
+  CreateContextOptions,
 } from "./pipeline/index";
 
 // ─── Types ───────────────────────────────────────────────────────────────────

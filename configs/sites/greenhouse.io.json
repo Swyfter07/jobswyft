@@ -1,0 +1,43 @@
+{
+  "board": "greenhouse",
+  "name": "Greenhouse",
+  "urlPatterns": [
+    "boards\\.greenhouse\\.io/.+/jobs/\\d+",
+    "job-boards\\.greenhouse\\.io"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        ".app-title"
+      ],
+      "secondary": [
+        "h1.heading"
+      ]
+    },
+    "company": {
+      "primary": [
+        ".company-name"
+      ],
+      "secondary": [
+        "span[itemprop=\"hiringOrganization\"]"
+      ]
+    },
+    "description": {
+      "primary": [
+        "#content"
+      ],
+      "secondary": [
+        ".content-intro"
+      ]
+    },
+    "location": {
+      "primary": [
+        ".location"
+      ],
+      "secondary": [
+        "div[itemprop=\"jobLocation\"]"
+      ]
+    }
+  },
+  "version": 1
+}

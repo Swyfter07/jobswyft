@@ -1,0 +1,110 @@
+{
+  "$ref": "#/definitions/SiteConfig",
+  "definitions": {
+    "SiteConfig": {
+      "type": "object",
+      "properties": {
+        "board": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "urlPatterns": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        },
+        "selectors": {
+          "type": "object",
+          "additionalProperties": {
+            "type": "object",
+            "properties": {
+              "primary": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "secondary": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              },
+              "tertiary": {
+                "type": "array",
+                "items": {
+                  "type": "string"
+                }
+              }
+            },
+            "required": [
+              "primary"
+            ],
+            "additionalProperties": false
+          }
+        },
+        "pipelineHints": {
+          "type": "object",
+          "properties": {
+            "skipLayers": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "board-detector",
+                  "json-ld",
+                  "css",
+                  "og-meta",
+                  "heuristic",
+                  "ai-fallback",
+                  "post-process"
+                ]
+              }
+            },
+            "layerOrder": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": [
+                  "board-detector",
+                  "json-ld",
+                  "css",
+                  "og-meta",
+                  "heuristic",
+                  "ai-fallback",
+                  "post-process"
+                ]
+              }
+            },
+            "gateOverrides": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "number"
+              }
+            }
+          },
+          "additionalProperties": false
+        },
+        "customExtractor": {
+          "type": "string"
+        },
+        "version": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": [
+        "board",
+        "name",
+        "urlPatterns",
+        "selectors",
+        "version"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}

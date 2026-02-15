@@ -1,0 +1,28 @@
+{
+  "board": "workday",
+  "name": "Workday",
+  "urlPatterns": [
+    "myworkdayjobs\\.com/.+/job/",
+    "wd\\d+\\.myworkdaysite\\.com",
+    "workday\\.com"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        "[data-automation-id=\"jobPostingHeader\"]"
+      ],
+      "secondary": [
+        "h2[data-automation-id=\"jobTitle\"]"
+      ]
+    },
+    "description": {
+      "primary": [
+        "[data-automation-id=\"jobPostingDescription\"]"
+      ],
+      "secondary": [
+        ".job-description"
+      ]
+    }
+  },
+  "version": 1
+}

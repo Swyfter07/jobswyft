@@ -1,0 +1,51 @@
+{
+  "board": "ziprecruiter",
+  "name": "ZipRecruiter",
+  "urlPatterns": [
+    "ziprecruiter\\.com/c/.+/job/",
+    "ziprecruiter\\.com/jobs/"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        "h1.job_title"
+      ],
+      "secondary": [
+        ".job-title h1"
+      ]
+    },
+    "company": {
+      "primary": [
+        ".hiring_company_text a"
+      ],
+      "secondary": [
+        ".company-name"
+      ]
+    },
+    "description": {
+      "primary": [
+        ".job_description"
+      ],
+      "secondary": [
+        ".job-description-content"
+      ]
+    },
+    "location": {
+      "primary": [
+        ".location_text"
+      ],
+      "secondary": [
+        ".job-location"
+      ]
+    },
+    "salary": {
+      "primary": [
+        ".salary_text"
+      ],
+      "secondary": [
+        ".job-salary"
+      ]
+    }
+  },
+  "version": 1
+}

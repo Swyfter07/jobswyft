@@ -215,4 +215,107 @@ describe("InMemorySelectorHealthStore", () => {
     expect(rec.lastVerified).toBe(t1.toISOString());
     expect(rec.lastFailed).toBe(t1.toISOString());
   });
+
+  // ─── getHealthSummary() (Story 2.4) ───────────────────────────────────────
+
+  describe("getHealthSummary", () => {
+    it("returns summary for all selectors when no board filter", () => {
+      store.record("sel-a", true, "linkedin", "title");
+      store.record("sel-b", false, "indeed", "company");
+      store.record("sel-b", false, "indeed", "company");
+
+      const summary = store.getHealthSummary();
+      expect(summary.board).toBe("all");
+      expect(summary.totalSelectors).toBe(2);
+    });
+
+    it("filters by board when specified", () => {
+      store.record("sel-li", true, "linkedin", "title");
+      store.record("sel-in", false, "indeed", "company");
+
+      const summary = store.getHealthSummary("linkedin");
+      expect(summary.board).toBe("linkedin");
+      expect(summary.totalSelectors).toBe(1);
+    });
+
+    it("classifies healthy selectors (healthScore >= 0.7)", () => {
+      // 3 successes, 1 failure = 0.75 — healthy
+      store.record("sel-h", true, "board", "title");
+      store.record("sel-h", true, "board", "title");
+      store.record("sel-h", true, "board", "title");
+      store.record("sel-h", false, "board", "title");
+
+      const summary = store.getHealthSummary("board");
+      expect(summary.healthyCount).toBe(1);
+      expect(summary.degradedCount).toBe(0);
+      expect(summary.failedCount).toBe(0);
+    });
+
+    it("classifies degraded selectors (0.3 <= healthScore < 0.7)", () => {
+      // 1 success, 1 failure = 0.5 — degraded
+      store.record("sel-d", true, "board", "title");
+      store.record("sel-d", false, "board", "title");
+
+      const summary = store.getHealthSummary("board");
+      expect(summary.healthyCount).toBe(0);
+      expect(summary.degradedCount).toBe(1);
+      expect(summary.failedCount).toBe(0);
+    });
+
+    it("classifies failed selectors (healthScore < 0.3)", () => {
+      // 0 successes, 4 failures = 0.0 — failed
+      store.record("sel-f", false, "board", "title");
+      store.record("sel-f", false, "board", "title");
+      store.record("sel-f", false, "board", "title");
+      store.record("sel-f", false, "board", "title");
+
+      const summary = store.getHealthSummary("board");
+      expect(summary.healthyCount).toBe(0);
+      expect(summary.degradedCount).toBe(0);
+      expect(summary.failedCount).toBe(1);
+    });
+
+    it("computes overallSuccessRate as weighted average", () => {
+      // 3 successes + 1 failure = 3/4 = 0.75
+      store.record("sel-1", true, "board", "title");
+      store.record("sel-1", true, "board", "title");
+      store.record("sel-1", true, "board", "title");
+      store.record("sel-1", false, "board", "title");
+
+      const summary = store.getHealthSummary("board");
+      expect(summary.overallSuccessRate).toBe(0.75);
+    });
+
+    it("returns 1.0 successRate for empty store", () => {
+      const summary = store.getHealthSummary();
+      expect(summary.overallSuccessRate).toBe(1.0);
+      expect(summary.totalSelectors).toBe(0);
+    });
+
+    it("includes lastFailedSelectors sorted by most recent failure", () => {
+      const t1 = new Date("2026-02-14T10:00:00.000Z");
+      vi.setSystemTime(t1);
+      store.record("sel-old", false, "board", "title");
+
+      const t2 = new Date("2026-02-14T12:00:00.000Z");
+      vi.setSystemTime(t2);
+      store.record("sel-new", false, "board", "company");
+
+      const summary = store.getHealthSummary("board");
+      expect(summary.lastFailedSelectors).toHaveLength(2);
+      expect(summary.lastFailedSelectors[0].selectorId).toBe("sel-new");
+      expect(summary.lastFailedSelectors[1].selectorId).toBe("sel-old");
+    });
+
+    it("includes suggestedRepairs for degraded selectors", () => {
+      store.record("sel-repair", false, "board", "title");
+      store.record("sel-repair", false, "board", "title");
+      store.record("sel-healthy", true, "board", "company");
+      store.record("sel-healthy", true, "board", "company");
+
+      const summary = store.getHealthSummary("board");
+      expect(summary.suggestedRepairs).toHaveLength(1);
+      expect(summary.suggestedRepairs[0].selectorId).toBe("sel-repair");
+    });
+  });
 });

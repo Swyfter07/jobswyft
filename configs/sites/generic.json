@@ -1,0 +1,57 @@
+{
+  "board": "generic",
+  "name": "Generic ATS",
+  "urlPatterns": [],
+  "selectors": {
+    "title": {
+      "primary": [
+        "h1"
+      ],
+      "secondary": [
+        "[itemprop=\"title\"]"
+      ],
+      "tertiary": [
+        ".job-title",
+        ".posting-title"
+      ]
+    },
+    "company": {
+      "primary": [
+        "[itemprop=\"hiringOrganization\"]"
+      ],
+      "secondary": [
+        ".company-name",
+        ".employer-name"
+      ]
+    },
+    "description": {
+      "primary": [
+        "[itemprop=\"description\"]"
+      ],
+      "secondary": [
+        ".job-description",
+        ".posting-description",
+        "#job-description"
+      ]
+    },
+    "location": {
+      "primary": [
+        "[itemprop=\"jobLocation\"]"
+      ],
+      "secondary": [
+        ".location",
+        ".job-location"
+      ]
+    },
+    "salary": {
+      "primary": [
+        "[itemprop=\"baseSalary\"]"
+      ],
+      "secondary": [
+        ".salary",
+        ".compensation"
+      ]
+    }
+  },
+  "version": 1
+}

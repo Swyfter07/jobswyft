@@ -1,0 +1,59 @@
+{
+  "board": "linkedin",
+  "name": "LinkedIn",
+  "urlPatterns": [
+    "linkedin\\.com/jobs/view/",
+    "linkedin\\.com/jobs/collections/",
+    "linkedin\\.com/jobs/search/",
+    "linkedin\\.com/.*currentJobId="
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        ".job-details-jobs-unified-top-card__job-title h1",
+        ".job-details-jobs-unified-top-card__job-title a",
+        ".job-details-jobs-unified-top-card__job-title"
+      ],
+      "secondary": [
+        "h1.t-24",
+        "h1[data-test-id=\"job-title\"]"
+      ]
+    },
+    "company": {
+      "primary": [
+        ".job-details-jobs-unified-top-card__company-name a",
+        ".job-details-jobs-unified-top-card__company-name"
+      ],
+      "secondary": [
+        "a[data-tracking-control-name=\"public_jobs_topcard-org-name\"]"
+      ]
+    },
+    "description": {
+      "primary": [
+        ".jobs-description__content",
+        ".jobs-box__html-content"
+      ],
+      "secondary": [
+        "#job-details",
+        "article.jobs-description"
+      ]
+    },
+    "location": {
+      "primary": [
+        ".job-details-jobs-unified-top-card__bullet"
+      ],
+      "secondary": [
+        "span.jobs-unified-top-card__bullet"
+      ]
+    },
+    "salary": {
+      "primary": [
+        ".job-details-jobs-unified-top-card__job-insight--highlight span"
+      ],
+      "secondary": [
+        ".salary-main-rail__current-range"
+      ]
+    }
+  },
+  "version": 1
+}

@@ -1,0 +1,44 @@
+{
+  "board": "glassdoor",
+  "name": "Glassdoor",
+  "urlPatterns": [
+    "glassdoor\\.com/job-listing/"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        "h1[data-test=\"job-title\"]"
+      ],
+      "secondary": [
+        ".css-1vg6q84"
+      ]
+    },
+    "company": {
+      "primary": [
+        "div[data-test=\"employer-name\"]"
+      ],
+      "secondary": [
+        ".css-87uc0g"
+      ]
+    },
+    "description": {
+      "primary": [
+        ".jobDescriptionContent"
+      ],
+      "secondary": [
+        "div[data-test=\"job-description\"]"
+      ]
+    },
+    "location": {
+      "primary": [
+        "div[data-test=\"location\"]"
+      ]
+    },
+    "salary": {
+      "primary": [
+        "div[data-test=\"detailSalary\"]"
+      ]
+    }
+  },
+  "version": 1
+}

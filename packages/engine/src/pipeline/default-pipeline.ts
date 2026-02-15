@@ -21,6 +21,7 @@ import {
   postProcess,
 } from "./layers/index";
 import type { DetectionContext, ExtractionMiddleware, SiteConfig } from "./types";
+import type { BoardRegistry } from "../registry/board-registry";
 
 // Internal layer name for matching against skipLayers
 interface NamedMiddleware {
@@ -57,4 +58,19 @@ export function createDefaultPipeline(
     .map((l) => l.middleware);
 
   return compose(middlewares);
+}
+
+/**
+ * Convenience factory: detect board from URL, get config from registry,
+ * and create pipeline with that config's skipLayers applied at composition time.
+ *
+ * When BOTH siteConfig and boardRegistry are provided, siteConfig takes precedence
+ * (explicit override).
+ */
+export function createPipelineForUrl(
+  url: string,
+  registry: BoardRegistry
+): (ctx: DetectionContext) => Promise<DetectionContext> {
+  const config = registry.getConfig(url);
+  return createDefaultPipeline(config);
 }

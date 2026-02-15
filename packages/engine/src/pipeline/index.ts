@@ -22,6 +22,7 @@ export {
   addSignal,
   resolveSignals,
 } from "./create-context";
+export type { CreateContextOptions } from "./create-context";
 
 // ─── Compose ─────────────────────────────────────────────────────────────────
 export { compose } from "./compose";
@@ -39,4 +40,4 @@ export {
 } from "./layers/index";
 
 // ─── Default Pipeline ────────────────────────────────────────────────────────
-export { createDefaultPipeline } from "./default-pipeline";
+export { createDefaultPipeline, createPipelineForUrl } from "./default-pipeline";

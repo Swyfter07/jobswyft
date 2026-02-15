@@ -1,0 +1,42 @@
+{
+  "board": "monster",
+  "name": "Monster",
+  "urlPatterns": [
+    "monster\\.com/job-openings/"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        "h1.heading-xxlarge"
+      ],
+      "secondary": [
+        "h1[data-testid=\"job-title\"]"
+      ]
+    },
+    "company": {
+      "primary": [
+        ".company-name"
+      ],
+      "secondary": [
+        "a[data-testid=\"company-name\"]"
+      ]
+    },
+    "description": {
+      "primary": [
+        ".job-description"
+      ],
+      "secondary": [
+        "#job-description"
+      ]
+    },
+    "location": {
+      "primary": [
+        ".location-name"
+      ],
+      "secondary": [
+        "div[data-testid=\"job-location\"]"
+      ]
+    }
+  },
+  "version": 1
+}

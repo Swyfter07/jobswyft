@@ -17,13 +17,21 @@ import type {
   LayerName,
   TraceAttempt,
 } from "./types";
+import type { BoardRegistry } from "../registry/board-registry";
+import type { SelectorHealthStore } from "../registry/selector-health";
+
+export interface CreateContextOptions {
+  boardRegistry?: BoardRegistry;
+  healthStore?: SelectorHealthStore;
+}
 
 /**
  * Create a fresh DetectionContext with zeroed fields and initialized trace.
  */
 export function createDetectionContext(
   url: string,
-  dom: Document
+  dom: Document,
+  options?: CreateContextOptions
 ): DetectionContext {
   return {
     url,
@@ -43,6 +51,8 @@ export function createDetectionContext(
       completeness: 0,
     },
     signals: {},
+    boardRegistry: options?.boardRegistry,
+    healthStore: options?.healthStore,
     metadata: {},
   };
 }

@@ -1,0 +1,45 @@
+{
+  "board": "lever",
+  "name": "Lever",
+  "urlPatterns": [
+    "jobs\\.lever\\.co/"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        ".posting-headline h2"
+      ],
+      "secondary": [
+        ".posting-header .posting-headline"
+      ]
+    },
+    "description": {
+      "primary": [
+        ".posting-page .content"
+      ],
+      "secondary": [
+        "div[data-qa=\"posting-description\"]"
+      ]
+    },
+    "location": {
+      "primary": [
+        ".posting-categories .sort-by-time"
+      ],
+      "secondary": [
+        ".location .posting-category"
+      ]
+    },
+    "employmentType": {
+      "primary": [
+        ".posting-categories .commitment"
+      ],
+      "secondary": [
+        ".workplaceTypes"
+      ]
+    }
+  },
+  "pipelineHints": {
+    "skipLayers": ["json-ld"]
+  },
+  "version": 1
+}

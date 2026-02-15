@@ -1,0 +1,43 @@
+{
+  "board": "wellfound",
+  "name": "Wellfound",
+  "urlPatterns": [
+    "wellfound\\.com/jobs",
+    "angel\\.co/company/.+/jobs"
+  ],
+  "selectors": {
+    "title": {
+      "primary": [
+        "h1[data-test=\"job-title\"]"
+      ],
+      "secondary": [
+        ".styles_jobTitle__"
+      ]
+    },
+    "company": {
+      "primary": [
+        "a[data-test=\"company-name\"]"
+      ],
+      "secondary": [
+        ".styles_companyName__"
+      ]
+    },
+    "description": {
+      "primary": [
+        ".styles_description__"
+      ],
+      "secondary": [
+        ".description-container"
+      ]
+    },
+    "location": {
+      "primary": [
+        "[data-test=\"job-location\"]"
+      ],
+      "secondary": [
+        ".styles_location__"
+      ]
+    }
+  },
+  "version": 1
+}

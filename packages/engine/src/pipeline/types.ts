@@ -9,6 +9,7 @@
 
 import type { ExtractionSource } from "../scoring/extraction-validator";
 import type { SelectorHealthStore } from "../registry/selector-health";
+import type { BoardRegistry } from "../registry/board-registry";
 
 // ─── Layer Names ─────────────────────────────────────────────────────────────
 
@@ -126,6 +127,7 @@ export interface DetectionContext {
   completeness: number;
   trace: ExtractionTrace;
   siteConfig?: SiteConfig;
+  boardRegistry?: BoardRegistry;
   signals: Record<string, ExtractionSignal[]>;
   selectorRepairs?: SelectorRepairProposal[];
   healthStore?: SelectorHealthStore;
