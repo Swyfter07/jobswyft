@@ -231,7 +231,7 @@ function ProjectEditCard({
       <div className="space-y-1.5">
         {(entry.highlights ?? []).map((h, idx) => (
           <div key={`hl-${idx}-${h.slice(0, 16)}`} className="flex gap-2 items-start">
-            <div className="mt-3 h-1 w-1 rounded-full bg-primary shrink-0" />
+            <div className="mt-3 size-1 rounded-full bg-primary shrink-0" />
             <Textarea
               ref={autoResizeRef}
               value={h}
@@ -242,7 +242,7 @@ function ProjectEditCard({
             <Button
               variant="ghost"
               size="icon"
-              className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+              className="size-6 shrink-0 text-muted-foreground hover:text-destructive"
               onClick={() => onRemoveHighlight(idx)}
             >
               <X className="size-3" />

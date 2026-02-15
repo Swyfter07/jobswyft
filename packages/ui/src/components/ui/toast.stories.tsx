@@ -1,5 +1,5 @@
 import React from "react"
-import type { Meta, StoryObj } from "@storybook/react"
+import type { Meta, StoryObj } from "@storybook/react-vite"
 import { Toast, ToastContainer } from "./toast"
 import { Button } from "./button"
 
@@ -84,7 +84,7 @@ export const AutofillSuccess: Story = {
         title: "Autofill Complete",
         description: "7 out of 7 fields filled successfully!",
         action: (
-            <Button variant="ghost" size="sm" className="text-green-700 hover:text-green-800 hover:bg-green-100 shrink-0">
+            <Button variant="ghost" size="sm" className="text-success hover:text-success hover:bg-success/10 shrink-0">
                 Undo All
             </Button>
         ),
@@ -151,6 +151,39 @@ export const StackedToasts: Story = {
                         onDismiss={() => { }}
                     />
                 </ToastContainer>
+            </div>
+        ),
+    ],
+}
+
+export const DarkMode: Story = {
+    parameters: { backgrounds: { default: "dark" } },
+    decorators: [
+        () => (
+            <div className="dark w-[400px] bg-background p-4 rounded-xl space-y-3">
+                <Toast
+                    variant="success"
+                    title="Success!"
+                    description="Your changes have been saved."
+                    onDismiss={() => { }}
+                />
+                <Toast
+                    variant="error"
+                    title="Error"
+                    description="Something went wrong."
+                    onDismiss={() => { }}
+                />
+                <Toast
+                    variant="info"
+                    title="Info"
+                    description="You can scan jobs from LinkedIn."
+                    onDismiss={() => { }}
+                />
+                <Toast
+                    title="Default"
+                    description="A plain notification toast."
+                    onDismiss={() => { }}
+                />
             </div>
         ),
     ],

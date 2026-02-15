@@ -2,7 +2,7 @@ import type { Meta, StoryObj } from "@storybook/react-vite"
 import { AIStudio } from "./ai-studio"
 
 const meta = {
-    title: "Custom/AI Studio",
+    title: "Custom/AiStudio",
     component: AIStudio,
     parameters: {
         layout: "centered",

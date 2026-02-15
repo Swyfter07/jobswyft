@@ -115,3 +115,23 @@ export const SimpleContent: Story = {
     </Card>
   ),
 }
+
+export const DarkMode: Story = {
+  parameters: { backgrounds: { default: "dark" } },
+  render: () => (
+    <div className="dark bg-background p-4 rounded-xl">
+      <Card className="w-[350px]">
+        <CardHeader>
+          <CardTitle>Card Title</CardTitle>
+          <CardDescription>Card Description</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <p>Card content in dark mode.</p>
+        </CardContent>
+        <CardFooter>
+          <Button className="w-full">Action</Button>
+        </CardFooter>
+      </Card>
+    </div>
+  ),
+}

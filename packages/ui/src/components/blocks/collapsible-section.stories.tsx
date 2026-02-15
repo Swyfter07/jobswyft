@@ -93,6 +93,28 @@ export const Accordion: Story = {
   },
 }
 
+/** Extension viewport (360px). */
+export const ExtensionViewport: Story = {
+  render: () => (
+    <div className="w-[360px] p-4">
+      <CollapsibleSection
+        icon={<Layers />}
+        title="Resume Blocks"
+        count={6}
+        isParent
+        defaultOpen
+      >
+        <CollapsibleSection icon={<User />} title="Personal Info" count={4} defaultOpen>
+          <div className="text-sm text-muted-foreground space-y-1">
+            <p>Marcus Chen</p>
+            <p>marcus@email.com</p>
+          </div>
+        </CollapsibleSection>
+      </CollapsibleSection>
+    </div>
+  ),
+}
+
 /** Dark mode variant — verifies section styles render correctly. */
 export const DarkMode: Story = {
   parameters: {

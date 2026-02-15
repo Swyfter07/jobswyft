@@ -69,3 +69,13 @@ export const WithLabel: Story = {
     </div>
   ),
 }
+
+export const DarkMode: Story = {
+  parameters: { backgrounds: { default: "dark" } },
+  render: () => (
+    <div className="dark bg-background p-4 rounded-xl grid w-full max-w-sm gap-1.5">
+      <label htmlFor="dark-email" className="text-sm font-medium">Email</label>
+      <Input type="email" id="dark-email" placeholder="name@example.com" />
+    </div>
+  ),
+}

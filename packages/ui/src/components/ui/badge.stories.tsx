@@ -78,3 +78,17 @@ export const AllVariants: Story = {
     </div>
   ),
 }
+
+export const DarkMode: Story = {
+  parameters: { backgrounds: { default: "dark" } },
+  render: () => (
+    <div className="dark bg-background p-4 rounded-xl flex flex-wrap gap-2">
+      <Badge variant="default">Default</Badge>
+      <Badge variant="secondary">Secondary</Badge>
+      <Badge variant="destructive">Destructive</Badge>
+      <Badge variant="outline">Outline</Badge>
+      <Badge variant="ghost">Ghost</Badge>
+      <Badge variant="link">Link</Badge>
+    </div>
+  ),
+}

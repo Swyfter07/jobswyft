@@ -115,3 +115,28 @@ export const MultipleTabs: Story = {
     </Tabs>
   ),
 }
+
+export const DarkMode: Story = {
+  parameters: { backgrounds: { default: "dark" } },
+  render: () => (
+    <div className="dark bg-background p-4 rounded-xl">
+      <Tabs defaultValue="account" className="w-[400px]">
+        <TabsList>
+          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="password">Password</TabsTrigger>
+        </TabsList>
+        <TabsContent value="account">
+          <Card>
+            <CardHeader>
+              <CardTitle>Account</CardTitle>
+              <CardDescription>Manage your account settings.</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Input defaultValue="john@example.com" />
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
+    </div>
+  ),
+}

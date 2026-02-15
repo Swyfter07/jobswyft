@@ -120,7 +120,7 @@ development_status:
   1-2-shell-layout-navigation-fixes: done
   1-3-card-block-component-standardization: done
   1-4-ai-studio-feature-view-fixes: done
-  1-5-storybook-completion-variant-coverage: review
+  1-5-storybook-completion-variant-coverage: done
   1-6-state-management-audit-integration-validation: backlog
   epic-1-retrospective: optional
 
@@ -131,7 +131,7 @@ development_status:
   2-1-engine-package-scaffold-scan-engine-extraction: done
   2-2-middleware-extraction-pipeline: done
   2-3-smart-extraction-patterns-confidence-self-healing: done
-  2-4-site-config-system-board-registry: backlog
+  2-4-site-config-system-board-registry: ready-for-dev
   2-5-autofill-engine-core-field-detection-form-filling: backlog
   2-6-extension-adapter-engine-integration: backlog
   epic-2-retrospective: optional

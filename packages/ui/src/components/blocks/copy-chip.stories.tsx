@@ -59,6 +59,28 @@ export const CopyButtonDemo: Story = {
   ),
 }
 
+/** Long text that may overflow. */
+export const LongText: Story = {
+  render: () => (
+    <div className="w-[300px] p-4">
+      <CopyChip value="This is a very long text value that demonstrates how the CopyChip handles overflow when the content exceeds the expected width." />
+    </div>
+  ),
+}
+
+/** Extension viewport (360px). */
+export const ExtensionViewport: Story = {
+  render: () => (
+    <div className="w-[360px] p-4">
+      <div className="flex flex-wrap gap-2">
+        <CopyChip value="marcus.chen@email.com" icon={<Mail />} label="marcus.chen@email.com" />
+        <CopyChip value="TypeScript" />
+        <CopyChip value="San Francisco, CA" icon={<MapPin />} label="San Francisco, CA" />
+      </div>
+    </div>
+  ),
+}
+
 /** Dark mode variant — verifies all chip states render correctly. */
 export const DarkMode: Story = {
   parameters: {

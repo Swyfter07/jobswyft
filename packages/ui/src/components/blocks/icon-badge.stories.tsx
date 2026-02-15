@@ -38,3 +38,17 @@ export const AllSizes: Story = {
         </div>
     ),
 }
+
+export const DarkMode: Story = {
+    parameters: { backgrounds: { default: "dark" } },
+    render: () => (
+        <div className="dark bg-background p-4 rounded-xl flex items-center gap-3">
+            <IconBadge icon={<Zap />} variant="primary" />
+            <IconBadge icon={<Brain />} variant="ai" />
+            <IconBadge icon={<CheckCircle />} variant="success" />
+            <IconBadge icon={<AlertTriangle />} variant="warning" />
+            <IconBadge icon={<Zap />} variant="destructive" />
+            <IconBadge icon={<Settings />} variant="muted" />
+        </div>
+    ),
+}
